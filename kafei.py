@@ -18,6 +18,6 @@ def submit_report():
     return jsonify({'message': 'OK'})
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", debug=True,
+    app.run(host="0.0.0.0", debug=False,
             ssl_context=('cert.pem', 'key.pem'))
 
