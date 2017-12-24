@@ -7,4 +7,4 @@ export SSL_KEY=$LETSENCRYPT/privkey.pem
 
 export FLASK_APP=$(dirname $0)/kafei.py
 
-flask run --host 0.0.0.0 --port 443 $@
+python3 "$FLASK_APP"

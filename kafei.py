@@ -37,6 +37,12 @@ def submit_report():
     return make_response(jsonify({'message': msg}), code)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0",
+    KAFEI_DEBUG = False
+    KAFEI_PORT = 443
+    if ENV['KAFEI_DEBUG'] == '1':
+        KAFEI_DEBUG = True
+    if len(ENV['KAFEI_PORT']) > 0:
+        KAFEI_PORT = int(ENV['KAFEI_PORT'])
+    app.run(host="0.0.0.0", port=KAFEI_PORT, debug=KAFEI_DEBUG,
             ssl_context=(ENV['SSL_CERT'], ENV['SSL_KEY']))
 
