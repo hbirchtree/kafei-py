@@ -1,7 +1,8 @@
 #!/bin/bash
 
-apt update
-apt install virtualenv python3
+apt -q update
+apt -qy install virtualenv python3 python3-pip
 
-cd $(dirname $0)
-virtualenv kafei_py --python $(which python3)
+export LC_ALL="en_US.UTF-8"
+export LC_CTYPE="en_US.UTF-8"
+sudo dpkg-reconfigure locales
