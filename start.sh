@@ -5,4 +5,6 @@
 export SSL_CERT=$LETSENCRYPT/fullchain.pem
 export SSL_KEY=$LETSENCRYPT/privkey.pem
 
-flask $(dirname $0)/kafei.py --host 0.0.0.0 --port 443 $@
+export FLASK_APP=$(dirname $0)/kafei.py
+
+flask run --host 0.0.0.0 --port 443 $@
