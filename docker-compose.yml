@@ -1,0 +1,20 @@
+version: "3"
+services:
+  db:
+    image: postgres:10
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - $PWD/schemas:/docker-entrypoint-initdb.d
+    ports:
+      - 5432:5432
+  nginx:
+    image: nginx:latest
+    volumes:
+      - $PWD/nginx-www:/usr/share/nginx/html:ro
+      - $PWD/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - 80:80
+      - 8080:8080
+      - 5000:5000
+volumes:
+  db-data:
