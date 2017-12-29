@@ -2,3 +2,6 @@
 *.pem
 .*.swp
 ~*
+*.log
+__pycache__
+config
