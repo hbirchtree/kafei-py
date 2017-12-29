@@ -30,7 +30,7 @@ except:
 
 
 def stock_response(r):
-    r.headers['X-Coffee-Variant'] = 'Kafei/0.0'
+    r.headers['X-Coffee-Variant'] = 'Kafei/0.1'
     return r
 
 
