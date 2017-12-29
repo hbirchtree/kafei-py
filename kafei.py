@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+import logging
+from logging.handlers import RotatingFileHandler
 from apscheduler.schedulers.background import BackgroundScheduler as Scheduler
 from flask import Flask, jsonify, request, make_response, Response
 from os import environ as ENV
@@ -18,8 +20,6 @@ app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 # Add function for committing to database
 cron = Scheduler(daemon=True)
 cron.start()
-
-#print("-- DB credentials: postgres:%s" % ENV['DBPASS'])
 
 # Create DB connection
 try:
@@ -98,7 +98,7 @@ class Sequelizer():
         self.table_links.append((t1, t2, tu))
         return self
 
-    def gen_query(self, table, fields):
+    def gen_query(self, table: str, fields):
         q = "INSERT INTO " + table + " "
         q = q + "("
         for f in fields:
@@ -233,42 +233,15 @@ class Sequelizer():
             args = [k1, k2]
             cursor.execute(q, args)
 
-        #print(queries)
-        #print(arguments)
-
+        pass
+        
+    def serialize(self, query: str=''):
         pass
 
 
-@app.route('/reports', methods=['POST', 'PUT', 'GET'])
-def submit_report():
-    code, msg = handle_request(request)
-    
-    if code != 200:
-        return make_response(jsonify({'message': msg}), code)
 
-    print("-- Starting response")
-
-    cur = conn.cursor()
-
-    if request.method == 'GET':
-        data = []
-        cur.execute("SELECT * FROM RUN;")
-        for r in cur.fetchall():
-            data = data + [r]
-        r = make_response(jsonify({'message': 'OK',  'data': data}))
-        return stock_response(r)
-
-    #cur.execute("""
-#INSERT INTO RUN
-#(BUILD_VERSION,MEMORY, CWD, SWAPSPACE, SWAPSPACE_FREE, COMMANDLINE)
-#VALUES('1.0', 0, '', 0, 0, '') RETURNING RUN_ID;""")
-
-    key_run = ('RUN', 'RUN_ID')
-
-    if 'runtime.arguments' in request.json:
-        request.json['runtime.arguments'] = str(request.json['runtime.arguments'])
-
-    Sequelizer()\
+key_run = ('RUN', 'RUN_ID')
+sql = Sequelizer()\
       \
       .table('RUN', 'RUN_ID')\
       .field('BUILD_VERSION', 'build.version', '0.0.0')\
@@ -323,9 +296,38 @@ def submit_report():
       .link(key_run, ('COMPILER', 'COMPILER_NAME'), 'RUN_COMPILER')\
       .link(key_run, ('APPLICATION', 'APP_ID'), 'RUN_APP')\
       .link(key_run, ('PROCESSOR', 'PROC_ID'), 'RUN_PROC')\
-      .link(key_run, ('DEVICE', 'DEV_ID'), 'RUN_DEVICE')\
-      \
-      .execute(request.json, cur)
+      .link(key_run, ('DEVICE', 'DEV_ID'), 'RUN_DEVICE')
+
+
+@app.route('/reports', methods=['POST', 'PUT', 'GET'])
+def submit_report():
+    code, msg = handle_request(request)
+    
+    if code != 200:
+        return make_response(jsonify({'message': msg}), code)
+
+    print("-- Starting response")
+
+    cur = conn.cursor()
+
+    if request.method == 'GET':
+        data = []
+        cur.execute("SELECT * FROM RUN;")
+        for r in cur.fetchall():
+            data = data + [r]
+        r = make_response(jsonify({'message': 'OK',  'data': data}))
+        return stock_response(r)
+
+    #cur.execute("""
+#INSERT INTO RUN
+#(BUILD_VERSION,MEMORY, CWD, SWAPSPACE, SWAPSPACE_FREE, COMMANDLINE)
+#VALUES('1.0', 0, '', 0, 0, '') RETURNING RUN_ID;""")
+
+
+    if 'runtime.arguments' in request.json:
+        request.json['runtime.arguments'] = str(request.json['runtime.arguments'])
+
+    sql.execute(request.json, cur)
 
     #print(cur.fetchall())
 
@@ -383,6 +385,12 @@ def getenv(k):
 if __name__ == "__main__":
     #cron.add_job(database_commit, 'interval', minutes=5)
     atexit.register(lambda: cron.shutdown(wait=False))
+
+    # Add a logger
+    handler = RotatingFileHandler('app.log', maxBytes=10000, backupCount=3)
+    logging.getLogger('werkzeug').addHandler(handler)
+    logging.getLogger('__name__').addHandler(handler)
+    app.logger.addHandler(handler)
 
     KAFEI_DEBUG = False
     KAFEI_PORT = 443
