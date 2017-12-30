@@ -3,7 +3,7 @@
 import logging
 from logging.handlers import RotatingFileHandler
 from apscheduler.schedulers.background import BackgroundScheduler as Scheduler
-from flask import Flask, jsonify, request, make_response, Response
+from flask import Flask, jsonify, redirect, url_for, request, make_response, Response
 from os import environ as ENV
 import ssl
 import psycopg2
@@ -11,15 +11,20 @@ import atexit
 from typing import Tuple, Dict, List, Any
 from time import time
 from base64 import b64decode as mysteryfun
+from functools import wraps
+from os.path import dirname
+from strap import create_app, bootstrap
 
 # Flask server
-app = Flask(__name__)
-app.config.from_object(__name__)
-app.config.from_envvar('FLASKR_SETTINGS', silent=True)
+app = create_app(__name__)
 
-# Add function for committing to database
-cron = Scheduler(daemon=True)
-cron.start()
+KAFEI_SIGNATURE = 'Kafei/'
+
+try:
+    with open('%s/VERSION' % dirname(__file__)) as f:
+        KAFEI_SIGNATURE = KAFEI_SIGNATURE + f.read().decode()
+except FileNotFoundError:
+    KAFEI_SIGNATURE = KAFEI_SIGNATURE + '0.1'
 
 # Create DB connection
 try:
@@ -29,28 +34,9 @@ except:
     exit(1)
 
 
-def stock_response(r):
-    r.headers['X-Coffee-Variant'] = 'Kafei/0.1'
-    return r
-
-
 def database_commit():
     print("-- Committing to database")
     conn.commit()
-
-
-def validate_token(token):
-    if not token.startswith('token '):
-        return False
-    return True
-
-
-def handle_request(req):
-    if not req.is_json:
-        return (406, 'Invalid Content-Type')
-    if not validate_token(req.headers['X-Coffee-Token']):
-        return (401, 'Authorization procedure failed')
-    return (200, 'OK')
 
 
 class timestamp():
@@ -200,15 +186,25 @@ class Sequelizer():
         
         # Execute basic queries, get the keys
         for q in queries:
-            query = queries[q]
-            arg = arguments[q]
-            for a in arg:
-                cursor.execute(query, a)
-            key = cursor.fetchall()
-            if len(key) == 0:
-                cursor.execute(bqueries[q], arg[0])
-                key = cursor.fetchall()
-            links[q] = key[0][0]
+            try:
+                query = queries[q]
+                arg = arguments[q]
+                for a in arg:
+                    cursor.execute(query, a)
+                try:
+                    key = cursor.fetchall()
+                except psycopg2.ProgrammingError:
+                    # In this case, the query actually returned nothing
+                    # This is amended with the next sequence.
+                    key = []
+                if len(key) == 0:
+                    cursor.execute(bqueries[q], arg[0])
+                    key = cursor.fetchall()
+                links[q] = key[0][0]
+            except Exception as e:
+                print("QUERY: '%s' with" % queries[q], arguments[q])
+                raise e
+                
 
 
         for table in self.field_mappings:
@@ -232,12 +228,38 @@ class Sequelizer():
             k2 = links[link[1][0]]
             args = [k1, k2]
             cursor.execute(q, args)
-
-        pass
         
-    def serialize(self, query: str=''):
-        pass
-
+    def serialize(self, cursor, table, page=0, count=20):
+        for e in self.field_mappings.keys():
+            if e.upper() == table.upper():
+                break
+        else:
+            return []
+    
+        fields_ = [f[0] for f in self.field_mappings[table.upper()]]
+        fields = ""
+        for f in fields_:
+            fields = fields + "," + f
+        
+        fields = fields[1:]
+    
+        cursor.execute('SELECT %s FROM %s OFFSET %s LIMIT %s'\
+             % (fields, table, page * count, count))
+        
+        data = cursor.fetchall()
+        
+        if not data:
+            return []
+        
+        proc = []
+        
+        for i, row in enumerate(data):
+            row_data = {}
+            proc.append(row_data)
+            for field, field_data in zip(fields_, row):
+                row_data[field.lower()] = field_data
+        
+        return proc
 
 
 key_run = ('RUN', 'RUN_ID')
@@ -288,56 +310,191 @@ sql = Sequelizer()\
       .field('DEV_TYPE', 'device.type', -1)\
       .field('DEV_DPI', 'device.dpi', -1.0)\
       \
-      .table('DEVICE_VERSION', ('DEV_ID', 'DEV_VERSION'))\
+      .table('RUN_DEVICE', ('DEV_ID', 'DEV_VERSION'))\
       .keyfield('DEV_ID', 'DEVICE')\
       .field('DEV_VERSION', 'device.version', 'Unknown')\
       \
       .link(key_run, ('ARCHITECTURE', 'ARCH_NAME'), 'RUN_ARCH')\
       .link(key_run, ('COMPILER', 'COMPILER_NAME'), 'RUN_COMPILER')\
       .link(key_run, ('APPLICATION', 'APP_ID'), 'RUN_APP')\
-      .link(key_run, ('PROCESSOR', 'PROC_ID'), 'RUN_PROC')\
-      .link(key_run, ('DEVICE', 'DEV_ID'), 'RUN_DEVICE')
+      .link(key_run, ('PROCESSOR', 'PROC_ID'), 'RUN_PROC')
 
 
-@app.route('/reports', methods=['POST', 'PUT', 'GET'])
-def submit_report():
-    code, msg = handle_request(request)
+def rest_database(f):
+    @wraps(f)
+    def db(*args, **kwargs):
+        ret = f(conn.cursor(), *args, **kwargs)
+        database_commit()
+        return ret
+    return db
+
+def sign_response(r):
+    r.headers['X-Coffee-Variant'] = KAFEI_SIGNATURE
+
+def rest_validate(f):
+    def handle_request(req):
+        if not req.is_json:
+            return (406, 'Invalid Content-Type')
+        return (200, None)
+        
+    @wraps(f)
+    def valid(*args, **kwargs):
+        code, msg = handle_request(request)
+        if code != 200:
+            return None, msg, code
+        
+        return f(*args, **kwargs)
+    return valid
+
+def rest_authenticate(f):
+    def validate_token(token):
+        if not token.startswith('token'):
+            return False
+        return True
+    def handle_auth(req):
+        if 'X-Coffee-Token' not in req.headers:
+            return (401, 'Authorization procedure failed')
+        if not validate_token(req.headers['X-Coffee-Token']):
+            return (401, 'Authorization procedure failed')
+        return (200, None)
+    @wraps(f)
+    def auth(*args, **kwargs):
+        code, msg = handle_auth(request)
+        if code != 200:
+            return None, msg, code
+        
+        return f(*args, **kwargs)
+    return auth
+
+def headers_update(r, h):
+    for k in h:
+        r.headers[k] = h[k]
+
+def rate_limit_n(req):
+    limit = 10000
+    rem = limit
+    rlim = {'X-RateLimit-Limit': limit, 'X-RateLimit-Remaining': rem}
     
-    if code != 200:
-        return make_response(jsonify({'message': msg}), code)
+    if rem <= 0:
+        msg = jsonify({'message': 'Too many requests', 'data': None})
+        r = make_response(msg)
+        headers_update(r, rlim)
+        return r, rlim
+    return None, rlim
 
-    print("-- Starting response")
+def rate_limit(f):
+    @wraps(f)
+    def rlim(*args, **kwargs):
+        r, rlim = rate_limit_n(request)
+        if r is not None:
+            return r
+        
+        return f(rlim, *args, **kwargs)
+    return rlim
+        
+def rest_wrap_json(f):
+    @wraps(f)
+    def db_wrap(*args, **kwargs):
+        r, rlim = rate_limit_n(request)
+       
+        if r is not None:
+            return r
+    
+        data, msg, code = f(*args, **kwargs)
+ 
+        r = make_response(jsonify({'message': msg, 'data': data}), code)
+        sign_response(r)
+        headers_update(r, rlim)
+        return r
+    return db_wrap
 
-    cur = conn.cursor()
 
-    if request.method == 'GET':
-        data = []
-        cur.execute("SELECT * FROM RUN;")
-        for r in cur.fetchall():
-            data = data + [r]
-        r = make_response(jsonify({'message': 'OK',  'data': data}))
-        return stock_response(r)
-
-    #cur.execute("""
-#INSERT INTO RUN
-#(BUILD_VERSION,MEMORY, CWD, SWAPSPACE, SWAPSPACE_FREE, COMMANDLINE)
-#VALUES('1.0', 0, '', 0, 0, '') RETURNING RUN_ID;""")
-
-
+@app.route('/v1/reports', methods=['POST', 'PUT'])
+@rest_wrap_json
+@rest_database
+@rest_validate
+@rest_authenticate
+def submit_report(cur):
     if 'runtime.arguments' in request.json:
         request.json['runtime.arguments'] = str(request.json['runtime.arguments'])
 
     sql.execute(request.json, cur)
+    return None, 'OK', 200
 
-    #print(cur.fetchall())
 
-    database_commit()
+@app.route('/v1/runs', methods=['GET'])
+@rest_wrap_json
+@rest_database
+@rest_validate
+def get_runs(cur):
+    data = sql.serialize(cur, 'run', 0, 50)
+    return data, 'OK', 200
     
-    print("-- Finished request")
 
-    r = make_response(jsonify({'message': msg}))
-    return stock_response(r)
+@app.route('/v1/devices', methods=['GET'])
+@rest_wrap_json
+@rest_database
+@rest_validate
+def get_devices(cur):
+    data = sql.serialize(cur, 'device', 0, 50)
+    return data, 'OK', 200
 
+
+stat_queries = {
+    'os':
+'''
+select dev_version, count(run_id) from run_device
+    group by dev_version 
+''',
+    'arch':
+'''
+select count(run_id), arch_name from run_arch
+    group by arch_name
+    order by count desc
+''',
+    'version':
+'''
+select count(run_id), system, build_version from run
+    group by system, build_version
+    order by count desc
+'''
+}
+
+@app.route('/v1/statistics/<stat>', methods=['GET'])
+@rest_wrap_json
+@rest_database
+@rest_validate
+def get_statistics(cur, stat):
+
+    try:
+        query = stat_queries[stat]
+    except KeyError:
+        query = stat_queries['version']
+    
+    cur.execute('select row_to_json(t) from (%s limit 20) t;' % query)
+    data = cur.fetchall()
+    return data, 'OK', 200
+
+
+@app.route('/v1/statistics/', methods=['GET'])
+@rest_wrap_json
+@rest_validate
+def get_statistics_variants():
+    return list(stat_queries.keys()), 'OK', 200
+
+
+"""
+@app.route('/v1/statistics', methods=['GET'])
+def get_stats_redir():
+    return redirect(url_for('get_statistics', stat='any'))
+
+
+@app.route('/reports', methods=['POST', 'PUT'])
+def submit_report_redir():
+    return redirect(url_for('submit_report'))
+"""
+
+@app.route("/api", methods=['GET'])
 @app.route("/", methods=['GET'])
 def puzzle():
     return """
@@ -375,30 +532,5 @@ def puzzle():
 </html>
 """
 
-
-def getenv(k):
-    try:
-        return ENV[k]
-    except KeyError:
-        return ''
-
-if __name__ == "__main__":
-    #cron.add_job(database_commit, 'interval', minutes=5)
-    atexit.register(lambda: cron.shutdown(wait=False))
-
-    # Add a logger
-    handler = RotatingFileHandler('app.log', maxBytes=10000, backupCount=3)
-    logging.getLogger('werkzeug').addHandler(handler)
-    logging.getLogger('__name__').addHandler(handler)
-    app.logger.addHandler(handler)
-
-    KAFEI_DEBUG = False
-    KAFEI_PORT = 443
-    if getenv('KAFEI_DEBUG') == '1':
-        KAFEI_DEBUG = True
-    if len(getenv('KAFEI_PORT')) > 0:
-        KAFEI_PORT = int(ENV['KAFEI_PORT'])
-    app.run(host="0.0.0.0", threaded=True,
-            port=KAFEI_PORT, debug=KAFEI_DEBUG,
-            ssl_context=(ENV['SSL_CERT'], ENV['SSL_KEY']))
+bootstrap(app, 'KAFEI')
 
