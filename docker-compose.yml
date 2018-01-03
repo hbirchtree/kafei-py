@@ -5,12 +5,34 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
       - $PWD/schemas:/docker-entrypoint-initdb.d
+    networks:
+      - postgres
+  kafei:
+    build:
+      context: ./pyapp_container
+      dockerfile: Dockerfile.pyapp
+    image: pyapp:v1
+    environment:
+      - PYAPP_NAME=kafei.py
+      - PYAPP_INTERPRETER=python3
+      - KAFEI_CERT=/workdir/certificates/live/coffee.birchtrees.me/fullchain.pem
+      - KAFEI_KEY=/workdir/certificates/live/coffee.birchtrees.me/privkey.pem
+      - KAFEI_PORT=420
+      - KAFEI_DEBUG=1
+      - DBHOST=db
+      - DBPASS=$DBPASS
+    volumes:
+      - $PWD:/pyapp:ro
+      - /etc/letsencrypt:/workdir/certificates:ro
+    networks:
+      - postgres
     ports:
-      - 5432:5432
+      - 420:420
   nginx:
     image: nginx:latest
     volumes:
-      - $PWD/nginx-www:/usr/share/nginx/html:ro
+      - $PWD/coffeecutie/multi_build/build/docs/docs/html:/usr/share/nginx/html/docs:ro
+      - $PWD/nginx-www:/usr/share/nginx/html/other:ro
       - $PWD/nginx-conf:/etc/nginx:ro
       - $PWD/nginx-logs:/var/logs/nginx:rw
       - /etc/letsencrypt:/etc/ssl
@@ -20,5 +42,9 @@ services:
       - 8080:8080
       - 5000:5000
     network_mode: host
+
 volumes:
   db-data:
+
+networks:
+  postgres:

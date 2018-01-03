@@ -14,6 +14,7 @@ from base64 import b64decode as mysteryfun
 from functools import wraps
 from os.path import dirname
 from strap import create_app, bootstrap
+from math import ceil
 
 # Flask server
 app = create_app(__name__)
@@ -28,7 +29,7 @@ except FileNotFoundError:
 
 # Create DB connection
 try:
-    conn = psycopg2.connect("dbname='postgres' user='postgres' host='localhost' password='%s'" % ENV['DBPASS'])
+    conn = psycopg2.connect("dbname='postgres' user='postgres' host='%s' password='%s'" % (ENV['DBHOST'], ENV['DBPASS']))
 except:
     print("Unable to connect to database")
     exit(1)
@@ -229,7 +230,7 @@ class Sequelizer():
             args = [k1, k2]
             cursor.execute(q, args)
         
-    def serialize(self, cursor, table, page=0, count=20):
+    def serialize(self, cursor, table, page=0, count=20, extra_opts=''):
         for e in self.field_mappings.keys():
             if e.upper() == table.upper():
                 break
@@ -243,13 +244,17 @@ class Sequelizer():
         
         fields = fields[1:]
     
-        cursor.execute('SELECT %s FROM %s OFFSET %s LIMIT %s'\
-             % (fields, table, page * count, count))
+        cursor.execute('SELECT %s FROM %s %s OFFSET %s LIMIT %s'\
+             % (fields, table, extra_opts, page * count, count))
         
         data = cursor.fetchall()
-        
+       
+        cursor.execute('SELECT count(*) FROM %s' % table)
+        num_pages = ceil(cursor.fetchone()[0] / count)
+        print(num_pages)
+ 
         if not data:
-            return []
+            return [], num_pages
         
         proc = []
         
@@ -259,7 +264,7 @@ class Sequelizer():
             for field, field_data in zip(fields_, row):
                 row_data[field.lower()] = field_data
         
-        return proc
+        return proc, num_pages
 
 
 key_run = ('RUN', 'RUN_ID')
@@ -341,7 +346,7 @@ def rest_validate(f):
     def valid(*args, **kwargs):
         code, msg = handle_request(request)
         if code != 200:
-            return None, msg, code
+            return None, msg, code, None
         
         return f(*args, **kwargs)
     return valid
@@ -369,6 +374,27 @@ def rest_authenticate(f):
 def headers_update(r, h):
     for k in h:
         r.headers[k] = h[k]
+
+def pagination_n(page=0, count=50, max_count=100):
+    page = 0
+    count = 50
+
+    try:
+        page = int(request.args.get('page'))
+    except TypeError:
+        pass
+    try:
+        count = int(request.args.get('count'))
+    except TypeError:
+        pass
+
+    count = max(min(count, max_count), 1)
+    page = min(0, page)
+
+    return count, page
+
+def pagination_data(page=0, pages=0):
+    return {'X-Pages-Remaining': pages - page, 'X-Pages-Total': pages}
 
 def rate_limit_n(req):
     limit = 10000
@@ -400,9 +426,11 @@ def rest_wrap_json(f):
         if r is not None:
             return r
     
-        data, msg, code = f(*args, **kwargs)
+        data, msg, code, extra = f(*args, **kwargs)
  
         r = make_response(jsonify({'message': msg, 'data': data}), code)
+        if extra is not None:
+            headers_update(r, extra)
         sign_response(r)
         headers_update(r, rlim)
         return r
@@ -419,7 +447,7 @@ def submit_report(cur):
         request.json['runtime.arguments'] = str(request.json['runtime.arguments'])
 
     sql.execute(request.json, cur)
-    return None, 'OK', 200
+    return None, 'OK', 200, None
 
 
 @app.route('/v1/runs', methods=['GET'])
@@ -427,8 +455,9 @@ def submit_report(cur):
 @rest_database
 @rest_validate
 def get_runs(cur):
-    data = sql.serialize(cur, 'run', 0, 50)
-    return data, 'OK', 200
+    count, page = pagination_n(0, 50, 100)
+    data, pages = sql.serialize(cur, 'run', page, count, 'order by submit_time desc')
+    return data, 'OK', 200, pagination_data(page, pages)
     
 
 @app.route('/v1/devices', methods=['GET'])
@@ -436,9 +465,21 @@ def get_runs(cur):
 @rest_database
 @rest_validate
 def get_devices(cur):
-    data = sql.serialize(cur, 'device', 0, 50)
-    return data, 'OK', 200
+    count, page = pagination_n(0, 50, 100)
+    data, pages = sql.serialize(cur, 'device', page, count)
+    return data, 'OK', 200, pagination_data(page, pages)
 
+
+@app.route("/v1/processors", methods=['GET'])
+@rest_wrap_json
+@rest_database
+@rest_validate
+def get_processors(cur):
+    count, page = pagination_n(0, 50, 100)
+
+    cur.execute('select row_to_json(t) from (select *, array(select proc_freq from processor_freq where proc_id = processor.proc_id) as proc_freqs, array(select proc_fw from processor_fw where proc_id = processor.proc_id) proc_fws from processor limit %s offset %s) t;' % (count, count * page))
+    data = cur.fetchall()
+    return data, 'OK', 200, None
 
 stat_queries = {
     'os':
@@ -473,14 +514,14 @@ def get_statistics(cur, stat):
     
     cur.execute('select row_to_json(t) from (%s limit 20) t;' % query)
     data = cur.fetchall()
-    return data, 'OK', 200
+    return data, 'OK', 200, None
 
 
 @app.route('/v1/statistics/', methods=['GET'])
 @rest_wrap_json
 @rest_validate
 def get_statistics_variants():
-    return list(stat_queries.keys()), 'OK', 200
+    return list(stat_queries.keys()), 'OK', 200, None
 
 
 """
@@ -498,7 +539,12 @@ def submit_report_redir():
 @app.route("/", methods=['GET'])
 def puzzle():
     return """
-<html>
+<html style="
+  display: flex;
+  justify-content: stretch;
+  align-items: stretch;
+  min-height: 100%;
+  ">
   <head>
     <title>There is nothing here...</title>
   </head>
@@ -508,7 +554,7 @@ def puzzle():
     justify-content: center;
     align-items: center;
     font-size: 2em;
-    margin: 0;">
+    margin: auto;">
 
     <span style="flex-grow: 1;"></span>
 
