@@ -19,27 +19,27 @@ The Kafei server is the only entrypoint to the PostgreSQL server from the outsid
 
 The following interfaces are exposed:
 
- - coffee.birchtrees.me/
-   - docs/
+ - `coffee.birchtrees.me/`
+   - `docs/`
      Coffeecutie documentation, updated with every push to master branch.
-   - hook
+   - `hook/`
      Hook for the above interface, only for GitHub to access
-   - api/
+   - `api/`
      Interface for submitting runtime reports by Coffeecutie applications
-     - v1/
-       - reports/
+     - `v1/`
+       - `reports/`
          A POST-only interface that allows submission of system information.
-       - runs/
+       - `runs/`
          A GET-only interface for all runs submitted, parameterized with `page` and `count`
-       - devices/
+       - `devices/`
          A GET-only interface for all devices by all runs submitted
-       - processors/
+       - `processors/`
          A GET-only interface for all processors by all runs submitted
-       - statistics/
+       - `statistics/`
          A GET-only interface to various statistics collected, like architectures and etc.
-       - / and api/
+       - `/`
          Just a little jape
-   - reports/
+   - `reports/`
      Redirects to api/v1/reports
 
  - birchtrees.me
