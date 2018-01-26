@@ -20,39 +20,40 @@ def create_app(name):
 
 
 def bootstrap(app, envkey: str):
-    try:
-        opts = {
-          'DEBUG': False,
-          'PORT': 443,
-          'HOST': '0.0.0.0',
-          'CERT': '',
-          'KEY': '',
-          'PROCS': 1
-        }
+    while True:
+        try:
+            opts = {
+              'DEBUG': False,
+              'PORT': 443,
+              'HOST': '0.0.0.0',
+              'CERT': '',
+              'KEY': '',
+              'PROCS': 1
+            }
 
-        # Add a logger
-        handler = RotatingFileHandler(
-          '%s_app.log' % envkey, maxBytes=10000, backupCount=3)
-        logging.getLogger('werkzeug').addHandler(handler)
-        logging.getLogger('__name__').addHandler(handler)
-        app.logger.addHandler(handler)
+            # Add a logger
+            handler = RotatingFileHandler(
+              '%s_app.log' % envkey, maxBytes=10000, backupCount=3)
+            logging.getLogger('werkzeug').addHandler(handler)
+            logging.getLogger('__name__').addHandler(handler)
+            app.logger.addHandler(handler)
 
-        for opt in opts:
-            val = getenv('%s_%s' % (envkey, opt))
-            if val is not None:
-                if type(opts[opt]) == str:
-                    opts[opt] = val
-                elif type(opts[opt]) == int:
-                    opts[opt] = int(val)
-                elif type(opts[opt]) == float:
-                    opts[opt] = float(val)
-                elif type(opts[opt]) == bool:
-                    opts[opt] = (val == '1')
+            for opt in opts:
+                val = getenv('%s_%s' % (envkey, opt))
+                if val is not None:
+                    if type(opts[opt]) == str:
+                        opts[opt] = val
+                    elif type(opts[opt]) == int:
+                        opts[opt] = int(val)
+                    elif type(opts[opt]) == float:
+                        opts[opt] = float(val)
+                    elif type(opts[opt]) == bool:
+                        opts[opt] = (val == '1')
 
-        print(opts)
+            print(opts)
 
-        app.run(host=opts['HOST'], processes=opts['PROCS'],
-                port=opts['PORT'], debug=opts['DEBUG'],
-                ssl_context=(opts['CERT'], opts['KEY']))
-    except Exception as e:
-        print(e)
+            app.run(host=opts['HOST'], processes=opts['PROCS'],
+                    port=opts['PORT'], debug=opts['DEBUG'],
+                    ssl_context=(opts['CERT'], opts['KEY']))
+        except Exception as e:
+            print(e)

@@ -74,7 +74,7 @@ def receive():
                 for p in CREMIA_QUEUE:
                     p.wait()
                 CREMIA_QUEUE = []
-            proc = Popen(['bash', '-c', 'git pull origin %s && cd %s && NODEPLOY=1 ./quick-build.sh docs' % (CREMIA_GIT_BRANCH, CREMIA_GIT_DIR)])
+            proc = Popen(['bash', '-c', 'cd %s && git pull && NODEPLOY=1 ./quick-build.sh docs' % (CREMIA_GIT_DIR,)])
             CREMIA_QUEUE.append(proc)
     elif check_hdr(evname) == 'ping':
         pass

@@ -15,6 +15,8 @@ from functools import wraps
 from os.path import dirname
 from strap import create_app, bootstrap
 from math import ceil
+import sys
+import traceback
 
 # Flask server
 app = create_app(__name__)
@@ -72,8 +74,8 @@ class Sequelizer():
         return self
 
     def keyfield(self,
-                 field_name: str, table_ref: str):
-        f = (field_name, table_ref, '%s')
+                 field_name: str, table_ref: str, fmt: str = '%s'):
+        f = (field_name, table_ref, fmt)
         self.kfield_mappings[self.cur_table].append(f)
         return self
 
@@ -84,6 +86,15 @@ class Sequelizer():
              tu: str):
         self.table_links.append((t1, t2, tu))
         return self
+        
+    def get_fmt_opt(self, table, field):
+        fm = [f[4] for f in self.field_mappings[table] if f[0] == field]
+        if len(fm) > 0:
+            return fm[0]
+        fm = [f[2] for f in self.kfield_mappings[table] if f[0] == field]
+        if len(fm) > 0:
+            return fm[0]
+        return '%s'
 
     def gen_query(self, table: str, fields):
         q = "INSERT INTO " + table + " "
@@ -97,18 +108,17 @@ class Sequelizer():
             try:
                 q = q + f[1] + ","
             except IndexError:
-                q = q +  "%s,"
+                q = q + self.get_fmt_opt(table, f[0]) + ","
         if len(fields) > 0:
             q = q[:-1]
         if type(self.primary_keys[table]) == str:
             q = q + ")"\
                 " ON CONFLICT DO NOTHING" +\
                 " RETURNING " +\
-                self.primary_keys[table] +\
-                ";"
+                self.primary_keys[table]
         else:
             q = q + ")"\
-                " ON CONFLICT DO NOTHING;"
+                " ON CONFLICT DO NOTHING"
         return q
 
     def gen_query_n(self, table, fields, i):
@@ -147,21 +157,140 @@ class Sequelizer():
         arguments[table] = self.pivot_arguments(
             table, self.field_mappings[table],
             data, [])
+            
+    def gen_declaration(self, table_name: str, var_name: str, typename: str, default_val: str):
+        return '\n    _%s %s := %s;' % (var_name, typename, default_val)
+        
+    def add_foreign_key(self, links, foreign_key_str: str, table, field, keyval):
+        if (table, field) in links:
+            return foreign_key_str
+        links[(table, field)] = '_%s' % field
+        return foreign_key_str + self.gen_declaration(table, field, 'INTEGER', keyval)
+        
+    def get_key_query(self, table, field):
+        query = "SELECT %s FROM %s"\
+          % (self.primary_keys[table], table)
+        i = 0
+        last = len(self.field_mappings[table])
+        for f in self.field_mappings[table]:
+            if 'TIME' in f[0]:
+                i += 1
+                continue
+            fq = query
+            if i == 0:
+                fq = fq + " WHERE"
+            elif i != last:
+                fq = fq + " AND"
+            fq = fq + " %s = " % f[0]
+            fq = fq + "%s"
+            query = fq
+            i = i+1
+        return query + ' LIMIT 1'
 
     def execute(self, data, cursor):
-        # Insert queries
-        queries = {}
-        arguments = {}
-        # Key queries, because single-query solutions were nasty AF
-        bqueries = {}
+        links = {}
+        megaq = ''
+        megarg = []
+        
+        megakeys = ''
+        
+        megaq = '''\
+CREATE OR REPLACE FUNCTION public.insertion() 
+    RETURNS INTEGER AS
+$func$
+DECLARE%s
+BEGIN%s
+    RETURN 0;
+END
+$func$ LANGUAGE plpgsql;
+SELECT public.insertion();'''
+        # First, make variable declarations for keys
+        foreign_keys = ''
+        inserts = ''
+        # This is for referenced key fields
+        for table in self.kfield_mappings:
+            for f in self.kfield_mappings[table]:
+                flen = len(foreign_keys)
+                foreign_keys = self.add_foreign_key(
+                    links, foreign_keys,
+                    f[1], f[0], 'NULL')
+                
+                if f[1] == 'RUN':
+                    continue
+                
+                q = self.get_key_query(f[1], f[0])
+                fields = [f for f in self.field_mappings[f[1]] if 'TIME' not in f[0]]
+                arg = self.pivot_arguments(f[1], fields, data, [])[0]
+                if len(foreign_keys) != flen:
+                    megarg = megarg + arg
+                    inserts = inserts + '\n    %s INTO %s;' % (q, '_' + f[0])
+        # This is for table links
+        for table in self.table_links:
+            for f in table[:2]:
+                flen = len(foreign_keys)
+                foreign_keys = self.add_foreign_key(
+                    links, foreign_keys,
+                    f[0], f[1], 'NULL')
+                
+                if f[0] == 'RUN':
+                    continue
+                
+                q = self.get_key_query(f[0], f[1])
+                fields = [f for f in self.field_mappings[f[0]] if 'TIME' not in f[0]]
+                arg = self.pivot_arguments(f[0], fields, data, [])[0]
+                if len(foreign_keys) != flen:
+                    megarg = megarg + arg
+                    inserts = inserts + '\n    %s INTO %s;' % (q, '_' + f[1])
+    
+        inserts = inserts + '\n\n'
+    
+        # Now create basic insertion queries, no keys
+        for table in self.field_mappings:
+            if len(self.kfield_mappings[table]) > 0:
+                continue
+            query = self.gen_query_n(table, self.field_mappings[table], [0, 4])
+            fkey = (table, self.primary_keys[table])
+            if fkey in links:
+                query = query + ' INTO %s' % links[fkey]
+                query = 'IF %s IS NULL THEN %s; END IF' % (links[fkey], query)
+            
+            arg_sets = self.pivot_arguments(table, self.field_mappings[table], data, [])
+            for a in arg_sets:
+                inserts = inserts + '''
+    %s;''' % (query,)
+                megarg = megarg + a
+        
+        for table in self.field_mappings:
+            if len(self.kfield_mappings[table]) == 0:
+                continue
+            query = self.gen_query_n(table,
+                    self.field_mappings[table] + self.kfield_mappings[table],
+                    [0])
+            fkey = (table, self.primary_keys[table])
+            if table in self.primary_keys and fkey in links:
+                query = query + ' INTO %s' % links[fkey]
+            
+            arg_sets = self.pivot_arguments(table, self.field_mappings[table], data, [])
+            for a in arg_sets:
+                inserts = inserts + '''
+    %s;''' % (query,)
+                megarg = megarg + a
+        
+        megaq = megaq % (foreign_keys, inserts)
+        
+        #print(megaq)
+        #print(megarg)
+        
+        cursor.execute(megaq, megarg)
 
+        '''
         for table in self.field_mappings:
             # If the table has key references, delay it
             if len(self.kfield_mappings[table]) > 0:
                 continue
             # First, generate the query strings
             q = self.gen_query_n(table, self.field_mappings[table], [0, 4])
-            queries[table] = q
+            megaq = q
 
             bqueries[table] = "SELECT %s FROM %s"\
               % (self.primary_keys[table], table)
@@ -183,32 +312,17 @@ class Sequelizer():
             
             arguments[table] = self.pivot_arguments(table, self.field_mappings[table], data, [])
 
-        links = {}
         
         # Execute basic queries, get the keys
         for q in queries:
-            try:
-                query = queries[q]
-                arg = arguments[q]
-                for a in arg:
-                    cursor.execute(query, a)
-                try:
-                    key = cursor.fetchall()
-                except psycopg2.ProgrammingError:
-                    # In this case, the query actually returned nothing
-                    # This is amended with the next sequence.
-                    key = []
-                if len(key) == 0:
-                    cursor.execute(bqueries[q], arg[0])
-                    key = cursor.fetchall()
-                links[q] = key[0][0]
-            except Exception as e:
-                print("QUERY: '%s' with" % queries[q], arguments[q])
-                raise e
-                
-
+            query = queries[q]
+            arg = arguments[q]
+            megaq = megaq + '; ' + query
+            megarg.append(arg)
+            links[q] = key[0][0]
 
         for table in self.field_mappings:
+            pass
             if len(self.kfield_mappings[table]) == 0:
                 continue
             fields = self.field_mappings[table]
@@ -223,12 +337,17 @@ class Sequelizer():
 
         # Create queries for relational tables
         for link in self.table_links:
+            pass
             q = 'INSERT INTO %s (%s, %s)' % (link[2], link[0][1], link[1][1])
             q = q + ' VALUES(%s,%s) ON CONFLICT DO NOTHING;'
             k1 = links[link[0][0]]
             k2 = links[link[1][0]]
             args = [k1, k2]
-            cursor.execute(q, args)
+            megaq
+
+        print(megaq)
+        '''
+       
         
     def serialize(self, cursor, table, page=0, count=20, extra_opts=''):
         for e in self.field_mappings.keys():
@@ -280,9 +399,9 @@ sql = Sequelizer()\
       .field('SUBMIT_TIME', None, time(), timestamp, 'to_timestamp(%s)')\
       .field('COMMANDLINE', 'runtime.arguments')\
       \
-      .table('ARCHITECTURE', 'ARCH_NAME')\
+      .table('ARCHITECTURE', None)\
       .field('ARCH_NAME', 'build.architecture', 'Unknown')\
-      .table('COMPILER', 'COMPILER_NAME')\
+      .table('COMPILER', None)\
       .field('COMPILER_NAME', 'build.compiler', 'Unknown 0.0')\
       \
       .table('APPLICATION', 'APP_ID')\
@@ -300,11 +419,11 @@ sql = Sequelizer()\
       .field('PROC_CORES', 'processor.cores', -1, int)\
       \
       .table('PROCESSOR_FREQ', ('PROC_FREQ', 'PROC_ID'))\
-      .keyfield('PROC_ID', 'PROCESSOR')\
+      .keyfield('PROC_ID', 'PROCESSOR', '_PROC_ID')\
       .field('PROC_FREQ', 'processor.frequency', -1.0, float)\
       \
       .table('PROCESSOR_FW', ('PROC_FW', 'PROC_ID'))\
-      .keyfield('PROC_ID', 'PROCESSOR')\
+      .keyfield('PROC_ID', 'PROCESSOR', '_PROC_ID')\
       .field('PROC_FW', 'processor.firmware', '0x0')\
       \
       .table('DEVICE', 'DEV_ID')\
@@ -316,11 +435,18 @@ sql = Sequelizer()\
       .field('DEV_DPI', 'device.dpi', -1.0)\
       \
       .table('RUN_DEVICE', ('DEV_ID', 'DEV_VERSION'))\
-      .keyfield('DEV_ID', 'DEVICE')\
+      .keyfield('DEV_ID', 'DEVICE', '_DEV_ID')\
+      .keyfield('RUN_ID', 'RUN', '_RUN_ID')\
       .field('DEV_VERSION', 'device.version', 'Unknown')\
       \
-      .link(key_run, ('ARCHITECTURE', 'ARCH_NAME'), 'RUN_ARCH')\
-      .link(key_run, ('COMPILER', 'COMPILER_NAME'), 'RUN_COMPILER')\
+      .table('RUN_ARCH', None)\
+      .field('ARCH_NAME', 'build.architecture', 'Unknown')\
+      .keyfield('RUN_ID', 'RUN', '_RUN_ID')\
+      \
+      .table('RUN_COMPILER', None)\
+      .field('COMPILER_NAME', 'build.compiler')\
+      .keyfield('RUN_ID', 'RUN', '_RUN_ID')\
+      \
       .link(key_run, ('APPLICATION', 'APP_ID'), 'RUN_APP')\
       .link(key_run, ('PROCESSOR', 'PROC_ID'), 'RUN_PROC')
 
@@ -338,7 +464,7 @@ def sign_response(r):
 
 def rest_validate(f):
     def handle_request(req):
-        if not req.is_json:
+        if not req.is_json and req.headers['Accept'] != 'application/json' and req.headers['Accept'] != '*/*':
             return (406, 'Invalid Content-Type')
         return (200, None)
         
@@ -366,7 +492,7 @@ def rest_authenticate(f):
     def auth(*args, **kwargs):
         code, msg = handle_auth(request)
         if code != 200:
-            return None, msg, code
+            return None, msg, code, None
         
         return f(*args, **kwargs)
     return auth
@@ -446,7 +572,11 @@ def submit_report(cur):
     if 'runtime.arguments' in request.json:
         request.json['runtime.arguments'] = str(request.json['runtime.arguments'])
 
-    sql.execute(request.json, cur)
+    try:
+        sql.execute(request.json, cur)
+    except Exception as e:
+        traceback.print_exc()
+    sys.stdout.flush()
     return None, 'OK', 200, None
 
 
@@ -480,6 +610,26 @@ def get_processors(cur):
     cur.execute('select row_to_json(t) from (select *, array(select proc_freq from processor_freq where proc_id = processor.proc_id) as proc_freqs, array(select proc_fw from processor_fw where proc_id = processor.proc_id) proc_fws from processor limit %s offset %s) t;' % (count, count * page))
     data = cur.fetchall()
     return data, 'OK', 200, None
+
+@app.route("/v1/", methods=['GET'])
+@rest_wrap_json
+@rest_validate
+def get_api():
+    return {
+      "endpoints": {
+        "reports": ['POST'],
+        "runs": ['GET'],
+        "devices": ['GET'],
+        "processors": ['GET'],
+        "statistics": {
+          ".": ['GET'],
+          "os": ['GET'],
+          "arch": ['GET'],
+          "version": ['GET']
+        }
+      },
+      "schemas": {}
+    }, 'OK', 200, None
 
 stat_queries = {
     'os':
@@ -554,7 +704,9 @@ def puzzle():
     justify-content: center;
     align-items: center;
     font-size: 2em;
-    margin: auto;">
+    margin: auto;
+    background-color: #202020;
+    color: white;">
 
     <span style="flex-grow: 1;"></span>
 
@@ -578,5 +730,9 @@ def puzzle():
 </html>
 """
 
-bootstrap(app, 'KAFEI')
+while True:
+    try:
+        bootstrap(app, 'KAFEI')
+    except Exception:
+        pass
 
