@@ -277,7 +277,7 @@ main#statistics table {
     color: white;
     background-color: rgba(255, 255, 255, 0.1);
     box-shadow: inset 0 0 5px black;
-    overflow-y: scroll;
+    overflow-x: overlay;
     white-space: nowrap;
 }
 
@@ -307,9 +307,10 @@ main#statistics table {
     </p>
 
     <div class="last-update">
-        <a class="avatar-bubble">
+        <a class="avatar-bubble" id="home-author-bubble" href="">
             <img class="avatar-bubble" id="release-author" src="">
         </a>
+        <!--
         <a class="update-listing" id="release-link" href="">
             <strong>latest release</strong>
             <span>
@@ -319,6 +320,11 @@ main#statistics table {
             <span>
                 <em id="release-notes">(Nothing here)</em>
             </span>
+        </a>
+        -->
+        <a class="update-listing" id="author-link" href="">
+            <span><strong>username</strong> <span id="author-username"></span></span>
+            <em id="author-notes"></em>
         </a>
     </div>
 
@@ -344,19 +350,10 @@ main#statistics table {
     <h1>Examples</h1>
 
     <p>
-        These are C++ examples compiled to Emscripten.
-        All the packing happens automatically in CMake scripts,
-        no extra work, same process as creating iOS applications,
-        Snap packages, AppImages and Universal Windows Platform containers.
+        Example applications may be downloaded from the GitHub releases page.
+        It serves as a distribution page for the library and binary part of the package.
+        In the below-linked release page, you will find the examples inside `<em>binaries_*</em>` archives.
     </p>
-
-    <!--
-    <div class="last-update">
-        <a class="avatar-bubble" href="">
-            <img class="avatar-bubble" src="">
-        </a>
-    </div>
-    -->
 
     <div class="last-update">
         <a class="avatar-bubble" id="avatar-link" href="">
@@ -389,6 +386,18 @@ main#statistics table {
     <h2>
         In-browser examples
     </h2>
+
+    <p>
+        These are C++ examples compiled to Emscripten.
+        All the packing happens automatically in CMake scripts,
+        no extra work, same process as creating iOS applications,
+        Snap packages, AppImages and Universal Windows Platform containers.
+    </p>
+
+    <p>
+        These are simple code tests, and don't have much in the way of interactivity.
+    </p>
+
     <ul>
         <li><a href="/examples/EnvTest.bundle/EnvTest.html">Environment information</a>: Prints storage paths in the virtual filesystem provided by Emscripten</li>
         <li><a href="/examples/GLeamBaseTest_RHI.bundle/GLeamBaseTest_RHI.html">Basic OpenGL</a>: A basic OpenGL scene with a faulty emulation of 2D texture arrays</li>
@@ -500,6 +509,7 @@ function loadHome()
     {
         let release = JSON.parse(this.responseText);
 
+        /*
         let relDate = $('#release-date');
         let relTag = $('#release-tag');
         let relMsg = $('#release-notes');
@@ -507,10 +517,23 @@ function loadHome()
         let relLink = $('#release-link');
 
         relMsg.innerHTML = shortenText(release.release.body, 100, 2).replace('\n', '<br>');
+        relLink.href = release.release.author.html_url;
         relTag.innerText = release.release.tag_name;
         relDate.innerText = new Date(release.release.published_at).toUTCString();
-        relAuthor.src = release.release.author.avatar_url;
         relLink.href = release.release.html_url;
+        */
+
+        let relTag = $('#author-username');
+        let relMsg = $('#author-notes');
+        let relAuthor = $('#release-author');
+        let relLink = $('#author-link');
+        let bubLink = $('#home-author-bubble');
+
+        relTag.innerHTML = release.release.author.login;
+        relMsg.innerHTML = 'All my code is on GitHub!';
+        relAuthor.src = release.release.author.avatar_url;
+        relLink.href = release.release.author.html_url;
+        bubLink.href = relLink.href;
     });
 
     releaseInfo.open('GET', '/github/.latest-release.json');
