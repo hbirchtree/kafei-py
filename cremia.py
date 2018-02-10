@@ -10,6 +10,9 @@ from sys import stderr
 from multiprocessing import Process
 from json import dumps
 
+import hmac
+import hashlib
+
 app = create_app(__name__)
 
 CREMIA_API_KEY = None
@@ -72,11 +75,13 @@ def bad_response():
     return make_response(jsonify({'message': 'Get out'}), 417)
 
 def handle_push(branch_name):
+    global CREMIA_QUEUE
+
     if len(CREMIA_QUEUE) > 0:
         for p in CREMIA_QUEUE:
             p.wait()
-        CREMIA_QUEUE = []
-        proc = Popen(['bash', '-c', '''
+    CREMIA_QUEUE = []
+    proc = Popen(['bash', '-c', '''
 cd %s && git checkout %s &&
 git pull &&
 mkdir -p multi_build/build/docs/docs/%s &&
@@ -84,7 +89,7 @@ rm -f multi_build/build/docs/docs/html &&
 ln -sf %s multi_build/build/docs/docs/html &&
 chown -R anju:anju multi_build/build/docs &&
 NODEPLOY=1 ./quick-build.sh docs''' % (CREMIA_GIT_DIR, branch_name, branch_name, branch_name)])
-        CREMIA_QUEUE.append(proc)
+    CREMIA_QUEUE.append(proc)
 
 def bash_run(cmd):
     proc = Popen(['bash', '-c', cmd], stdout=PIPE)
@@ -139,12 +144,23 @@ def handle_new_build(commit, status_info):
 
 @app.route('/', methods=['POST'])
 def receive():
-    global CREMIA_QUEUE
     global RECENT_RELEASE_HANDLER
 
     # Deter outsiders
     if not check_hdr('User-Agent').startswith('GitHub-Hookshot'):
         print('Some loser tried: UA=%s, Event=%s' % (check_hdr('User-Agent'), check_hdr(evname)), file=stderr)
+        return bad_response()
+
+    # We verify that the SHA1 digest matches with the payload
+    try:
+        mac = hmac.new(CREMIA_API_KEY.encode(), msg=request.data, digestmod='sha1')
+
+        digest = mac.hexdigest()
+        gh_mod, gh_digest = check_hdr('X-Hub-Signature').split('=')
+
+        if not hmac.compare_digest(str(digest), str(gh_digest)):
+            return bad_response()
+    except:
         return bad_response()
 
     # Process events
