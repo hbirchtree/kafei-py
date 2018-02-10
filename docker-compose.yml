@@ -31,7 +31,7 @@ services:
   nginx:
     image: nginx:latest
     volumes:
-      - $PWD/coffeecutie/multi_build/build/docs/docs/html:/usr/share/nginx/html/docs:ro
+      - $PWD/coffeecutie/multi_build/build/docs/docs:/usr/share/nginx/html/docs:ro
       - $PWD/nginx-www:/usr/share/nginx/html/other:ro
       - $PWD/nginx-conf:/etc/nginx:ro
       - $PWD/nginx-logs:/var/logs/nginx:rw

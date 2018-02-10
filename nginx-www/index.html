@@ -1,0 +1,494 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+
+    <title>Coffee and stuff</title>
+
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0'/>
+    <meta name="theme-color" content="royalblue" />
+
+
+<style>
+
+* {
+    -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+    font-family: 'Ubuntu Mono', monospace;
+}
+
+ul {
+    margin: 0;
+}
+
+html, body {
+    display: flex;
+    justify-content: stretch;
+    align-items: stretch;
+    min-height: 100%;
+}
+
+body {
+    flex-direction: column;
+    color: darkgray;
+    background-color: #151530;
+}
+
+html, body, header, header > div {
+    width: 100%;
+}
+
+body, h1 {
+    margin: 0;
+}
+
+a {
+    color: white;
+}
+
+a:hover {
+    color: darkgray;
+}
+
+a:active {
+    color: gray;
+}
+
+h1 {
+    color: #353535;
+    font-size: 1.3em;
+}
+
+header {
+    height: 5em;
+    background-color: royalblue;
+    position: fixed;
+    top: 0;
+}
+
+header, header div, h1{
+    display:flex;
+    align-items: stretch;
+}
+
+header > div {
+    justify-content: space-between;
+}
+
+header {
+    justify-content: center;
+}
+header a + a {
+    margin-left: 0.5em;
+}
+header a {
+    padding: 0.3em;
+    cursor: pointer;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    transition: background-color ease-in-out 0.2s;
+}
+.menu-item:active {
+    background-color: midnightblue;
+    cursor: pointer;
+}
+.menu-item:active > h1 {
+    color: white;
+    margin: 0.1em;
+    flex-grow: 1;
+}
+
+header div, main {
+    max-width: 50em;
+}
+
+main {
+    display: flex;
+    align-self: stretch;
+    flex-direction: column;
+    flex-grow: 1;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 5.2em;
+    width: 100%;
+}
+
+footer {
+    display: flex;
+    justify-content: center;
+    padding: 0.2em;
+}
+
+.avatar-bubble {
+    background-color: black;
+    border-radius: 100px;
+    overflow: hidden;
+    width: 5em;
+    height: 5em;
+    min-width: 5em;
+    min-height: 5em;
+    transition: filter linear 0.2s;
+}
+
+@keyframes avatar-opacity {
+    0% {
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes avatar-placeholder-opacity {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes avatar-placeholder-flip {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+img.avatar-bubble {
+    position: relative;
+    z-index: 2;
+    animation: avatar-opacity ease-out 1s;
+}
+
+.avatar-pre-cnt {
+    position: relative;
+    width: 5rem;
+    height: 5rem;
+    min-width: 5rem;
+    min-height: 5rem;
+    animation: avatar-placeholder-opacity ease-out 1s;
+    opacity: 0;
+}
+
+.avatar-pre {
+    position: absolute;
+    font-size: 8em;
+    top: -0.985em;
+    left: 0.01em;
+    z-index: 1;
+    padding-bottom: 0.14em;
+    animation: avatar-placeholder-flip linear 1s infinite;
+}
+
+.avatar-bubble:active {
+    filter: /*blur(2px)*/ brightness(0.5);
+}
+
+.last-update {
+    position: relative;
+    background-color: midnightblue;
+    border-radius: 100px;
+    overflow: hidden;
+    display: flex;
+    align-items: stretch;
+    margin: 0 0.2em;
+    filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.4));
+}
+
+.update-listing {
+    display: flex;
+    flex-direction: column;
+    margin-left: 1em;
+    flex-grow: 1;
+    justify-content: flex-start;
+    margin: 0.5em 1em;
+    text-decoration: none;
+    overflow: hidden;
+}
+
+#commit-message {
+    white-space: nowrap;
+}
+
+#commit-shade {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 7em;
+    height: 5em;
+    background: linear-gradient(to right, rgba(25,25,112,0.0), rgba(25, 25, 112, 0.8), rgba(25, 25, 112, 1.0));
+    border-radius: 100px;
+}
+
+</style>
+
+</head>
+<body>
+
+<header>
+    <div>
+        <a onclick="loadHome()" class="menu-item"><h1>Coffeecutie stuff</h1></a>
+        <div>
+            <a onclick="loadStatistics()" class="menu-item">Statistics</a>
+            <a onclick="loadExamples()" class="menu-item">Examples</a>
+            <a href="https://github.com/hbirchtree/coffeecutie" class="menu-item">GitHub</a>
+        </div>
+    </div>
+</header>
+
+<main id="home">
+    <p>
+        Welcome to the official-like page for stuff related to Coffeecutie.
+    </p>
+
+    <div class="last-update">
+        <a class="avatar-bubble" href="">
+            <img class="avatar-bubble" id="release-author" src="">
+        </a>
+        <a class="update-listing" href="">
+            <strong>latest release</strong>
+            <span>
+                <strong>released</strong> <span id="release-date">(unknown)</span>
+                <strong>tag</strong> <span id="release-tag">(unknown)</span>
+            </span>
+            <span>
+                <em id="release-notes">(Nothing here)</em>
+            </span>
+        </a>
+    </div>
+
+    <div>
+    <h2>Running examples</h2>
+    For examples of the project in action, check out the `<a onclick="loadExamples()">Examples</a>` section.
+    </div>
+
+    <div id="docs-linking">
+    <h2>Documentation</h2>
+    <p>
+        Have a look at the generated documentation for the project. The documentation is automatically updated per commit.
+    </p>
+    <ul>
+        <li><a href="docs/master">Stable branch (master)</a></li>
+	    <li><a href="docs/testing">Testing branch</a></li>
+    </ul>
+    </div>
+</main>
+
+<main id="examples" style="display: none;">
+
+    <p>
+        These are C++ examples compiled to Emscripten.
+        All the packing happens automatically in CMake scripts,
+        no extra work, same process as creating iOS applications,
+        Snap packages, AppImages and Universal Windows Platform containers.
+    </p>
+
+    <!--
+    <div class="last-update">
+        <a class="avatar-bubble" href="">
+            <img class="avatar-bubble" src="">
+        </a>
+    </div>
+    -->
+
+    <div class="last-update">
+        <a class="avatar-bubble" id="avatar-link" href="">
+            <img class="avatar-bubble" id="avatar-img" src="">
+            <span class="avatar-pre-cnt">
+                <span class="avatar-pre">&#9863;</span>
+            </span>
+        </a>
+        <a class="update-listing" href="">
+            <span>
+                <strong>updated</strong> <span id="commit-date">(unknown)</span>,
+                <strong>commit</strong> <span id="commit-sha">(unknown)</span>
+            </span>
+            <em id="commit-message"></em>
+        </a>
+        <div id="commit-shade"> </div>
+    </div>
+
+    <h2>
+        Downloadable examples
+    </h2>
+
+    <p>
+        GitHub release with downloadable binaries: <br>
+        <ul>
+            <li><a id="release_link" href="">Release page</a></li>
+        </ul>
+    </p>
+
+    <h2>
+        In-browser examples
+    </h2>
+    <ul>
+        <li><a href="/examples/EnvTest.bundle/EnvTest.html">Environment information</a>: Prints storage paths in the virtual filesystem provided by Emscripten</li>
+        <li><a href="/examples/GLeamBaseTest_RHI.bundle/GLeamBaseTest_RHI.html">Basic OpenGL</a>: A basic OpenGL scene with a faulty emulation of 2D texture arrays</li>
+    </ul>
+</main>
+
+<main id="statistics">
+</main>
+
+<footer>
+
+    source: <a href="https://github.com/hbirchtree">github/hbirchtree</a>
+
+</footer>
+
+<script>
+
+function $(q)
+{
+    return document.querySelector(q);
+}
+
+var current = document.getElementById("home");
+
+function loadElement(name)
+{
+    let el = document.getElementById(name);
+    current.style['display'] = 'none';
+    el.style['display'] = 'flex';
+    current = el;
+    return current;
+}
+
+function shortenText(msg, max_len, max_lines)
+{
+    if(msg.length > max_len)
+    {
+        msg = msg.substring(0, max_len - 3) + '...';
+    }
+    var numNewLines = 0;
+    var msgIdx = 0;
+    while((msgIdx = msg.indexOf('\n', msgIdx + 1)) >= 0)
+    {
+        numNewLines ++;
+
+        if(numNewLines > (max_lines - 1))
+        {
+            msg = msg.substring(0, msgIdx);
+            break;
+        }
+    }
+
+    return msg;
+}
+
+function loadHome()
+{
+    loadElement("home");
+
+    let releaseInfo = new XMLHttpRequest();
+
+    releaseInfo.addEventListener('load', function()
+    {
+        let release = JSON.parse(this.responseText);
+
+        let relDate = $('#release-date');
+        let relTag = $('#release-tag');
+        let relMsg = $('#release-notes');
+        let relAuthor = $('#release-author');
+
+        relMsg.innerHTML = shortenText(release.release.body, 100, 2).replace('\n', '<br>');
+        relTag.innerText = release.release.tag_name;
+        relDate.innerText = new Date(release.release.published_at).toUTCString();
+        relAuthor.src = release.release.author.avatar_url;
+    });
+
+    releaseInfo.open('GET', '/github/.latest-release.json');
+    releaseInfo.send();
+}
+
+function loadExamples()
+{
+    loadElement("examples");
+
+    let updateInfo = new XMLHttpRequest();
+
+    updateInfo.addEventListener('load', function(){
+        let info_base = JSON.parse(this.responseText);
+        let info = info_base.commit;
+
+        let avatImg = $('#avatar-img');
+        /* We get a perfectly fitting avatar image from GitHub,
+         *  avoiding the 512x512 image */
+        avatImg.src = info.committer.avatar_url + "&s=" + avatImg.width;
+
+        let commitLink = $('.update-listing');
+        let authorLink = $('#avatar-link');
+        let commitMsg = $('#commit-message');
+        let commitDate = $('#commit-date');
+        let commitSha = $('#commit-sha');
+
+        /* For commit message, restrict it to
+         *  fit into the commit message box */
+        var msg = info.commit.message;
+        msg = shortenText(msg, 200, 3);
+        msg = msg.replace(/\n/g, '<br>');
+        commitMsg.innerHTML = msg;
+
+        authorLink.href = info.committer.html_url;
+        commitLink.href = info.html_url;
+        /* SHA is massif. Shorten it. */
+        commitSha.innerText = shortenText(info.sha, 23, 2);
+        /* Format the date to look a bit more appealing */
+        commitDate.innerText = new Date(info_base.updated_at).toUTCString();
+    });
+
+
+    let releaseInfo = new XMLHttpRequest();
+
+    releaseInfo.addEventListener('load', function() {
+        let releaseLink = $('#release_link');
+
+        let release = JSON.parse(this.responseText);
+
+        releaseLink.href = release.release.html_url;
+    });
+
+    updateInfo.open('GET', '/examples/.update-info.json');
+    updateInfo.send();
+    releaseInfo.open('GET', '/github/.latest-release.json');
+    releaseInfo.send();
+}
+
+function loadStatistics()
+{
+    let statPage = new XMLHttpRequest();
+
+    statPage.addEventListener('load', function()
+    {
+        console.log('HELLO');
+    });
+
+    statPage.open('GET', '/statistics.html');
+    statPage.send();
+}
+
+loadHome();
+
+</script>
+
+<link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,400i,700&amp;subset=latin-ext" rel="stylesheet">
+
+</body>
+</html>
