@@ -62,6 +62,8 @@ header {
     background-color: royalblue;
     position: fixed;
     top: 0;
+    z-index: 1000;
+    filter: drop-shadow(0 0 10px black);
 }
 
 header, header div, h1{
@@ -119,6 +121,10 @@ footer {
     display: flex;
     justify-content: center;
     padding: 0.2em;
+    background-color: midnightblue;
+    filter: drop-shadow(0 0 10px black);
+
+    margin-top: 5em;
 }
 
 .avatar-bubble {
@@ -236,13 +242,33 @@ img.avatar-bubble {
     border-radius: 100px;
 }
 
+main#statistics {
+    flex-wrap: wrap;
+    align-items: stretch;
+}
+
+main#statistics > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+    align-items: stretch;
+    margin: 0.2em 0;
+    padding: 0.2em 0.2em;
+    position: relative;
+}
+
+main#statistics table {
+    width: 100%;
+    text-align: left;
+}
+
 </style>
 
 </head>
 <body>
 
 <header>
-    <div>
+    <div id="navbar">
         <a onclick="loadHome()" class="menu-item"><h1>Coffeecutie stuff</h1></a>
         <div>
             <a onclick="loadStatistics()" class="menu-item">Statistics</a>
@@ -344,7 +370,32 @@ img.avatar-bubble {
     </ul>
 </main>
 
-<main id="statistics">
+<main id="statistics" style="display: none;">
+
+    <div>
+        <h2>Operating system versions</h2>
+        <canvas id="os-ver-stats-view"></canvas>
+    </div>
+
+    <div>
+        <h2>Architectures</h2>
+        <canvas id="arch-stats-view"></canvas>
+    </div>
+
+    <div style="flex-grow: 1;">
+        <h2>Processors used</h2>
+        <table>
+            <thead>
+                <th>Manufacturer</th>
+                <th>Model</th>
+                <th>Cores</th>
+                <th>Threads</th>
+            </thead>
+            <tbody id="processors-view">
+
+            </tbody>
+        </table>
+    </div>
 </main>
 
 <footer>
@@ -471,17 +522,75 @@ function loadExamples()
     releaseInfo.send();
 }
 
-function loadStatistics()
+function createStat(query, canvasId, nameField, chartType)
 {
-    let statPage = new XMLHttpRequest();
+    let statDoc = new XMLHttpRequest();
 
-    statPage.addEventListener('load', function()
+    statDoc.addEventListener('load', function()
     {
-        console.log('HELLO');
+        let data = JSON.parse(this.responseText).data;
+        let canvas = $('#' + canvasId);
+
+        var blabels = [];
+        var bcounts = [];
+
+        for(var i=0;i<data.length; i++)
+        {
+            var m = data[i][0];
+            blabels = blabels.concat(m[nameField]);
+            bcounts = bcounts.concat(m.count);
+        }
+
+        var ctxt = canvas.getContext('2d');
+
+        var chart = new Chart(ctxt,
+        {
+            type: chartType,
+            data: {
+                labels: blabels,
+                datasets: [{
+                    label: 'Count',
+                    data: bcounts,
+                    backgroundColor: 'rgba(50, 50, 224, 0.5)'
+                }]
+            }
+        });
     });
 
-    statPage.open('GET', '/statistics.html');
-    statPage.send();
+    statDoc.open('GET', query);
+    statDoc.send();
+}
+
+function loadStatistics()
+{
+    loadElement('statistics');
+
+    //Chart.defaults.global.defaultColor = 'rgba(255, 255, 255, 0.5)';
+
+    let procQuery = new XMLHttpRequest();
+
+    procQuery.addEventListener('load', function()
+    {
+        let data = JSON.parse(this.responseText).data;
+
+        let table = $('#processors-view');
+
+        data.map((proc) => {
+            proc = proc[0];
+
+            table.innerHTML += '<tr><td>' + proc.proc_manufacturer + '</td>' +
+                '<td>' + proc.proc_name + '</td>' +
+                '<td>' + proc.proc_cores + '</td>' +
+                '<td>' + proc.proc_threads + '</td>' +
+                '</tr>';
+        });
+    });
+
+    procQuery.open('GET', '/api/v1/processors');
+    procQuery.send();
+
+    createStat('/api/v1/statistics/os', 'os-ver-stats-view', 'dev_version', 'doughnut');
+    createStat('/api/v1/statistics/arch', 'arch-stats-view', 'arch_name', 'bar');
 }
 
 loadHome();
@@ -489,6 +598,8 @@ loadHome();
 </script>
 
 <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,400i,700&amp;subset=latin-ext" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
 
 </body>
 </html>
