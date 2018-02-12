@@ -669,12 +669,9 @@ let pageReferences = {
     examples: loadExamples,
 };
 
-console.log(pageReferences)
-
 window.onhashchange = function()
 {
     var hash = location.hash.replace('#', '');
-    console.log(pageReferences[hash]);
     if(location.hash.length > 0)
         pageReferences[hash]();
     else
