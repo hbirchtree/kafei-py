@@ -63,6 +63,7 @@ a:active {
 #navbar h1 {
     color: #353535;
     font-size: 1.3em;
+    transition: color ease-in-out 0.2s;
 }
 
 header {
@@ -105,9 +106,7 @@ header a {
     cursor: pointer;
 }
 .menu-item:active > h1 {
-    color: white;
-    margin: 0.1em;
-    flex-grow: 1;
+    color: white !important;
 }
 
 header div, main {
@@ -292,16 +291,16 @@ main#statistics table {
 
 <header>
     <div id="navbar">
-        <a onclick="loadHome()" class="menu-item"><h1>Coffeecutie stuff</h1></a>
+        <a onclick="location.hash = 'home'" class="menu-item"><h1>Coffeecutie stuff</h1></a>
         <div>
-            <a onclick="loadStatistics()" class="menu-item">Statistics</a>
-            <a onclick="loadExamples()" class="menu-item">Examples</a>
+            <a onclick="location.hash = 'stats'" class="menu-item">Statistics</a>
+            <a onclick="location.hash = 'examples'" class="menu-item">Examples</a>
             <a href="https://github.com/hbirchtree/coffeecutie" class="menu-item">GitHub</a>
         </div>
     </div>
 </header>
 
-<main id="home">
+<main id="home" style="display: none;">
     <p>
         Welcome to the official-like page for stuff related to Coffeecutie.
     </p>
@@ -422,7 +421,7 @@ main#statistics table {
     </p>
 
     <div class="code-block">
-        adb shell start -n &lt;com.package/.Activity&gt; --es COFFEE_REPORT_URL &lt;report-server&gt;
+        adb shell am start -n &lt;com.package/.Activity&gt; --es COFFEE_REPORT_URL &lt;report-server&gt;
     </div>
 
     <div>
@@ -664,7 +663,26 @@ function loadStatistics()
     createStat('/api/v1/statistics/arch', 'arch-stats-view', 'arch_name', 'bar');
 }
 
-loadHome();
+let pageReferences = {
+    home: loadHome,
+    stats: loadStatistics,
+    examples: loadExamples,
+};
+
+console.log(pageReferences)
+
+window.onhashchange = function()
+{
+    var hash = location.hash.replace('#', '');
+    console.log(pageReferences[hash]);
+    if(location.hash.length > 0)
+        pageReferences[hash]();
+    else
+        loadHome();
+
+};
+
+window.onhashchange();
 
 </script>
 
