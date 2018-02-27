@@ -141,29 +141,8 @@ def handle_new_build(commit, status_info):
     print('-- Example update process finished')
 
 
-
-@app.route('/', methods=['POST'])
-def receive():
+def process_coffeecutie(evname):
     global RECENT_RELEASE_HANDLER
-
-    # Deter outsiders
-    if not check_hdr('User-Agent').startswith('GitHub-Hookshot'):
-        print('Some loser tried: UA=%s, Event=%s' % (check_hdr('User-Agent'), check_hdr(evname)), file=stderr)
-        return bad_response()
-
-    # We verify that the SHA1 digest matches with the payload
-    try:
-        mac = hmac.new(CREMIA_API_KEY.encode(), msg=request.data, digestmod='sha1')
-
-        digest = mac.hexdigest()
-        gh_mod, gh_digest = check_hdr('X-Hub-Signature').split('=')
-
-        if not hmac.compare_digest(str(digest), str(gh_digest)):
-            return bad_response()
-    except:
-        return bad_response()
-
-    # Process events
     if check_hdr(evname) == 'push' and request.is_json and 'ref' in request.json:
         branch_name = git_eval(request.json['ref'])
         if branch_name is not None:
@@ -186,9 +165,50 @@ def receive():
             f.write(dumps(request.json))
     elif check_hdr(evname) == 'ping':
         pass
+        
+
+def process_sips(evname):
+    if check_hdr(evname) == 'push':
+        bash_run('cd blog && git pull && hugo')
+
+
+REPOSITORY_MAPPING = {
+    'hbirchtree/coffeecutie': process_coffeecutie,
+    'hbirchtree/coffee-sips': process_sips
+}
+
+
+@app.route('/', methods=['POST'])
+def receive():
+
+    # Deter outsiders
+    if not check_hdr('User-Agent').startswith('GitHub-Hookshot'):
+        print('Some loser tried: UA=%s, Event=%s' % (check_hdr('User-Agent'), check_hdr(evname)), file=stderr)
+        return bad_response()
+
+    # We verify that the SHA1 digest matches with the payload
+    try:
+        mac = hmac.new(CREMIA_API_KEY.encode(), msg=request.data, digestmod='sha1')
+
+        digest = mac.hexdigest()
+        gh_mod, gh_digest = check_hdr('X-Hub-Signature').split('=')
+
+        if not hmac.compare_digest(str(digest), str(gh_digest)):
+            print('-- digest failed', file=stderr)
+            return bad_response()
+    except:
+        print('-- hmac failed', file=stderr)
+        return bad_response()
+
+    # Process events
+    if check_hdr(evname) != 'ping':
+        if not request.is_json or 'repository' not in request.json:
+            print('-- data error', file=stderr)
+            return bad_response()
+        if request.json['repository']['full_name'] in REPOSITORY_MAPPING:
+            REPOSITORY_MAPPING[request.json['repository']['full_name']](evname)
 
     print('-- User agent: %s' % check_hdr('User-Agent'), file=stderr)
-
 
     return make_response(jsonify({'message': 'OK'}), 200)
    

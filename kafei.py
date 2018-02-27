@@ -634,14 +634,20 @@ def get_api():
 stat_queries = {
     'os':
 '''
-select dev_version, count(run_id) from run_device
-    group by dev_version 
+select system, count(system) from run
+    group by system 
 ''',
     'arch':
 '''
 select count(run_id), arch_name from run_arch
     group by arch_name
     order by count desc
+''',
+    'os-arch':
+'''
+select system, arch_name, count(arch_name) from run
+    join run_arch on run.run_id = run_arch.run_id
+    group by arch_name, system
 ''',
     'version':
 '''
