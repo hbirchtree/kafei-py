@@ -144,6 +144,8 @@ main {
     margin-right: auto;
     margin-top: 5.2em;
     width: 100%;
+    margin-bottom: 5em;
+    animation: avatar-opacity 0.4s linear;
 }
 
 footer {
@@ -153,7 +155,6 @@ footer {
     background-color: midnightblue;
     filter: drop-shadow(0 0 10px black);
     align-items: center;
-    margin-top: 5em;
 }
 footer img {
     height: 100%;
@@ -342,6 +343,16 @@ main#statistics table {
     animation: color-rotation linear 3s infinite;
 }
 
+#building {
+    max-width: 100%;
+    margin-bottom: 0;
+}
+
+#building iframe {
+    border: none;
+    flex-grow: 1;
+}
+
 </style>
 
 </head>
@@ -356,6 +367,7 @@ main#statistics table {
         <div>
             <a onclick="location.hash = 'stats'" class="menu-item">Statistics</a>
             <a onclick="location.hash = 'examples'" class="menu-item">Examples</a>
+            <a onclick="location.hash = 'building'" class="menu-item">Building</a>
             <a href="https://github.com/hbirchtree/coffeecutie" class="menu-item"><img src="GitHub-Mark-120px-plus.png" alt="GitHub"></a>
         </div>
     </div>
@@ -520,6 +532,11 @@ main#statistics table {
     </div>
 </main>
 
+    
+<main id="building" style="display: none;">
+    <iframe src="https://blog.birchtrees.me/readme"></iframe>
+</main>
+
 <footer>
 
     source:<a href="https://github.com/hbirchtree/kafei-py"><img src="GitHub-Mark-120px-plus.png" alt="GitHub"></a>
@@ -548,6 +565,13 @@ function loadElement(name)
     el.style['display'] = 'flex';
     current = el;
     return current;
+}
+
+function loadElementPreload(name)
+{
+    return function() {
+        return loadElement(name);
+    };
 }
 
 function shortenText(msg, max_len, max_lines)
@@ -753,6 +777,7 @@ let pageReferences = {
     home: loadHome,
     stats: loadStatistics,
     examples: loadExamples,
+    building: loadElementPreload('building')
 };
 
 if(window.mobilecheck())
