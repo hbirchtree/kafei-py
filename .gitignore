@@ -1,3 +1,4 @@
+# General badness
 *_py
 *.pem
 .*.swp
@@ -5,3 +6,15 @@
 *.log
 __pycache__
 config
+
+# Log files
+*.log.*
+
+# Secrets
+CREMIA_key.txt
+
+# Generated/downloaded content
+coffeecutie
+.latest*
+nginx-www/emscripten*
+nginx-www/blog
