@@ -27,6 +27,7 @@ adduser kafei \
 
 # Add user to `docker` group
 usermod -a -G docker -G sudo kafei
+echo "kafei:*" | chpasswd -e
 
 # Clone repository and start containers
 su -c 'if [ ! $(grep .local ~/.bashrc) ]; then echo \'PATH=$PATH:~/.local/bin\' >> ~/.bashrc; fi'
