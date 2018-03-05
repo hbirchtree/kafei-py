@@ -348,7 +348,12 @@ main#statistics table {
     margin-bottom: 0;
 }
 
-#building iframe {
+#exframe {
+    max-width: 100%;
+    margin-bottom: 0;
+}
+
+iframe {
     border: none;
     flex-grow: 1;
 }
@@ -402,7 +407,7 @@ main#statistics table {
 
     <div>
     <h2>Running examples</h2>
-    For examples of the project in action, check out the `<a onclick="loadExamples()">Examples</a>` section.
+    For examples of the project in action, check out the `<a onclick="location.hash = 'examples'">Examples</a>` section.
     </div>
 
     <div id="docs-linking">
@@ -471,8 +476,8 @@ main#statistics table {
     </p>
 
     <ul>
-        <li><a href="/examples/EnvTest.bundle/EnvTest.html">Environment information</a>: Prints storage paths in the virtual filesystem provided by Emscripten</li>
-        <li><a href="/examples/GLeamBaseTest_RHI.bundle/GLeamBaseTest_RHI.html">Basic OpenGL</a>: A basic OpenGL scene with a faulty emulation of 2D texture arrays</li>
+        <li><a onclick="showExample('EnvTest')">Environment information</a>: Prints storage paths in the virtual filesystem provided by Emscripten</li>
+        <li><a onclick="showExample('GLeamBaseTest_RHI')">Basic OpenGL</a>: A basic OpenGL scene with a faulty emulation of 2D texture arrays</li>
     </ul>
 </main>
 
@@ -537,6 +542,10 @@ main#statistics table {
     <iframe src="https://blog.birchtrees.me/readme"></iframe>
 </main>
 
+<main id="exframe" style="display: none;">
+    <iframe id="exiframe" src=""></iframe>
+</main>
+
 <footer>
 
     source:<a href="https://github.com/hbirchtree/kafei-py"><img src="GitHub-Mark-120px-plus.png" alt="GitHub"></a>
@@ -564,6 +573,12 @@ function loadElement(name)
     current.style['display'] = 'none';
     el.style['display'] = 'flex';
     current = el;
+
+    if(name != 'exframe' && location.search != '')
+    {
+        location.search = '';
+    }
+
     return current;
 }
 
@@ -773,11 +788,58 @@ function loadStatistics()
     //createStat('/api/v1/statistics/os-arch', 'os-arch-correlation-view', 'system', 'radar');
 }
 
+function loadSingleExample(example)
+{
+    return function()
+    {
+        loadElement('exframe');
+
+        var element = $('#exiframe');
+       
+        element.onload = function() {
+            let body = $('body');
+            let otherBody = element.contentDocument.getElementsByTagName('body')[0];
+
+            let bodyStyle = window.getComputedStyle(body);
+            otherBody.style['background-color'] = bodyStyle['background-color'];
+        };
+
+        element.src = '/examples/'
+            + example + '.bundle/'
+            + example + '.html';
+
+    };
+}
+
+function getArg(query, arg)
+{
+    query = query.substr(1, query.length + 1);
+
+    var i = query.indexOf(arg);
+    var nextI = query.indexOf('&');
+    if(nextI == -1)
+        nextI = query.length;
+    if(i >= 0)
+        return query.substr(query.indexOf('=') + 1);
+}
+
+function loadSingleExamplePage()
+{
+    var example = getArg(location.search, 'sample');
+    loadSingleExample(example)();
+}
+
+function showExample(name)
+{
+    location = '/?sample=' + name + '#exframe';
+}
+
 let pageReferences = {
     home: loadHome,
     stats: loadStatistics,
     examples: loadExamples,
-    building: loadElementPreload('building')
+    building: loadElementPreload('building'),
+    exframe: loadSingleExamplePage
 };
 
 if(window.mobilecheck())
