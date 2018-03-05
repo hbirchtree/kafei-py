@@ -26,7 +26,7 @@ adduser kafei \
     --gecos ""
 
 # Add user to `docker` group
-usermod -a -G docker kafei
+usermod -a -G docker -G sudo kafei
 
 # Clone repository and start containers
 su -c 'if [ ! $(grep .local ~/.bashrc) ]; then echo \'PATH=$PATH:~/.local/bin\' >> ~/.bashrc; fi'
