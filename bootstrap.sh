@@ -32,8 +32,10 @@ usermod -a -G docker kafei
 su -c 'if [ ! $(grep .local ~/.bashrc) ]; then echo \'PATH=$PATH:~/.local/bin\' >> ~/.bashrc; fi'
 su -c 'cd ~ && git clone https://github.com/hbirchtree/kafei-py.git && cd kafei-py && pip3 install -r requirements.txt' kafei
 
-# Get certificates
-bash /home/kafei/kafei-py/get-certs.sh
+# The steps below here cannot be done automatically
 
-# Start servers
-su -c 'cd ~/kafei-py && docker-compose up -d' kafei
+# Get certificates and start the servers
+#
+#   bash /home/kafei/kafei-py/get-certs.sh
+#   su -c 'cd ~/kafei-py && docker-compose up -d' kafei
+#
