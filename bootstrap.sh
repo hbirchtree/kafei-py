@@ -9,7 +9,8 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 
 apt update
-apt install docker-ce
+apt install docker.io
+apt install docker-compose
 
 # Create Kafei contained user
 adduser \
@@ -21,3 +22,5 @@ adduser \
 # Add user to `docker` group
 usermod -a -G docker kafei
 
+su -c 'cd ~ && git clone https://github.com/hbirchtree/kafei-py.git' kafei
+#su -c 'docker-compose ' kafei
