@@ -7,6 +7,31 @@ services:
       - $PWD/schemas:/docker-entrypoint-initdb.d
     networks:
       - postgres
+  cremia:
+    build:
+      context: ./pyapp_container
+      dockerfile: Dockerfile.pyapp
+    image:
+      pyapp:v1
+    environment:
+      - PYAPP_NAME=cremia.py
+      - PYAPP_INTERPRETER=python3
+      - CREMIA_CERT=/workdir/certificates/live/coffee.birchtrees.me/fullchain.pem
+      - CREMIA_KEY=/workdir/certificates/live/coffee.birchtrees.me/privkey.pem
+      - CREMIA_PORT=421
+      - CREMIA_DEBUG=1
+      - CREMIA_GIT_DIR=/workdir/coffeecutie
+      - CREMIA_GIT_BRANCH=master
+      - CREMIA_PROCS=1
+      - GITHUB_TOKEN=$GITHUB_TOKEN
+    ports:
+      - 421:421
+    volumes:
+      - $PWD:/pyapp:ro
+      - cremia-data:/workdir:rw
+      - /etc/letsencrypt:/workdir/certificates:ro
+      - $PWD/coffeecutie:/workdir/coffeecutie:rw
+      - $PWD/nginx-www:/workdir/nginx-www:rw
   kafei:
     build:
       context: ./pyapp_container
@@ -45,6 +70,7 @@ services:
 
 volumes:
   db-data:
+  cremia-data:
 
 networks:
   postgres:

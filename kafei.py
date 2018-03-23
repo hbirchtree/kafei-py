@@ -54,6 +54,7 @@ class Sequelizer():
         self.cur_table = None
         self.field_mappings = {}
         self.kfield_mappings = {}
+        self.blobs = {}
         self.primary_keys = {}
         self.table_links = []
         pass
@@ -61,6 +62,7 @@ class Sequelizer():
     def table(self, table_name: str, prim_key: str):
         self.field_mappings[table_name] = []
         self.kfield_mappings[table_name] = []
+        self.blobs[table_name] = []
         self.primary_keys[table_name] = prim_key
         self.cur_table = table_name
         return self
@@ -77,6 +79,10 @@ class Sequelizer():
                  field_name: str, table_ref: str, fmt: str = '%s'):
         f = (field_name, table_ref, fmt)
         self.kfield_mappings[self.cur_table].append(f)
+        return self
+
+    def blobfield(self, field_name: str):
+        self.blobs[self.cur_table].append(field_name)
         return self
 
     # t1 = tuple(str, str)
@@ -263,6 +269,8 @@ SELECT public.insertion();'''
         for table in self.field_mappings:
             if len(self.kfield_mappings[table]) == 0:
                 continue
+            if len(self.blobs[table]) > 0:
+                continue
             query = self.gen_query_n(table,
                     self.field_mappings[table] + self.kfield_mappings[table],
                     [0])
@@ -283,71 +291,6 @@ SELECT public.insertion();'''
         
         cursor.execute(megaq, megarg)
 
-        '''
-        for table in self.field_mappings:
-            # If the table has key references, delay it
-            if len(self.kfield_mappings[table]) > 0:
-                continue
-            # First, generate the query strings
-            q = self.gen_query_n(table, self.field_mappings[table], [0, 4])
-            megaq = q
-
-            bqueries[table] = "SELECT %s FROM %s"\
-              % (self.primary_keys[table], table)
-            i = 0
-            last = len(self.field_mappings[table])
-            for f in self.field_mappings[table]:
-                fq = bqueries[table]
-                if i == 0:
-                    fq = fq + " WHERE"
-                elif i != last:
-                    fq = fq + " AND"
-                fq = fq + " %s = " % f[0]
-                fq = fq + "%s"
-                bqueries[table] = fq
-                i = i+1
-            bqueries[table] = bqueries[table] + ";"
-            
-            # ... then create arguments
-            
-            arguments[table] = self.pivot_arguments(table, self.field_mappings[table], data, [])
-
-        
-        # Execute basic queries, get the keys
-        for q in queries:
-            query = queries[q]
-            arg = arguments[q]
-            megaq = megaq + '; ' + query
-            megarg.append(arg)
-            links[q] = key[0][0]
-
-        for table in self.field_mappings:
-            pass
-            if len(self.kfield_mappings[table]) == 0:
-                continue
-            fields = self.field_mappings[table]
-            kfields = self.kfield_mappings[table]
-            
-            q = self.gen_query_n(table, fields + kfields, [0])
-            args = self.pivot_arguments(table, fields, data, [])
-            for f in kfields:
-                for a in args:
-                    a.append(links[f[1]])
-            cursor.executemany(q, args)
-
-        # Create queries for relational tables
-        for link in self.table_links:
-            pass
-            q = 'INSERT INTO %s (%s, %s)' % (link[2], link[0][1], link[1][1])
-            q = q + ' VALUES(%s,%s) ON CONFLICT DO NOTHING;'
-            k1 = links[link[0][0]]
-            k2 = links[link[1][0]]
-            args = [k1, k2]
-            megaq
-
-        print(megaq)
-        '''
-       
         
     def serialize(self, cursor, table, page=0, count=20, extra_opts=''):
         for e in self.field_mappings.keys():
@@ -445,6 +388,11 @@ sql = Sequelizer()\
       \
       .table('RUN_COMPILER', None)\
       .field('COMPILER_NAME', 'build.compiler')\
+      .keyfield('RUN_ID', 'RUN', '_RUN_ID')\
+      \
+      .table('RUN_REPORT', None)\
+      .field('REPORT_TYPE', '///', 'Chrome/JSON')\
+      .blobfield('REPORT')\
       .keyfield('RUN_ID', 'RUN', '_RUN_ID')\
       \
       .link(key_run, ('APPLICATION', 'APP_ID'), 'RUN_APP')\

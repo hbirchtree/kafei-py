@@ -87,11 +87,11 @@ git pull &&
 mkdir -p multi_build/build/docs/docs/%s &&
 rm -f multi_build/build/docs/docs/html &&
 ln -sf %s multi_build/build/docs/docs/html &&
-chown -R anju:anju multi_build/build/docs &&
-NODEPLOY=1 ./quick-build.sh docs''' % (CREMIA_GIT_DIR, branch_name, branch_name, branch_name)])
+BUILD_MODE=bare NODEPLOY=1 ./quick-build.sh docs''' % (CREMIA_GIT_DIR, branch_name, branch_name, branch_name)])
     CREMIA_QUEUE.append(proc)
 
 def bash_run(cmd):
+    print(cmd)
     proc = Popen(['bash', '-c', cmd], stdout=PIPE)
     proc.wait()
     return proc.stdout.read().decode()
@@ -106,11 +106,12 @@ def bash_extract(out):
 # It proceeds to upload it to the live examples page
 def handle_new_build(commit, status_info):
     if not sha_eval(commit['sha']) or not CREMIA_GHB_KEY:
+        print('-- No GitHub key', file=stderr)
         return
 
-    print('-- Starting example update')
+    print('-- Starting example update', file=stderr)
 
-    gh_py = '%s/tools/ci/github_api.py' % CREMIA_GIT_DIR
+    gh_py = 'python3 %s/tools/ci/github_api.py' % CREMIA_GIT_DIR
 
     query_base = '%s --api-token %s' % (gh_py, CREMIA_GHB_KEY)
 
@@ -120,7 +121,7 @@ def handle_new_build(commit, status_info):
 
     tag = bash_run(query)
     if len(tag) == 0:
-        print('-- Failed to look up tag')
+        print('-- Failed to look up tag', file=stderr)
         return
 
     tag = bash_extract(tag)
@@ -130,15 +131,15 @@ def handle_new_build(commit, status_info):
     asset_id = bash_extract(asset_id)
 
     if len(asset_id) == 0:
-        print('--Failed to look up asset')
+        print('--Failed to look up asset', file=stderr)
         return
 
     out = bash_run('''%s pull asset %s %s && tar xf binaries_emscripten.wasm.tar.gz && rm binaries_emscripten.wasm.tar.gz && rm -r nginx-www/emscripten.wasm && mv -f build/emscripten.wasm nginx-www/''' % (query_base, CREMIA_GIT_BLOB, asset_id))
 
-    print(out)
+    print(out, file=stderr)
     with open('nginx-www/emscripten.wasm/bin/.update-info.json', mode='w') as f:
         f.write(dumps(status_info))
-    print('-- Example update process finished')
+    print('-- Example update process finished', file=stderr)
 
 
 def process_coffeecutie(evname):
@@ -148,6 +149,8 @@ def process_coffeecutie(evname):
         if branch_name is not None:
             print('-- Branch %s pushed' % branch_name, file=stderr)
             handle_push(branch_name)
+        else:
+            print('-- Branch check failed', file=stderr)
     elif check_hdr(evname) == 'status':
         if 'state' in request.json and 'context' in request.json:
             if request.json['state'] == 'success' and\
@@ -165,6 +168,8 @@ def process_coffeecutie(evname):
             f.write(dumps(request.json))
     elif check_hdr(evname) == 'ping':
         pass
+    else:
+        print(evname, request, file=stderr)
         
 
 def process_sips(evname):
@@ -206,7 +211,10 @@ def receive():
             print('-- data error', file=stderr)
             return bad_response()
         if request.json['repository']['full_name'] in REPOSITORY_MAPPING:
+            print('-- Moving into %s' % request.json['repository']['full_name'],file=stderr)
             REPOSITORY_MAPPING[request.json['repository']['full_name']](evname)
+        else:
+            print('-- Failed to map: %s' % request.json['repository']['full_name'],file=stderr)
 
     print('-- User agent: %s' % check_hdr('User-Agent'), file=stderr)
 
