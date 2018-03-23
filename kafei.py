@@ -412,7 +412,7 @@ def rest_validate(f):
     def handle_request(req):
         if not req.is_json and len(req.data) > 0:
             return (406, 'Invalid Content-Type')
-        if 'Accept' in req.headers and req.headers['Accept'] !=  'application/json':
+        if 'Accept' in req.headers and (req.headers['Accept'] != 'application/json' and req.headers['Accept'] != '*/*'):
             return (406, 'Invalid Accept')
         return (200, None)
         
