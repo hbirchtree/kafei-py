@@ -1,0 +1,33 @@
+version: "2"
+services:
+  db:
+    image: postgres:10
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - $PWD/schemas:/docker-entrypoint-initdb.d
+    networks:
+      - postgres
+  kafei:
+    build:
+      context: ./pyapp_container
+      dockerfile: Dockerfile.pyapp
+    image: pyapp:v1
+    environment:
+      - PYAPP_NAME=kafei.py
+      - PYAPP_INTERPRETER=python3
+      - KAFEI_PORT=420
+      - KAFEI_DEBUG=1
+      - DBHOST=db
+      - DBPASS=$DBPASS
+    volumes:
+      - $PWD:/pyapp:ro
+    networks:
+      - postgres
+    ports:
+      - 420:420
+
+volumes:
+  db-data:
+
+networks:
+  postgres:

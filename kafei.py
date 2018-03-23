@@ -82,7 +82,7 @@ class Sequelizer():
         return self
 
     def blobfield(self, field_name: str):
-        self.blobs[self.cur_table].append(field_name)
+        self.blobs[self.cur_table].append((field_name,))
         return self
 
     # t1 = tuple(str, str)
@@ -269,25 +269,24 @@ SELECT public.insertion();'''
         for table in self.field_mappings:
             if len(self.kfield_mappings[table]) == 0:
                 continue
-            if len(self.blobs[table]) > 0:
-                continue
             query = self.gen_query_n(table,
-                    self.field_mappings[table] + self.kfield_mappings[table],
+                    self.field_mappings[table] + self.kfield_mappings[table] + self.blobs[table],
                     [0])
             fkey = (table, self.primary_keys[table])
             if table in self.primary_keys and fkey in links:
                 query = query + ' INTO %s' % links[fkey]
             
+            # Generate argument sets for the query
             arg_sets = self.pivot_arguments(table, self.field_mappings[table], data, [])
             for a in arg_sets:
                 inserts = inserts + '''
     %s;''' % (query,)
                 megarg = megarg + a
+            # Blob entries are always added last
+            for f in self.blobs[table]:
+                megarg = megarg + [str(data).encode('utf8')]
         
         megaq = megaq % (foreign_keys, inserts)
-        
-        #print(megaq)
-        #print(megarg)
         
         cursor.execute(megaq, megarg)
 
@@ -313,7 +312,6 @@ SELECT public.insertion();'''
        
         cursor.execute('SELECT count(*) FROM %s' % table)
         num_pages = ceil(cursor.fetchone()[0] / count)
-        print(num_pages)
  
         if not data:
             return [], num_pages
@@ -391,7 +389,7 @@ sql = Sequelizer()\
       .keyfield('RUN_ID', 'RUN', '_RUN_ID')\
       \
       .table('RUN_REPORT', None)\
-      .field('REPORT_TYPE', '///', 'Chrome/JSON')\
+      .field('REPORT_FORMAT', '///', 'Chrome/JSON')\
       .blobfield('REPORT')\
       .keyfield('RUN_ID', 'RUN', '_RUN_ID')\
       \
@@ -412,8 +410,10 @@ def sign_response(r):
 
 def rest_validate(f):
     def handle_request(req):
-        if not req.is_json and req.headers['Accept'] != 'application/json' and req.headers['Accept'] != '*/*':
+        if not req.is_json and len(req.data) > 0:
             return (406, 'Invalid Content-Type')
+        if 'Accept' in req.headers and req.headers['Accept'] !=  'application/json':
+            return (406, 'Invalid Accept')
         return (200, None)
         
     @wraps(f)
@@ -536,7 +536,41 @@ def get_runs(cur):
     count, page = pagination_n(0, 50, 100)
     data, pages = sql.serialize(cur, 'run', page, count, 'order by submit_time desc')
     return data, 'OK', 200, pagination_data(page, pages)
-    
+
+
+@app.route('/v1/blob', methods=['GET'])
+@rest_wrap_json
+@rest_database
+@rest_validate
+def get_blob_list(cur):
+    cur.execute('SELECT RUN_ID FROM RUN_REPORT;')
+    return [x[0] for x in cur.fetchall()], 'OK', 200, None
+
+
+@app.route('/v1/blob/<run_id>', methods=['GET'])
+@rest_database
+def get_blobs(cur, run_id):
+    if 'Accept' in request.headers and request.headers['Accept'] != 'application/octet-stream':
+        return make_response(str(), 406)
+
+    cur.execute('SELECT REPORT, REPORT_FORMAT FROM RUN_REPORT WHERE RUN_ID = %s;', [run_id])
+    data = None
+    data_format = None
+    try:
+        fetch = cur.fetchone()
+        data_format = str(fetch[1])
+        data = fetch[0]
+    except TypeError:
+        pass
+    if data is not None:
+        r = make_response(bytes(data), 200)
+        r.headers['X-Report-Format'] = data_format
+        r.headers['Content-Type'] = 'application/octet-stream'
+    else:
+        r = make_response(jsonify({'error': 'No such entry'}), 404)
+        r.headers['Content-Type'] = 'application/json'
+    return r
+
 
 @app.route('/v1/devices', methods=['GET'])
 @rest_wrap_json
@@ -574,7 +608,8 @@ def get_api():
           "os": ['GET'],
           "arch": ['GET'],
           "version": ['GET']
-        }
+        },
+        "blob": ['GET']
       },
       "schemas": {}
     }, 'OK', 200, None
