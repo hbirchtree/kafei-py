@@ -19,7 +19,7 @@ The Kafei server is the only entrypoint to the PostgreSQL server from the outsid
 
 The following interfaces are exposed:
 
- - `coffee.birchtrees.me/`
+ - `coffee.birchtrees.me/` An introductory page to Coffeecutie, with running code examples and links to documentation.
    - `docs/`
      Coffeecutie documentation, updated with every push to master branch.
    - `hook/`
@@ -41,6 +41,7 @@ The following interfaces are exposed:
          Just a little jape
    - `reports/`
      Redirects to api/v1/reports
-
- - birchtrees.me
-   Just a redirect
+ - `blog.birchtrees.me`
+   Nothing special, hosts a blog page built by `hugo`
+ - `birchtrees.me`
+   Just a redirect to GitHub
