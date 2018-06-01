@@ -6,6 +6,8 @@ LETSENCRYPT=$(cat $(dirname $0)/config)
 
 echo "-- Using encryption keys in $LETSENCRYPT"
 
+export CREMIA_PORT=421
+export CREMIA_DEBUG=1
 export CREMIA_GIT_BRANCH=master
 export CREMIA_GIT_DIR=$PWD/coffeecutie
 export CREMIA_CERT=$LETSENCRYPT/fullchain.pem

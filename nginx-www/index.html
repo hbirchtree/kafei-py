@@ -479,10 +479,26 @@ iframe {
     <ul>
         <li><a onclick="showExample('EnvTest')">Environment information</a>: Prints storage paths in the virtual filesystem provided by Emscripten</li>
         <li><a onclick="showExample('GLeamBaseTest_RHI')">Basic OpenGL</a>: A basic OpenGL scene with a faulty emulation of 2D texture arrays</li>
+        <li>
+            <a target="blank_" href="/examples/coffeemetro.bundle/coffeemetro.html">Advanced scene</a>: A scene built using the OpenGL abstraction and a custom content pipeline.<br>
+            The pipeline is found in `<em>hbirchtree/coffeecutie/tools/data-management/pressure-cooker</em>`. It has several tasks:
+            <ul>
+                <li>Shaders are cross-compiled into multiple variants, such as ESSL 1.00, ESSL 3.00, GLSL 3.30 and GLSL 4.60.</li>
+                <li>Textures are compressed into different formats. For now it supports DXTn/S3TC. At the same time this process generates mipmaps to avoid the runtime costs of mipmapping.</li>
+                <li>Meshes are processed into raw buffers for direct upload into OpenGL, with added compression.</li>
+                <li>Finally the files are put into a virtual filesystem for memory-mapped access, enhancing the possibilities for content streaming.</li>
+            </ul>
+            In this particular case, support for OpenGL ES 2.0 is not fully implemented, meaning there are no textures.<br>
+            <strong>NOTE:</strong> This one opens in a new tab for the sake of input focus.
+        </li>
     </ul>
 </main>
 
 <main id="statistics" style="display: none;">
+
+    <div id="stat-service-unavailable" style="display: none; background-color: #E00; margin-top: -0.2em; border-radius: 100px; text-align: center;">
+        Backend service unavailable at the moment, graphs won't be visible!
+    </div>
 
     <h1>Statistics</h1>
 
@@ -784,9 +800,13 @@ function loadStatistics()
     procQuery.open('GET', '/api/v1/processors');
     procQuery.send();
 
-    createStat('/api/v1/statistics/os', 'os-ver-stats-view', 'system', 'doughnut');
-    createStat('/api/v1/statistics/arch', 'arch-stats-view', 'arch_name', 'bar');
-    //createStat('/api/v1/statistics/os-arch', 'os-arch-correlation-view', 'system', 'radar');
+    try {
+	createStat('/api/v1/statistics/os', 'os-ver-stats-view', 'system', 'doughnut');
+	createStat('/api/v1/statistics/arch', 'arch-stats-view', 'arch_name', 'bar');
+	//createStat('/api/v1/statistics/os-arch', 'os-arch-correlation-view', 'system', 'radar');
+    } catch(e) {
+        $("#stat-service-unavailable").style.display = 'block';
+    }
 }
 
 function loadSingleExample(example)
