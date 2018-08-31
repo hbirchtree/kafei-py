@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html>
+<html manifest="app.appcache">
 <head>
 
     <title>Coffee and stuff</title>
@@ -761,46 +761,46 @@ function createStat(query, canvasId, nameField, chartType)
 
 function loadStatistics()
 {
-    loadElement('statistics');
+    try {
+        loadElement('statistics');
 
-    //Chart.defaults.global.defaultColor = 'rgba(255, 255, 255, 0.5)';
+        //Chart.defaults.global.defaultColor = 'rgba(255, 255, 255, 0.5)';
 
-    let procQuery = new XMLHttpRequest();
+        let procQuery = new XMLHttpRequest();
 
-    procQuery.addEventListener('load', function()
-    {
-        let data = JSON.parse(this.responseText).data;
+        procQuery.addEventListener('load', function()
+        {
+            let data = JSON.parse(this.responseText).data;
 
-        let table = $('#processors-view');
+            let table = $('#processors-view');
 
-        table.innerHTML = '';
+            table.innerHTML = '';
 
-        data.map((proc) => {
-            proc = proc[0];
-            
-            var minHz = Infinity;
-            var maxHz = -Infinity;
-            proc.proc_freqs.map((fq) => {
-                minHz = Math.round(Math.min(fq, minHz) * 10) / 10;
-                maxHz = Math.round(Math.max(fq, maxHz) * 10) / 10;
+            data.map((proc) => {
+                proc = proc[0];
+                
+                var minHz = Infinity;
+                var maxHz = -Infinity;
+                proc.proc_freqs.map((fq) => {
+                    minHz = Math.round(Math.min(fq, minHz) * 10) / 10;
+                    maxHz = Math.round(Math.max(fq, maxHz) * 10) / 10;
+                });
+
+                var freqString = minHz + '~' + maxHz + 'GHz';
+
+                table.innerHTML += '<tr><td>' + proc.proc_manufacturer + '</td>' +
+                    '<td>' + proc.proc_name + '</td>' +
+                    '<td>' + proc.proc_cores + '</td>' +
+                    '<td>' + proc.proc_threads + '</td>' +
+                    '<td>' + freqString + '</td>' +
+                    '</tr>';
             });
 
-            var freqString = minHz + '~' + maxHz + 'GHz';
-
-            table.innerHTML += '<tr><td>' + proc.proc_manufacturer + '</td>' +
-                '<td>' + proc.proc_name + '</td>' +
-                '<td>' + proc.proc_cores + '</td>' +
-                '<td>' + proc.proc_threads + '</td>' +
-                '<td>' + freqString + '</td>' +
-                '</tr>';
         });
 
-    });
+        procQuery.open('GET', '/api/v1/processors');
+        procQuery.send();
 
-    procQuery.open('GET', '/api/v1/processors');
-    procQuery.send();
-
-    try {
 	createStat('/api/v1/statistics/os', 'os-ver-stats-view', 'system', 'doughnut');
 	createStat('/api/v1/statistics/arch', 'arch-stats-view', 'arch_name', 'bar');
 	//createStat('/api/v1/statistics/os-arch', 'os-arch-correlation-view', 'system', 'radar');
