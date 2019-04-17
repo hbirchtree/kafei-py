@@ -1,0 +1,5 @@
+reportDatabase:
+  driverClass: org.postgresql.Driver
+  user: postgres
+  password: admin
+  url: jdbc:postgresql://25.57.48.59/postgres

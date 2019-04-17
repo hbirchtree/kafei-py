@@ -18,3 +18,11 @@ coffeecutie
 .latest*
 nginx-www/emscripten*
 nginx-www/blog
+
+*.iml
+.idea
+local.properties
+
+.DS_Store
+
+.gradle
