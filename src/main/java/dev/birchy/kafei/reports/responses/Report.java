@@ -1,9 +1,13 @@
-package dev.birchy.kafei.responses;
+package dev.birchy.kafei.reports.responses;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import org.joda.time.DateTime;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -11,6 +15,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +25,9 @@ import lombok.extern.slf4j.Slf4j;
 public class Report {
     @Data
     public static class ApplicationInfo {
+        @JsonIgnore
+        private long appId;
+
         private String name;
         private String organization;
         private int version;
@@ -34,13 +42,35 @@ public class Report {
 
     @Data
     public static class RuntimeInfo {
+        @JsonIgnore
+        private long runId;
+
+        private DateTime submitTime;
         private String system;
         private String cwd;
         private List<String> arguments;
+
+        @JsonIgnore
+        public String getCommandLine() {
+            if(arguments != null)
+                return arguments.stream().reduce("", (arg1, arg2) -> arg1 + " " + arg2);
+
+            return "";
+        }
+
+        @JsonIgnore
+        public void setCommandLine(String commandLine) {
+            arguments = Arrays.stream(commandLine.split(" "))
+                    .filter((arg) -> arg.length() > 0)
+                    .collect(Collectors.toList());
+        }
     }
 
     @Data
     public static class DeviceInfo {
+        @JsonIgnore
+        private long devId;
+
         private String name;
         private String version;
         private String motherboard;
@@ -53,6 +83,9 @@ public class Report {
 
     @Data
     public static class Processor {
+        @JsonIgnore
+        private long procId;
+
         private String manufacturer;
         private String model;
         private String firmware;
@@ -83,9 +116,11 @@ public class Report {
     private RuntimeInfo runtime;
     private DeviceInfo device;
     private Processor processor;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Memory memory;
 
-    private Map<String, String> extra;
+    private Map<String, byte[]> extra;
 
     private List<ChromeTracePoint> traceEvents;
 
@@ -123,7 +158,7 @@ public class Report {
         final JsonNode extras = obj.get("extra");
         if(extras != null)
             extras.fieldNames().forEachRemaining((key) -> {
-                out.getExtra().put(key, extras.get(key).asText());
+                out.getExtra().put(key, extras.get(key).asText().getBytes());
             });
 
         out.setApplication(parseSubObject(obj, mapper, "application", ApplicationInfo.class));

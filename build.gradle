@@ -2,7 +2,6 @@ apply plugin: 'java'
 apply plugin: 'gradle-one-jar'
 apply plugin: 'application'
 
-// Use Java 7 by default
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
@@ -11,6 +10,8 @@ targetCompatibility = '1.8'
 
 // The main class of the application
 mainClassName = 'dev.birchy.kafei.KafeiServer'
+
+sourceSets.main.resources.srcDirs = [ 'src/main/resources/' ]
 
 // Add Gradle OneJar Plugin, see https://github.com/rholder/gradle-one-jar
 buildscript {
@@ -41,7 +42,10 @@ dependencies {
     compile "io.dropwizard:dropwizard-jdbi3:$dropwizardVersion"
     compile "io.dropwizard:dropwizard-migrations:$dropwizardVersion"
     compileOnly "org.projectlombok:lombok:1.16.8"
-    compile 'postgresql:postgresql:9.0-801.jdbc3'
+
+    compile 'org.postgresql:postgresql:42.2.5'
+
+    compile 'commons-codec:commons-codec:1.12' // For HMAC-SHA1
 }
 
 // Configure the oneJar task
@@ -51,8 +55,7 @@ task oneJar(type: OneJar) {
 
 // Configure the run task to start the Dropwizard service
 run {
-    args 'server', './src/dist/config/helloworld.yml'
-
+    args 'server', 'config.yml'
 }
 
 task wrapper(type: Wrapper) {

@@ -1,1 +1,888 @@
-<b>hello world</b>
+<!DOCTYPE HTML>
+<html manifest="app.appcache">
+<head>
+
+    <title>Coffee and stuff</title>
+
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0'/>
+    <meta name="theme-color" content="royalblue" />
+    <link rel="favicon" href="favicon.png" sizes="128x128" />
+    <link rel="manifest" href="/app.manifest">
+
+    <style>
+
+* {
+    -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+    font-family: 'Ubuntu Mono', monospace;
+}
+
+html.is-desktop .mobile-mode {
+    display: none;
+}
+
+html.is-mobile .desktop-mode {
+    display: none;
+}
+
+ul {
+    margin: 0;
+}
+
+html {
+    overflow-y: scroll;
+}
+
+html, body {
+    display: flex;
+    justify-content: stretch;
+    align-items: stretch;
+    min-height: 100%;
+}
+
+body {
+    flex-direction: column;
+    color: darkgray;
+    background-color: #151530;
+}
+
+html, body, header, header > div {
+    width: 100%;
+}
+
+body, h1 {
+    margin: 0;
+}
+
+h1 {
+    margin: 1em 1em;
+}
+
+a {
+    color: white;
+}
+
+a:hover {
+    color: darkgray;
+}
+
+a:active {
+    color: gray;
+}
+
+#navbar h1 {
+    color: #353535;
+    font-size: 1.3em;
+    transition: color ease-in-out 0.2s;
+}
+
+header {
+    height: 5em;
+    background-color: royalblue;
+    position: fixed;
+    top: 0;
+    z-index: 1000;
+    filter: drop-shadow(0 0 10px black);
+    user-select: none;
+}
+
+header, header div, h1{
+    display:flex;
+    align-items: stretch;
+}
+
+header > div {
+    justify-content: spaaaaaace-between;
+}
+
+header {
+    justify-content: center;
+}
+header a + a {
+    margin-left: 0.5em;
+}
+header a {
+    padding: 0.3em;
+    cursor: pointer;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    transition: background-color ease-in-out 0.2s;
+}
+.menu-item img {
+    object-fit: contain;
+    height: 2em;
+    transition: filter ease-in-out 0.2s;
+}
+.menu-item:active img {
+    filter: invert(1);
+}
+.menu-item:active {
+    background-color: midnightblue;
+    cursor: pointer;
+}
+
+html.is-mobile .menu-item > img {
+    padding-left: 1em;
+    padding-right: 1em;
+}
+.menu-item:active > h1 {
+    color: white !important;
+}
+
+header div, main {
+    max-width: 50em;
+}
+
+main {
+    display: flex;
+    align-self: stretch;
+    flex-direction: column;
+    flex-grow: 1;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 5.2em;
+    width: 100%;
+    margin-bottom: 5em;
+    animation: avatar-opacity 0.4s linear;
+}
+
+footer {
+    display: flex;
+    justify-content: center;
+    padding: 0.2em;
+    background-color: midnightblue;
+    filter: drop-shadow(0 0 10px black);
+    align-items: center;
+}
+footer img {
+    height: 100%;
+    filter: invert(1);
+}
+footer > a:active > img {
+    filter: invert(0.5);
+    transition: filter ease-in-out 0.2s;
+}
+footer a {
+    height: 1.5em;
+}
+
+.avatar-bubble {
+    background-color: black;
+    border-radius: 100px;
+    overflow: hidden;
+    width: 5em;
+    height: 5em;
+    min-width: 5em;
+    min-height: 5em;
+    transition: filter linear 0.2s;
+}
+
+@keyframes avatar-opacity {
+    0% {
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes avatar-placeholder-opacity {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes avatar-placeholder-flip {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+img.avatar-bubble {
+    position: relative;
+    z-index: 2;
+    animation: avatar-opacity ease-out 1s;
+}
+
+.avatar-pre-cnt {
+    position: relative;
+    width: 5rem;
+    height: 5rem;
+    min-width: 5rem;
+    min-height: 5rem;
+    animation: avatar-placeholder-opacity ease-out 1s;
+    opacity: 0;
+}
+
+.avatar-pre {
+    position: absolute;
+    font-size: 8em;
+    top: -0.985em;
+    left: 0.01em;
+    z-index: 1;
+    padding-bottom: 0.14em;
+    animation: avatar-placeholder-flip linear 1s infinite;
+}
+
+.avatar-bubble:active {
+    filter: /*blur(2px)*/ brightness(0.5);
+}
+
+.last-update {
+    position: relative;
+    background-color: midnightblue;
+    border-radius: 100px;
+    overflow: hidden;
+    display: flex;
+    align-items: stretch;
+    margin: 0 0.2em;
+    filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.4));
+}
+
+.update-listing {
+    display: flex;
+    flex-direction: column;
+    margin-left: 1em;
+    flex-grow: 1;
+    justify-content: flex-start;
+    margin: 0.5em 1em;
+    text-decoration: none;
+    overflow: hidden;
+}
+
+#commit-message {
+    white-spaaaaaace: nowrap;
+}
+
+#commit-shade {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 7em;
+    height: 5em;
+    background: linear-gradient(to right, rgba(25,25,112,0.0), rgba(25, 25, 112, 0.8), rgba(25, 25, 112, 1.0));
+    border-radius: 100px;
+}
+
+main#statistics {
+    flex-wrap: wrap;
+    align-items: stretch;
+}
+
+main#statistics > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+    align-items: stretch;
+    margin: 0.2em 0;
+    padding: 0.2em 0.2em;
+    position: relative;
+}
+
+main#statistics table {
+    width: 100%;
+    text-align: left;
+}
+
+.code-block {
+    padding: 1em !important;
+    padding-left: 3em !important;
+    margin: 0.5em !important;
+    color: white;
+    background-color: rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 0 5px black;
+    overflow-x: overlay;
+    white-spaaaaaace: nowrap;
+}
+
+.text-note {
+    font-size: 0.8em;
+}
+
+@keyframes color-rotation {
+    0% {
+        filter: brightness(10.0) hue-rotate(0deg) saturate(10);
+    }
+
+    100% {
+        filter: brightness(10.0) hue-rotate(360deg) saturate(10);
+    }
+}
+
+.menu-item > #menu-github-logo {
+    filter: brightness(0.0) hue-rotate(0deg) saturate(0);
+    animation: none;
+    transition: filter 0.2s linear;
+}
+
+.menu-item:active > #menu-github-logo {
+    animation: none !important;
+    filter: brightness(10);
+}
+
+.menu-item:hover > #menu-github-logo {
+    animation: color-rotation linear 3s infinite;
+}
+
+#building {
+    max-width: 100%;
+    margin-bottom: 0;
+}
+
+#exframe {
+    max-width: 100%;
+    margin-bottom: 0;
+}
+
+iframe {
+    border: none;
+    flex-grow: 1;
+}
+
+</style>
+
+</head>
+<body>
+
+<header>
+    <div id="navbar">
+        <a onclick="location.hash = 'home'" class="menu-item">
+            <h1 class="desktop-mode">Coffeecutie stuff</h1>
+            <img class="mobile-mode" style="filter: drop-shadow(0 0 1em black);" src="favicon.png" alt="Coffeecutie">
+        </a>
+        <div>
+            <a onclick="location.hash = 'stats'" class="menu-item">Statistics</a>
+            <a onclick="location.hash = 'examples'" class="menu-item">Examples</a>
+            <a onclick="location.hash = 'building'" class="menu-item">Building</a>
+            <a href="https://github.com/hbirchtree/coffeecutie" class="menu-item"><img src="GitHub-Mark-120px-plus.png" alt="GitHub"></a>
+        </div>
+    </div>
+</header>
+
+<main id="home" style="display: none;">
+    <p>
+        Welcome to the official-like page for stuff related to Coffeecutie.
+    </p>
+
+    <div class="last-update">
+        <a class="avatar-bubble" id="home-author-bubble" href="">
+            <img class="avatar-bubble" id="release-author" src="">
+        </a>
+        <!--
+        <a class="update-listing" id="release-link" href="">
+            <strong>latest release</strong>
+            <span>
+                <strong>released</strong> <span id="release-date">(unknown)</span>
+                <strong>tag</strong> <span id="release-tag">(unknown)</span>
+            </span>
+            <span>
+                <em id="release-notes">(Nothing here)</em>
+            </span>
+        </a>
+        -->
+        <a class="update-listing" id="author-link" href="">
+            <span><strong>username</strong> <span id="author-username"></span></span>
+            <em id="author-notes"></em>
+        </a>
+    </div>
+
+    <div>
+        <h2>Running examples</h2>
+        For examples of the project in action, check out the `<a onclick="location.hash = 'examples'">Examples</a>` section.
+    </div>
+
+    <div id="docs-linking">
+        <h2>Documentation</h2>
+        <p>
+            Have a look at the generated documentation for the project. The documentation is automatically updated per commit.
+        </p>
+        <ul>
+            <li><a href="docs/master">Stable branch (master)</a></li>
+            <li><a href="docs/testing">Testing branch</a></li>
+        </ul>
+    </div>
+</main>
+
+<main id="examples" style="display: none;">
+
+    <h1>Examples</h1>
+
+    <p>
+        Example applications may be downloaded from the GitHub releases page.
+        It serves as a distribution page for the library and binary part of the package.
+        In the below-linked release page, you will find the examples inside `<em>binaries_*</em>` archives.
+    </p>
+
+    <div class="last-update">
+        <a class="avatar-bubble" id="avatar-link" href="">
+            <img class="avatar-bubble" id="avatar-img" src="">
+            <span class="avatar-pre-cnt">
+                <span class="avatar-pre">&#9863;</span>
+            </span>
+        </a>
+        <a class="update-listing" id="commit-link" href="">
+            <span>
+                <strong>updated</strong> <span id="commit-date">(unknown)</span>,
+                <strong>commit</strong> <span id="commit-sha">(unknown)</span>
+            </span>
+            <em id="commit-message"></em>
+        </a>
+        <div id="commit-shade"> </div>
+    </div>
+
+    <h2>
+        Downloadable examples
+    </h2>
+
+    <p>
+        GitHub release with downloadable binaries: <br>
+    <ul>
+        <li><a id="examples-release-link" href="">Release page</a></li>
+    </ul>
+    </p>
+
+    <h2>
+        In-browser examples
+    </h2>
+
+    <p>
+        These are C++ examples compiled to Emscripten.
+        All the packing happens automatically in CMake scripts,
+        no extra work, same process as creating iOS applications,
+        Snap packages, AppImages and Universal Windows Platform containers.
+    </p>
+
+    <p>
+        These are simple code tests, and don't have much in the way of interactivity.
+    </p>
+
+    <ul>
+        <li><a onclick="showExample('EnvTest')">Environment information</a>: Prints storage paths in the virtual filesystem provided by Emscripten</li>
+        <li><a onclick="showExample('GLeamBaseTest_RHI')">Basic OpenGL</a>: A basic OpenGL scene with a faulty emulation of 2D texture arrays</li>
+        <li>
+            <a target="blank_" href="/examples/coffeemetro.bundle/coffeemetro.html">Advanced scene</a>: A scene built using the OpenGL abstraction and a custom content pipeline.<br>
+            The pipeline is found in `<em>hbirchtree/coffeecutie/tools/data-management/pressure-cooker</em>`. It has several tasks:
+            <ul>
+                <li>Shaders are cross-compiled into multiple variants, such as ESSL 1.00, ESSL 3.00, GLSL 3.30 and GLSL 4.60.</li>
+                <li>Textures are compressed into different formats. For now it supports DXTn/S3TC. At the same time this process generates mipmaps to avoid the runtime costs of mipmapping.</li>
+                <li>Meshes are processed into raw buffers for direct upload into OpenGL, with added compression.</li>
+                <li>Finally the files are put into a virtual filesystem for memory-mapped access, enhancing the possibilities for content streaming.</li>
+            </ul>
+            In this particular case, support for OpenGL ES 2.0 is not fully implemented, meaning there are no textures.<br>
+            <strong>NOTE:</strong> This one opens in a new tab for the sake of input focus.
+        </li>
+    </ul>
+</main>
+
+<main id="statistics" style="display: none;">
+
+    <div id="stat-service-unavailable" style="display: none; background-color: #E00; margin-top: -0.2em; border-radius: 100px; text-align: center;">
+        Backend service unavailable at the moment, graphs won't be visible!
+    </div>
+
+    <h1>Statistics</h1>
+
+    <p>
+        These numbers are collected from devices sending runtime reports to `<em>coffee.birchtrees.me</em>`.
+        This is made possible by an embedded profiler in the application, activated by specifying the following environment variable:
+    </p>
+
+    <div class="code-block">
+        COFFEE_REPORT_URL=https://&lt;server&gt;/&lt;endpoint&gt; &lt;program&gt;
+    </div>
+
+    <p>
+        or on Android builds, this is done by specifying an activity intent:
+    </p>
+
+    <div class="code-block">
+        adb shell am start -n &lt;com.package/.Activity&gt; --es COFFEE_REPORT_URL &lt;report-server&gt;
+    </div>
+
+    <div>
+        <h2>Operating system versions</h2>
+        <canvas id="os-ver-stats-view"></canvas>
+    </div>
+
+    <div>
+        <h2>Architectures</h2>
+        <canvas id="arch-stats-view"></canvas>
+
+        <em class="text-note">* If you ever see `Magic`, it means the architecture could not be identified</em>
+    </div>
+    <!--
+    <div>
+        <h2>Operating system/architecture</h2>
+        <canvas id="os-arch-correlation-view"></canvas>
+    </div>
+    -->
+
+    <div style="flex-grow: 1;">
+        <h2>Processors used</h2>
+        <table style="font-size: 8px;">
+            <thead>
+            <th>Manufacturer</th>
+            <th>Model</th>
+            <th>Cores</th>
+            <th>Threads</th>
+            <th>Frequency</th>
+            </thead>
+            <tbody id="processors-view">
+
+            </tbody>
+        </table>
+    </div>
+</main>
+
+
+<main id="building" style="display: none;">
+    <iframe src="https://blog.birchtrees.me/readme"></iframe>
+</main>
+
+<main id="exframe" style="display: none;">
+    <iframe id="exiframe" src=""></iframe>
+</main>
+
+<footer>
+
+    source:<a href="https://github.com/hbirchtree/kafei-py"><img src="GitHub-Mark-120px-plus.png" alt="GitHub"></a>
+
+</footer>
+
+<script>
+
+window.mobilecheck = function() {
+  var check = false;
+  (function(a){if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4))) check = true;})(navigator.userAgent||navigator.vendor||window.opera);
+  return check;
+};
+
+function $(q)
+{
+    return document.querySelector(q);
+}
+
+var current = document.getElementById("home");
+
+function loadElement(name)
+{
+    let el = document.getElementById(name);
+    current.style['display'] = 'none';
+    el.style['display'] = 'flex';
+    current = el;
+
+    if(name != 'exframe' && location.search != '')
+    {
+        location.search = '';
+    }
+
+    return current;
+}
+
+function loadElementPreload(name)
+{
+    return function() {
+        return loadElement(name);
+    };
+}
+
+function shortenText(msg, max_len, max_lines)
+{
+    if(msg.length > max_len)
+    {
+        msg = msg.substring(0, max_len - 3) + '...';
+    }
+    var numNewLines = 0;
+    var msgIdx = 0;
+    while((msgIdx = msg.indexOf('\n', msgIdx + 1)) >= 0)
+    {
+        numNewLines ++;
+
+        if(numNewLines > (max_lines - 1))
+        {
+            msg = msg.substring(0, msgIdx);
+            break;
+        }
+    }
+
+    return msg;
+}
+
+function loadHome()
+{
+    loadElement("home");
+
+    let releaseInfo = new XMLHttpRequest();
+
+    releaseInfo.addEventListener('load', function()
+    {
+        let release = JSON.parse(this.responseText).data;
+
+        /*
+        let relDate = $('#release-date');
+        let relTag = $('#release-tag');
+        let relMsg = $('#release-notes');
+        let relAuthor = $('#release-author');
+        let relLink = $('#release-link');
+
+        relMsg.innerHTML = shortenText(release.release.body, 100, 2).replace('\n', '<br>');
+        relLink.href = release.release.author.html_url;
+        relTag.innerText = release.release.tag_name;
+        relDate.innerText = new Date(release.release.published_at).toUTCString();
+        relLink.href = release.release.html_url;
+        */
+
+        let relTag = $('#author-username');
+        let relMsg = $('#author-notes');
+        let relAuthor = $('#release-author');
+        let relLink = $('#author-link');
+        let bubLink = $('#home-author-bubble');
+
+        relTag.innerHTML = release.release.author.login;
+        relMsg.innerHTML = 'All my code is on GitHub!';
+        relAuthor.src = release.release.author.avatar_url;
+        relLink.href = release.release.author.html_url;
+        bubLink.href = relLink.href;
+    });
+
+    releaseInfo.open('GET', '/api/github/latestRelease');
+    releaseInfo.send();
+}
+
+function loadExamples()
+{
+    loadElement("examples");
+
+    let updateInfo = new XMLHttpRequest();
+
+    updateInfo.addEventListener('load', function(){
+        let info_base = JSON.parse(this.responseText);
+        let info = info_base.data.commit;
+
+        let avatImg = $('#avatar-img');
+        /* We get a perfectly fitting avatar image from GitHub,
+         *  avoiding the 512x512 image */
+        avatImg.src = info.committer.avatar_url + "&s=" + avatImg.width;
+
+        let commitLink = $('#commit-link');
+        let authorLink = $('#avatar-link');
+        let commitMsg = $('#commit-message');
+        let commitDate = $('#commit-date');
+        let commitSha = $('#commit-sha');
+
+        /* For commit message, restrict it to
+         *  fit into the commit message box */
+        var msg = info.commit.message;
+        msg = shortenText(msg, 200, 3);
+        msg = msg.replace(/\n/g, '<br>');
+        commitMsg.innerHTML = msg;
+
+        authorLink.href = info.committer.html_url;
+        commitLink.href = info.html_url;
+        /* SHA is massif. Shorten it. */
+        commitSha.innerText = shortenText(info.sha, 23, 2);
+        /* Format the date to look a bit more appealing */
+        commitDate.innerText = new Date(info_base.updated_at).toUTCString();
+    });
+
+
+    let releaseInfo = new XMLHttpRequest();
+
+    releaseInfo.addEventListener('load', function() {
+        let releaseLink = $('#examples-release-link');
+        let release = JSON.parse(this.responseText).data;
+        releaseLink.href = release.release.html_url;
+    });
+
+    updateInfo.open('GET', '/api/github/updateInfo');
+    updateInfo.send();
+    releaseInfo.open('GET', '/api/github/latestRelease');
+    releaseInfo.send();
+}
+
+function createStat(query, canvasId, nameField, chartType)
+{
+    let statDoc = new XMLHttpRequest();
+
+    statDoc.addEventListener('load', function()
+    {
+        let data = JSON.parse(this.responseText).data;
+        let canvas = $('#' + canvasId);
+
+        var blabels = [];
+        var bcounts = [];
+
+        for(var i=0;i<data.length; i++)
+        {
+            var m = data[i];
+            blabels = blabels.concat(m[nameField]);
+            bcounts = bcounts.concat(m.count);
+        }
+
+        var ctxt = canvas.getContext('2d');
+
+        var chart = new Chart(ctxt,
+        {
+            type: chartType,
+            data: {
+                labels: blabels,
+                datasets: [{
+                    label: 'Count',
+                    data: bcounts,
+                    backgroundColor: 'rgba(50, 50, 224, 0.5)'
+                }]
+            }
+        });
+    });
+
+    statDoc.open('GET', query);
+    statDoc.send();
+}
+
+function loadStatistics()
+{
+    try {
+        loadElement('statistics');
+
+        //Chart.defaults.global.defaultColor = 'rgba(255, 255, 255, 0.5)';
+
+        let procQuery = new XMLHttpRequest();
+
+        procQuery.addEventListener('load', function()
+        {
+            let data = JSON.parse(this.responseText).data;
+
+            let table = $('#processors-view');
+
+            table.innerHTML = '';
+
+            data.map((proc) => {
+                var minHz = Infinity;
+                var maxHz = -Infinity;
+                proc.frequencies.map((fq) => {
+                    minHz = Math.round(Math.min(fq, minHz) * 10) / 10;
+                    maxHz = Math.round(Math.max(fq, maxHz) * 10) / 10;
+                });
+
+                var freqString = minHz + '~' + maxHz + 'GHz';
+
+                table.innerHTML += '<tr><td>' + proc.manufacturer + '</td>' +
+                    '<td>' + proc.model + '</td>' +
+                    '<td>' + proc.cores + '</td>' +
+                    '<td>' + proc.threads + '</td>' +
+                    '<td>' + freqString + '</td>' +
+                    '</tr>';
+            });
+
+        });
+
+        procQuery.open('GET', '/api/v1/processors');
+        procQuery.send();
+
+	createStat('/api/v1/statistics/os', 'os-ver-stats-view', 'system', 'doughnut');
+	createStat('/api/v1/statistics/arch', 'arch-stats-view', 'architecture', 'bar');
+	//createStat('/api/v1/statistics/os-arch', 'os-arch-correlation-view', 'system', 'radar');
+    } catch(e) {
+        $("#stat-service-unavailable").style.display = 'block';
+    }
+}
+
+function loadSingleExample(example)
+{
+    return function()
+    {
+        loadElement('exframe');
+
+        var element = $('#exiframe');
+
+        element.onload = function() {
+            let body = $('body');
+            let otherBody = element.contentDocument.getElementsByTagName('body')[0];
+
+            let bodyStyle = window.getComputedStyle(body);
+            otherBody.style['background-color'] = bodyStyle['background-color'];
+        };
+
+        element.src = '/examples/'
+            + example + '.bundle/'
+            + example + '.html';
+
+    };
+}
+
+function getArg(query, arg)
+{
+    query = query.substr(1, query.length + 1);
+
+    var i = query.indexOf(arg);
+    var nextI = query.indexOf('&');
+    if(nextI == -1)
+        nextI = query.length;
+    if(i >= 0)
+        return query.substr(query.indexOf('=') + 1);
+}
+
+function loadSingleExamplePage()
+{
+    var example = getArg(location.search, 'sample');
+    loadSingleExample(example)();
+}
+
+function showExample(name)
+{
+    location = '/?sample=' + name + '#exframe';
+}
+
+let pageReferences = {
+    home: loadHome,
+    stats: loadStatistics,
+    examples: loadExamples,
+    building: loadElementPreload('building'),
+    exframe: loadSingleExamplePage
+};
+
+if(window.mobilecheck())
+    $('html').classList.add('is-mobile');
+else
+    $('html').classList.add('is-desktop');
+
+window.onhashchange = function()
+{
+    var hash = location.hash.replace('#', '');
+    if(location.hash.length > 0)
+        pageReferences[hash]();
+    else
+        loadHome();
+
+};
+
+window.onhashchange();
+
+</script>
+
+<link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,400i,700&amp;subset=latin-ext" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0/dist/Chart.min.js"></script>
+
+</body>
+</html>

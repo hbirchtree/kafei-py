@@ -7,19 +7,22 @@ import javax.validation.constraints.NotNull;
 
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.Setter;
 
 public final class KafeiConfiguration extends Configuration {
     @Valid
-    @NotNull
-    private DataSourceFactory reportDb = new DataSourceFactory();
+    @NonNull
+    @Getter
+    @Setter
+    @JsonProperty
+    private DataSourceFactory reportDatabase = new DataSourceFactory();
 
-    @JsonProperty("reportDatabase")
-    public void setReportDatabase(DataSourceFactory db) {
-        reportDb = db;
-    }
-
-    @JsonProperty("reportDatabase")
-    public DataSourceFactory getReportDatabase() {
-        return reportDb;
-    }
+    @Valid
+    @NonNull
+    @Getter
+    @Setter
+    @JsonProperty
+    private DataSourceFactory gitHooksDatabase = new DataSourceFactory();
 }

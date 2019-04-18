@@ -1,5 +1,15 @@
 package dev.birchy.kafei.responses;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import static com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,7 +20,42 @@ import lombok.NoArgsConstructor;
 public final class Result<T> {
     public static final String MESSAGE_OK = "OK";
 
+    @JsonInclude(Include.NON_NULL)
     private T data;
+
     private int status;
+
+    @JsonInclude(Include.NON_NULL)
     private String message;
+
+    @JsonInclude(Include.NON_NULL)
+    private List<ShortLink> links;
+
+    public static Result<Object> ok() {
+        return new Result<>(null, 0, MESSAGE_OK, null);
+    }
+
+    public static <T> Result<T> ok(T obj) {
+        return new Result<>(obj, 0, MESSAGE_OK, null);
+    }
+
+    public static Result<Object> error(Response.Status status) {
+        return new Result<>( null, status.getStatusCode(), status.getReasonPhrase(), null);
+    }
+
+    public Response wrapped() {
+        if(status == 0)
+            return Response.ok(this).build();
+        else
+            return Response
+                    .status(status)
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity(this)
+                    .build();
+    }
+
+    public Result<T> withLinks(List<ShortLink> links) {
+        setLinks(links);
+        return this;
+    }
 }
