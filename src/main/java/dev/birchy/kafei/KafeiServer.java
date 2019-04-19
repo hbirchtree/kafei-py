@@ -6,8 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.jdbi.v3.core.Jdbi;
 
-import java.io.IOException;
-
 import dev.birchy.kafei.endpoints.Overview;
 import dev.birchy.kafei.github.HookShotBundle;
 import dev.birchy.kafei.github.dao.GithubDao;
@@ -19,7 +17,6 @@ import io.dropwizard.configuration.ResourceConfigurationSourceProvider;
 import io.dropwizard.jdbi3.JdbiFactory;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import io.dropwizard.sslreload.SslReloadBundle;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -30,14 +27,13 @@ public class KafeiServer extends Application<KafeiConfiguration> {
 
         bootstrap.setConfigurationSourceProvider(new ResourceConfigurationSourceProvider());
         bootstrap.addBundle(new AssetsBundle("/assets", "/", "index.html"));
-        bootstrap.addBundle(new SslReloadBundle());
 
         bootstrap.addBundle(new ReportsBundle());
         bootstrap.addBundle(new HookShotBundle());
     }
 
     @Override
-    public void run(KafeiConfiguration configuration, Environment environment) throws IOException {
+    public void run(KafeiConfiguration configuration, Environment environment) {
         final JdbiFactory jdbiFactory = new JdbiFactory();
         final Jdbi reportDb = jdbiFactory.build(
                 environment, configuration.getReportDatabase(), "reports");

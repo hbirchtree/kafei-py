@@ -1,5 +1,6 @@
-LOGIN_DETAILS := ubuntu@54.93.138.180
-TARGET_NAME := kafei-py
+LOGIN_DETAILS := ubuntu@birchy.dev
+TARGET_NAME   := kafei-py
+PORT          := 108
 
 .FORCE:
 
@@ -7,9 +8,9 @@ build: .FORCE
 	./gradlew :assemble
 
 deploy: build
-	ssh $(LOGIN_DETAILS) -- mkdir -p $(TARGET_NAME)
-	scp build/distributions/$(TARGET_NAME).tar $(LOGIN_DETAILS):$(TARGET_NAME).tar
-	ssh $(LOGIN_DETAILS) -- tar xf $(TARGET_NAME).tar $(TARGET_NAME)
+	ssh -p $(PORT) $(LOGIN_DETAILS) -- mkdir -p $(TARGET_NAME)
+	scp -P $(PORT) build/distributions/$(TARGET_NAME).tar $(LOGIN_DETAILS):$(TARGET_NAME).tar
+	ssh -p $(PORT) $(LOGIN_DETAILS) -- tar xf $(TARGET_NAME).tar $(TARGET_NAME)
 
 monitor:
-	ssh $(LOGIN_DETAILS) -t -- tmux attach
+	ssh -p $(PORT) $(LOGIN_DETAILS) -t -- tmux attach

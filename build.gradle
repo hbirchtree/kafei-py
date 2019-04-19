@@ -46,6 +46,7 @@ dependencies {
     compile 'org.postgresql:postgresql:42.2.5'
 
     compile 'commons-codec:commons-codec:1.12' // For HMAC-SHA1
+    compile 'org.apache.tika:tika-core:1.20' // For MIME-types
 }
 
 // Configure the oneJar task

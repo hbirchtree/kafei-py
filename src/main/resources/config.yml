@@ -1,3 +1,9 @@
+logging:
+  level: DEBUG
+
+  loggers:
+    "org.eclipse": INFO
+
 reportDatabase:
   driverClass: org.postgresql.Driver
   user: postgres

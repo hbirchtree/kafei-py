@@ -123,6 +123,10 @@ public final class GithubReleases {
                 });
                 break;
             }
+            case "status": {
+                log.info("{}", payload);
+                break;
+            }
             default: {
                 return Result.error(Response.Status.BAD_REQUEST).wrapped();
             }
