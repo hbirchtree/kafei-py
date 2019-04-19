@@ -34,7 +34,10 @@ public final class StaticBundle implements Bundle {
 
         @Override
         protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-            final String subPath = Optional.of(req.getPathInfo())
+            final String subPath = Optional
+                    .of(req.getPathInfo() != null
+                            ? req.getPathInfo()
+                            : source.getDefaultFile())
                     .map((path) -> path.replaceAll("/{2,}", "/").replaceAll("^/", ""))
                     .filter((path) -> !path.isEmpty())
                     .orElse(source.getDefaultFile());

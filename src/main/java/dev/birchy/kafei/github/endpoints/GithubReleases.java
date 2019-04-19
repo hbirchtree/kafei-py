@@ -123,7 +123,7 @@ public final class GithubReleases {
                 });
                 break;
             }
-            case "status": {
+            case "code": {
                 log.info("{}", payload);
                 break;
             }

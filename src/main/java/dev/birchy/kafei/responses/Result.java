@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.core.MediaType;
@@ -18,12 +17,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public final class Result<T> {
-    public static final String MESSAGE_OK = "OK";
+    public static final String MESSAGE_OK = Response.Status.OK.getReasonPhrase();
 
     @JsonInclude(Include.NON_NULL)
     private T data;
 
-    private int status;
+    private int code;
 
     @JsonInclude(Include.NON_NULL)
     private String message;
@@ -43,12 +42,16 @@ public final class Result<T> {
         return new Result<>( null, status.getStatusCode(), status.getReasonPhrase(), null);
     }
 
+    public Response.ResponseBuilder withCode(Response.Status status) {
+        return Response.status(status).entity(this);
+    }
+
     public Response wrapped() {
-        if(status == 0)
+        if(code == 0)
             return Response.ok(this).build();
         else
             return Response
-                    .status(status)
+                    .status(Response.Status.OK)
                     .type(MediaType.APPLICATION_JSON)
                     .entity(this)
                     .build();

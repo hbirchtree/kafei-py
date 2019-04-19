@@ -1,5 +1,6 @@
 package dev.birchy.kafei.endpoints;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -53,7 +54,11 @@ public class Overview {
             return;
 
         detectedReturnTypes.add(clazz);
+
         for(Field f : clazz.getDeclaredFields()) {
+            if(detectedReturnTypes.contains(f.getType()))
+                continue;
+
             expandReturnTypes(f.getType());
         }
     }
@@ -120,7 +125,8 @@ public class Overview {
             ObjectNode obj = mapper.createObjectNode();
 
             for(Field f : type.getDeclaredFields())
-                obj.put(f.getName(), f.getType().getSimpleName());
+                if(!f.getName().startsWith("$") && f.getAnnotation(JsonIgnore.class) == null)
+                    obj.put(f.getName(), f.getType().getSimpleName());
 
             returnTypes.put(type.getSimpleName(), obj);
         });

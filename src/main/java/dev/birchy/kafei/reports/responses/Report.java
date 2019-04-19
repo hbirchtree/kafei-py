@@ -35,9 +35,15 @@ public class Report {
 
     @Data
     public static class BuildInfo {
+        public enum BuildMode {
+            DEBUG,
+            RELEASE,
+        }
+
         private String version;
         private String compiler;
         private String architecture;
+        private BuildMode buildMode;
     }
 
     @Data

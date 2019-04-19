@@ -10,11 +10,14 @@ import org.joda.time.DateTime;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.core.Response;
 
 import dev.birchy.kafei.reports.dao.ReportDao;
 import dev.birchy.kafei.reports.responses.ExtrasProperty;
@@ -34,6 +37,26 @@ public final class ReportService {
     @Inject
     private ObjectMapper mapper;
 
+    private static void requireNonNull(Object o, String name) {
+        if(Objects.isNull(o))
+            throw new ClientErrorException(
+                    String.format("Field %s not specified", name),
+                    Response.Status.BAD_REQUEST);
+    }
+
+    private static void sanityCheck(final Report report) {
+            requireNonNull(report, "object");
+
+            requireNonNull(report.getApplication(), "application");
+            requireNonNull(report.getBuild(), "build");
+            requireNonNull(report.getDevice(), "device");
+            requireNonNull(report.getExtra(), "extra");
+            requireNonNull(report.getMemory(), "memory");
+            requireNonNull(report.getProcessor(), "processor");
+            requireNonNull(report.getRuntime(), "runtime");
+            requireNonNull(report.getTraceEvents(), "traceEvents");
+    }
+
     private static Optional<Long> removeFuckedOptional(Optional<?> opt) {
         if(!opt.isPresent())
             return Optional.empty();
@@ -47,6 +70,8 @@ public final class ReportService {
     }
 
     public long putReport(final Report newReport) {
+        sanityCheck(newReport);
+
         newReport.getRuntime().setSubmitTime(DateTime.now());
 
         return reportsDb.inTransaction((reportHnd) -> {

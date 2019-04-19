@@ -99,5 +99,9 @@ public final class ShortLink {
 
             return out;
         }
+
+        public URI uri() {
+            return baseUri;
+        }
     }
 }
