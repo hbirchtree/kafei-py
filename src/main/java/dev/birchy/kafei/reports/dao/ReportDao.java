@@ -228,6 +228,9 @@ public interface ReportDao {
     @RegisterBeanMapper(ReportData.class)
     Optional<ReportData> getRawReport(@Bind("runId") long runId);
 
+    @SqlQuery("select report_format from run_report where run_id = :runId")
+    Optional<String> getRawReportFormat(@Bind("runId") long runId);
+
     /*
      *
      * Counting operations

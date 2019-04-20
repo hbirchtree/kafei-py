@@ -16,6 +16,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import dev.birchy.kafei.RespondsWith;
+import dev.birchy.kafei.reports.ReportFormat;
+import dev.birchy.kafei.reports.responses.LegacyReport;
 import dev.birchy.kafei.reports.responses.Report;
 import dev.birchy.kafei.reports.responses.ReportInfo;
 import dev.birchy.kafei.responses.Result;
@@ -38,22 +40,25 @@ public final class ReportSubmitLegacy {
     @Path("/reports")
     @RespondsWith(ReportInfo.class)
     public Response postReport(ObjectNode reportData) throws NoSuchMethodException {
-        Report report = null;
+        Report report;
 
         try {
-            report = Report.parseLegacyFormat(reportData, mapper);
+            report = LegacyReport.parse(reportData, mapper);
         } catch(JsonProcessingException e) {
             log.error("Error deserializing report: {}", e);
-            return Response.status(Response.Status.BAD_REQUEST).build();
+            return Result
+                    .error(Response.Status.BAD_REQUEST)
+                    .withCode(Response.Status.BAD_REQUEST)
+                    .build();
         }
 
         long runId = reportService.putReport(report);
 
-        reportService.generateReportData(reportData, "legacy")
+        reportService.generateReportData(reportData, ReportFormat.LEGACY)
                 .ifPresent((rawReport) -> reportService.putRawReport(runId, rawReport));
 
-        return Response
-                .ok(Result.ok(new ReportInfo(runId)))
+        return Result.ok(new ReportInfo(runId))
+                .withCode(Response.Status.OK)
                 .link(uriInfo.getBaseUriBuilder()
                         .path(ReportViewLegacy.class)
                         .path("blob/{id}")

@@ -179,6 +179,12 @@ public final class ReportService {
         return reportsDb.withExtension(ReportDao.class, (reports) -> reports.getRawReport(runId));
     }
 
+    public Optional<String> getRawReportFormat(long runId) {
+        return reportsDb.withExtension(
+                ReportDao.class,
+                (reports) -> reports.getRawReportFormat(runId));
+    }
+
     /* Listings */
 
     public List<Report.Processor> getProcessors() {

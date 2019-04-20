@@ -11,6 +11,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import dev.birchy.kafei.RespondsWith;
+import dev.birchy.kafei.reports.ReportFormat;
 import dev.birchy.kafei.reports.responses.Report;
 import dev.birchy.kafei.reports.responses.ReportInfo;
 import dev.birchy.kafei.responses.Result;
@@ -35,7 +36,7 @@ public final class ReportSubmit {
         final long runId = reportService.putReport(reportData);
 
         reportService
-                .generateReportData(mapper.valueToTree(reportData), "structured")
+                .generateReportData(mapper.valueToTree(reportData), ReportFormat.STRUCTURED)
                 .ifPresent((report) -> {
                     reportService.putRawReport(runId, report);
                 });

@@ -11,6 +11,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import dev.birchy.kafei.RespondsWith;
+import dev.birchy.kafei.reports.ReportFormat;
 import dev.birchy.kafei.reports.responses.Report;
 import dev.birchy.kafei.reports.responses.ReportSummary;
 import dev.birchy.kafei.responses.CustomHeaders;
@@ -27,13 +28,12 @@ public final class ReportView {
     @GET
     @RespondsWith(ReportSummary.class)
     public Response getReportSummaries() {
-        return Response
-                .ok(Result.ok(reportService.getReports()
+        return Result
+                .ok(reportService.getReports()
                         .stream()
                         .map(ReportSummary::new)
-                        .collect(Collectors.toList())
-                ))
-                .build();
+                        .collect(Collectors.toList()))
+                .wrapped();
     }
 
     @GET
@@ -45,11 +45,12 @@ public final class ReportView {
 
                 .map((report) -> Response
                         .ok(Result.ok(report))
+                        .header(CustomHeaders.X_REPORT_FORMAT, ReportFormat.STRUCTURED)
                         .build())
 
-                .orElse(Response
-                        .status(Response.Status.NOT_FOUND)
-                        .entity(Result.error(Response.Status.NOT_FOUND))
+                .orElse(Result
+                        .error(Response.Status.NOT_FOUND)
+                        .withCode(Response.Status.NOT_FOUND)
                         .build());
     }
 
@@ -62,26 +63,24 @@ public final class ReportView {
                         .type(MediaType.APPLICATION_OCTET_STREAM)
                         .header(CustomHeaders.X_REPORT_FORMAT, report.getFormat())
                         .build()
-        ).orElse(
-                Response
-                        .status(Response.Status.NOT_FOUND)
-                        .entity(Result.error(Response.Status.NOT_FOUND))
-                        .build());
+        ).orElse(Result
+                .error(Response.Status.NOT_FOUND)
+                .withCode(Response.Status.NOT_FOUND)
+                .build());
     }
 
     @GET
     @Path("/{id}/json")
     public Response getJsonReport(@PathParam("id") long reportId) {
-        return reportService.getRawReport(reportId).map((report) ->
-                Response
+        return reportService.getRawReport(reportId)
+                .map((report) -> Response
                         .ok(report.getRawData())
                         .type(MediaType.APPLICATION_JSON)
                         .header(CustomHeaders.X_REPORT_FORMAT, report.getFormat())
-                        .build()
-        ).orElse(
-                Response
-                        .status(Response.Status.NOT_FOUND)
-                        .entity(Result.error(Response.Status.NOT_FOUND))
+                        .build())
+                .orElse(Result
+                        .error(Response.Status.NOT_FOUND)
+                        .withCode(Response.Status.NOT_FOUND)
                         .build());
     }
 }

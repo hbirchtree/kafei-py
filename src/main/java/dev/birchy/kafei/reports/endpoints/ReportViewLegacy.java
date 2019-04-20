@@ -17,6 +17,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import dev.birchy.kafei.RespondsWith;
+import dev.birchy.kafei.reports.ReportFormat;
 import dev.birchy.kafei.reports.ReportService;
 import dev.birchy.kafei.reports.responses.Report;
 import dev.birchy.kafei.reports.responses.statistics.ArchCount;
@@ -51,7 +52,7 @@ public final class ReportViewLegacy {
                         .map(Optional::get)
 
                         /* Only on legacy reports with non-null size */
-                        .filter((report) -> report.getFormat().equals("legacy"))
+                        .filter((report) -> report.getFormat().equals(ReportFormat.LEGACY))
                         .filter((report) -> report.getRawData() != null)
                         .filter((report) -> report.getRawData().length > 0)
 
@@ -71,7 +72,14 @@ public final class ReportViewLegacy {
     @GET
     @Path("/blob")
     public Response getBlob() {
-        return Result.ok(reportService.getReportIds()).wrapped();
+        return Result.ok(
+                reportService.getReportIds()
+                        .stream()
+                        .filter((reportId) ->
+                                reportService.getRawReportFormat(reportId)
+                                        .map((fmt) -> fmt.equals(ReportFormat.LEGACY))
+                                        .orElse(false)))
+                .wrapped();
     }
 
     @GET
@@ -79,13 +87,20 @@ public final class ReportViewLegacy {
     public Response getSingleBlob(@PathParam("runId") long runId) {
         return reportService.getRawReport(runId)
 
+                .filter((report) -> reportService.getRawReportFormat(runId)
+                        .map((fmt) -> fmt.equals(ReportFormat.LEGACY))
+                        .orElse(false))
+
                 .map((report) -> Response
                         .ok(report.getRawData())
                         .type(MediaType.APPLICATION_JSON)
                         .header(CustomHeaders.X_REPORT_FORMAT, report.getFormat())
                         .build())
 
-                .orElse(Result.error(Response.Status.NOT_FOUND).wrapped());
+                .orElse(Result
+                        .error(Response.Status.NOT_FOUND)
+                        .withCode(Response.Status.NOT_FOUND)
+                        .build());
     }
 
     @GET
