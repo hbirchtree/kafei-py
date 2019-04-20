@@ -4,14 +4,21 @@ logging:
   loggers:
     "org.eclipse": INFO
 
+flyway:
+  sqlMigrationPrefix: v
+  sqlMigrationSeparator: "-"
+  schemas:
+    - reports
+    - githooks
+
 reportDatabase:
   driverClass: org.postgresql.Driver
   user: postgres
   password: admin
-  url: jdbc:postgresql://25.57.48.59/reports
+  url: jdbc:postgresql://25.57.48.59/kafei
 
 gitHooksDatabase:
   driverClass: org.postgresql.Driver
   user: postgres
   password: admin
-  url: jdbc:postgresql://25.57.48.59/githooks
+  url: jdbc:postgresql://25.57.48.59/kafei

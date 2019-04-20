@@ -8,12 +8,13 @@ import org.jdbi.v3.core.Jdbi;
 
 import dev.birchy.kafei.endpoints.Overview;
 import dev.birchy.kafei.github.HookShotBundle;
-import dev.birchy.kafei.github.dao.GithubDao;
 import dev.birchy.kafei.reports.ReportsBundle;
-import dev.birchy.kafei.reports.dao.ReportDao;
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.configuration.ResourceConfigurationSourceProvider;
+import io.dropwizard.db.PooledDataSourceFactory;
+import io.dropwizard.flyway.FlywayBundle;
+import io.dropwizard.flyway.FlywayFactory;
 import io.dropwizard.jdbi3.JdbiFactory;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
@@ -30,6 +31,18 @@ public class KafeiServer extends Application<KafeiConfiguration> {
 
         bootstrap.addBundle(new ReportsBundle());
         bootstrap.addBundle(new HookShotBundle());
+
+        bootstrap.addBundle(new FlywayBundle<KafeiConfiguration>() {
+            @Override
+            public PooledDataSourceFactory getDataSourceFactory(KafeiConfiguration kafeiConfiguration) {
+                return kafeiConfiguration.getReportDatabase();
+            }
+
+            @Override
+            public FlywayFactory getFlywayFactory(KafeiConfiguration config) {
+                return config.getFlyway();
+            }
+        });
     }
 
     @Override
@@ -40,10 +53,8 @@ public class KafeiServer extends Application<KafeiConfiguration> {
         final Jdbi githubDb = jdbiFactory.build(
                 environment, configuration.getGitHooksDatabase(), "githooks");
 
-        MigrationBundle.loadMigrations(reportDb, "migrations/00-base.sql", (h) ->
-                h.attach(ReportDao.class).getRuns());
-        MigrationBundle.loadMigrations(githubDb, "migrations.githooks/00-base.sql", (h) ->
-                h.attach(GithubDao.class).getReleases());
+        reportDb.useHandle(handle -> handle.execute("set session search_path to reports;"));
+        githubDb.useHandle(handle -> handle.execute("set session search_path to githooks;"));
 
         /* Documentation APIs */
         environment.jersey().register(Overview.class);

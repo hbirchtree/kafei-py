@@ -6,14 +6,21 @@ server:
   - type: http
     port: 8041
 
+flyway:
+  sqlMigrationPrefix: v
+  sqlMigrationSeparator: "-"
+  schemas:
+    - reports
+    - githooks
+
 reportDatabase:
   driverClass: org.postgresql.Driver
   user: postgres
   password: postgres
-  url: jdbc:postgresql://localhost/reports
+  url: jdbc:postgresql://localhost/kafei
 
 gitHooksDatabase:
   driverClass: org.postgresql.Driver
   user: postgres
   password: postgres
-  url: jdbc:postgresql://localhost/githooks
+  url: jdbc:postgresql://localhost/kafei
