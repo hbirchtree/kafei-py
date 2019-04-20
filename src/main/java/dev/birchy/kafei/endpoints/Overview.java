@@ -25,6 +25,7 @@ import javax.ws.rs.core.Response;
 
 import dev.birchy.kafei.RespondsWith;
 import dev.birchy.kafei.github.endpoints.GithubReleases;
+import dev.birchy.kafei.reports.endpoints.ReportStatistics;
 import dev.birchy.kafei.reports.endpoints.ReportSubmit;
 import dev.birchy.kafei.reports.endpoints.ReportSubmitLegacy;
 import dev.birchy.kafei.reports.endpoints.ReportView;
@@ -114,6 +115,7 @@ public class Overview {
 
         overview.addAll(getLinks(ReportSubmit.class));
         overview.addAll(getLinks(ReportView.class));
+        overview.addAll(getLinks(ReportStatistics.class));
 
         overview.addAll(getLinks(ReportSubmitLegacy.class));
         overview.addAll(getLinks(ReportViewLegacy.class));

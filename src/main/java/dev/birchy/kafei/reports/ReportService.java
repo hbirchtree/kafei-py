@@ -19,7 +19,10 @@ import javax.inject.Named;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.core.Response;
 
+import dev.birchy.kafei.reports.dao.ReportAllDao;
+import dev.birchy.kafei.reports.dao.ReportCountDao;
 import dev.birchy.kafei.reports.dao.ReportDao;
+import dev.birchy.kafei.reports.dao.ReportSingleDao;
 import dev.birchy.kafei.reports.responses.ExtrasProperty;
 import dev.birchy.kafei.reports.responses.Report;
 import dev.birchy.kafei.reports.responses.ReportData;
@@ -127,7 +130,8 @@ public final class ReportService {
         });
     }
 
-    private Report mapToReport(ReportDao reports, Report.RuntimeInfo run) {
+    private Report mapToReport(
+            ReportSingleDao reports, ReportAllDao allReports, Report.RuntimeInfo run) {
         Report out = new Report();
 
         long runId = run.getRunId();
@@ -140,7 +144,7 @@ public final class ReportService {
         out.setProcessor(reports.getProcessor(runId).orElse(null));
         out.setBuild(reports.getBuild(runId).orElse(null));
 
-        out.getProcessor().setFrequencies(reports.getProcessorFrequencies(out.getProcessor()));
+        out.getProcessor().setFrequencies(allReports.getProcessorFrequencies(out.getProcessor()));
 
         out.getDevice().setVersion(reports.getDeviceVersion(runId).orElse(null));
 
@@ -152,43 +156,53 @@ public final class ReportService {
     }
 
     public Optional<Report> getReport(final long runId) {
-        return reportsDb.withExtension(
-                ReportDao.class,
-                (reports) -> reports.getRun(runId)
-                        .map((run) -> mapToReport(reports, run)));
+        return reportsDb.withHandle(
+                (hnd) -> {
+                    ReportAllDao allReports = hnd.attach(ReportAllDao.class);
+                    ReportSingleDao reports = hnd.attach(ReportSingleDao.class);
+
+                    return reports.getRun(runId)
+                            .map((run) -> mapToReport(reports, allReports, run));
+                });
     }
 
     public List<Report> getReports() {
-        return reportsDb.withExtension(
-                ReportDao.class,
-                (reports) -> reports.getRuns()
-                        .stream()
-                        .map((run) -> mapToReport(reports, run))
-                        .collect(Collectors.toList())
+        return reportsDb.withHandle(
+                (hnd) -> {
+                    ReportAllDao allReports = hnd.attach(ReportAllDao.class);
+                    ReportSingleDao reports = hnd.attach(ReportSingleDao.class);
+
+                    return allReports.getRuns()
+                            .stream()
+                            .map((run) -> mapToReport(reports, allReports, run))
+                            .collect(Collectors.toList());
+                }
         );
     }
 
     public List<Long> getReportIds() {
-        return reportsDb.withExtension(ReportDao.class, (reports) -> reports.getRuns()
+        return reportsDb.withExtension(ReportAllDao.class, (reports) -> reports.getRuns()
                 .stream()
                 .map(Report.RuntimeInfo::getRunId)
                 .collect(Collectors.toList()));
     }
 
     public Optional<ReportData> getRawReport(long runId) {
-        return reportsDb.withExtension(ReportDao.class, (reports) -> reports.getRawReport(runId));
+        return reportsDb.withExtension(
+                ReportSingleDao.class,
+                (reports) -> reports.getRawReport(runId));
     }
 
     public Optional<String> getRawReportFormat(long runId) {
         return reportsDb.withExtension(
-                ReportDao.class,
+                ReportSingleDao.class,
                 (reports) -> reports.getRawReportFormat(runId));
     }
 
     /* Listings */
 
     public List<Report.Processor> getProcessors() {
-        return reportsDb.withExtension(ReportDao.class, (reports) -> {
+        return reportsDb.withExtension(ReportAllDao.class, (reports) -> {
             List<Report.Processor> procs = reports.getProcessors();
 
             for(Report.Processor proc : procs)
@@ -199,24 +213,33 @@ public final class ReportService {
     }
 
     public List<Report.DeviceInfo> getDevices() {
-        return reportsDb.withExtension(ReportDao.class, ReportDao::getDevices);
+        return reportsDb.withExtension(ReportAllDao.class, ReportAllDao::getDevices);
+    }
+
+    public List<Report.ApplicationInfo> getApplications() {
+        return reportsDb.withExtension(ReportAllDao.class, ReportAllDao::getApplications);
+    }
+
+    public List<Report.BuildInfo> getAppBuilds(long appId) {
+        return reportsDb.withExtension(ReportAllDao.class, (reports) -> reports.getAppBuilds(appId));
     }
 
     /* Statistics */
 
     public List<SystemCount> countSystems() {
-        return reportsDb.withExtension(ReportDao.class, ReportDao::countSystems);
+        return reportsDb.withExtension(ReportCountDao.class, ReportCountDao::countSystems);
     }
 
     public List<ArchCount> countArchitectures() {
-        return reportsDb.withExtension(ReportDao.class, ReportDao::countArchitectures);
+        return reportsDb.withExtension(ReportCountDao.class, ReportCountDao::countArchitectures);
     }
 
     public List<BuildVersionCount> countBuildVersions() {
-        return reportsDb.withExtension(ReportDao.class, ReportDao::countBuildVersions);
+        return reportsDb.withExtension(ReportCountDao.class, ReportCountDao::countBuildVersions);
     }
 
     public List<ArchSystemCount> countArchSystems() {
-        return reportsDb.withExtension(ReportDao.class, ReportDao::countArchitectureSystems);
+        return reportsDb.withExtension(
+                ReportCountDao.class, ReportCountDao::countArchitectureSystems);
     }
 }
