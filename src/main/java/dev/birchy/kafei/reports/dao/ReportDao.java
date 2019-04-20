@@ -39,9 +39,9 @@ public interface ReportDao {
     Optional<Long> addApplication(@BindBean Report.ApplicationInfo app);
 
     @SqlUpdate("insert into run" +
-            "(build_version, cwd, memory, system, submit_time, commandline)" +
+            "(build_version, cwd, memory, system, submit_time, commandline, build_mode)" +
             " values(:build.version, :run.cwd, :mem.bank, :run.system," +
-            "        :run.submitTime, :run.commandLine)")
+            "        :run.submitTime, :run.commandLine, :build.buildMode)")
     @GetGeneratedKeys
     long addRuntime(
             @BindBean("run") Report.RuntimeInfo runtime,
@@ -158,7 +158,8 @@ public interface ReportDao {
 
     @SqlQuery("select distinct run_compiler.compiler_name as compiler," +
             "        run_arch.arch_name as architecture," +
-            "        run.build_version as version" +
+            "        run.build_version as version," +
+            "        run.build_mode as buildMode" +
             " from run_compiler" +
             " inner join run_arch using (run_id)" +
             " inner join run using (run_id)")
@@ -185,7 +186,8 @@ public interface ReportDao {
 
     @SqlQuery("select distinct run_compiler.compiler_name as compiler," +
             "        run_arch.arch_name as architecture," +
-            "        run.build_version as version" +
+            "        run.build_version as version," +
+            "        run.build_mode as build_mode" +
             " from run_compiler" +
             " inner join run_arch using (run_id)" +
             " inner join run using (run_id)" +

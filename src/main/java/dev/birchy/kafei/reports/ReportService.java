@@ -132,6 +132,7 @@ public final class ReportService {
 
         long runId = run.getRunId();
 
+        out.setReportId(runId);
         out.setRuntime(run);
 
         out.setApplication(reports.getApplication(runId).orElse(null));

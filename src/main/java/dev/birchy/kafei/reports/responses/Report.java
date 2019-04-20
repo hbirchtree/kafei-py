@@ -117,6 +117,9 @@ public class Report {
         }
     }
 
+    @JsonIgnore
+    private long reportId;
+
     private ApplicationInfo application;
     private BuildInfo build;
     private RuntimeInfo runtime;
