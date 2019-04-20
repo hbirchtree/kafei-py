@@ -1,0 +1,70 @@
+apply plugin: 'java'
+apply plugin: 'gradle-one-jar'
+apply plugin: 'application'
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+// UTF-8 should be standard by now. So use it!
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+// The main class of the application
+mainClassName = 'dev.birchy.kafei.KafeiServer'
+
+sourceSets.main.resources.srcDirs = [ 'src/main/resources/' ]
+
+// Add Gradle OneJar Plugin, see https://github.com/rholder/gradle-one-jar
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.github.rholder:gradle-one-jar:1.0.3'
+    }
+}
+
+// Set our project variables
+project.ext {
+    dropwizardVersion = '1.3.0'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile "javax.inject:javax.inject:1"
+    compile "io.dropwizard:dropwizard-bom:$dropwizardVersion"
+    compile "io.dropwizard:dropwizard-core:$dropwizardVersion"
+    compile "io.dropwizard:dropwizard-configuration:$dropwizardVersion"
+    compile "io.dropwizard:dropwizard-assets:$dropwizardVersion"
+    compile "io.dropwizard:dropwizard-jdbi3:$dropwizardVersion"
+    compile "io.dropwizard:dropwizard-migrations:$dropwizardVersion"
+    compile "io.dropwizard.modules:dropwizard-flyway:$dropwizardVersion-4"
+    compileOnly "org.projectlombok:lombok:1.16.8"
+
+    compile 'org.postgresql:postgresql:42.2.5'
+
+    compile 'commons-codec:commons-codec:1.12' // For HMAC-SHA1
+    compile 'org.apache.tika:tika-core:1.20' // For MIME-types
+}
+
+// Configure the oneJar task
+task oneJar(type: OneJar) {
+    mainClass = mainClassName
+}
+
+// Configure the run task to start the Dropwizard service
+run {
+    args 'server', 'config.yml'
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.4'
+}
+
+artifacts {
+    oneJar
+}
+
