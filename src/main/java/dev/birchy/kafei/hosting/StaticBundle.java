@@ -1,12 +1,17 @@
 package dev.birchy.kafei.hosting;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.tika.Tika;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import javax.servlet.http.HttpServlet;
@@ -38,41 +43,50 @@ public final class StaticBundle implements Bundle {
                     .of(req.getPathInfo() != null
                             ? req.getPathInfo()
                             : source.getDefaultFile())
-                    .map((path) -> path.replaceAll("/{2,}", "/").replaceAll("^/", ""))
+                    // This deduplicates slashes and relativizes all paths
+                    // .. in the URL doesn't transfer
+                    .map((path) -> path
+                            .replaceAll("/{2,}", "/")
+                            .replaceAll("^/", "")
+                            .replaceAll("\\.\\./?", ""))
                     .filter((path) -> !path.isEmpty())
                     .orElse(source.getDefaultFile());
 
-            log.info("Searching for path {}", subPath);
+            Path targetPath = source.getSourceDir().resolve(Paths.get(subPath));
 
-            File[] files = source.getSourceDir()
-                    .listFiles((file, s) -> s.equals(subPath));
+            log.info("Searching for path {} -> {}", subPath, targetPath);
 
-            if(files == null || files.length == 0) {
+            File file = targetPath.toFile();
+
+            if(file == null || !file.exists()) {
                 log.debug("No files found for {}", subPath);
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
 
-            for(File f : files) {
-                if(f.length() == 0) {
-                    resp.sendError(HttpServletResponse.SC_NO_CONTENT);
-                    return;
-                }
+            if(file.length() == 0) {
+                resp.sendError(HttpServletResponse.SC_NO_CONTENT);
+                return;
             }
 
-            Arrays.stream(files).findFirst().ifPresent((file) -> {
-                byte[] out = new byte[(int)file.length()];
+            byte[] out = new byte[(int)file.length()];
 
-                try {
-                    new FileInputStream(file).read(out);
+            try {
+                new FileInputStream(file).read(out);
 
+                final Map<String, String> mimeTypes = source.getExtraMimeTypes();
+                final String ext = FilenameUtils.getExtension(subPath);
+
+                if(mimeTypes != null && mimeTypes.containsKey(ext))
+                    resp.setHeader(HttpHeaders.CONTENT_TYPE, mimeTypes.get(ext));
+                else
                     resp.setHeader(HttpHeaders.CONTENT_TYPE, tika.detect(file));
-                    resp.getOutputStream().write(out);
+                resp.setHeader(HttpHeaders.CONTENT_LENGTH, "" + file.length());
 
-                } catch (IOException e) {
-                    log.debug("{}", e);
-                }
-            });
+                resp.getOutputStream().write(out);
+            } catch (IOException e) {
+                log.debug("{}", e);
+            }
 
             log.debug("{}", resp.getHeaderNames());
         }
@@ -80,8 +94,28 @@ public final class StaticBundle implements Bundle {
 
     @Data
     public static class StaticSource {
-        private File sourceDir;
-        private String defaultFile;
+        private Path sourceDir;
+        private String defaultFile = "index.html";
+        private Map<String, String> extraMimeTypes;
+
+        public static StaticSource from(final String source) {
+            StaticSource out = new StaticSource();
+            out.setSourceDir(Paths.get(source));
+            return out;
+        }
+
+        public StaticSource defaultTo(final String defaultFile) {
+            setDefaultFile(defaultFile);
+            return this;
+        }
+
+        public StaticSource addType(final String ext, final String type) {
+            if(extraMimeTypes == null)
+                extraMimeTypes = new HashMap<>();
+
+            extraMimeTypes.put(ext, type);
+            return this;
+        }
     }
 
     private StaticSource source;
@@ -93,8 +127,16 @@ public final class StaticBundle implements Bundle {
         this.targetPath = target;
         this.name = name;
 
-        this.source.setSourceDir(new File(source));
-        this.source.setDefaultFile(defaultFile != null ? defaultFile : "index.html");
+        this.source.setSourceDir(Paths.get(source));
+
+        if(defaultFile != null)
+            this.source.setDefaultFile(defaultFile);
+    }
+
+    public StaticBundle(final StaticSource source, final String target, final String name) {
+        this.source = source;
+        this.targetPath = target;
+        this.name = name;
     }
 
     @Override
@@ -103,7 +145,7 @@ public final class StaticBundle implements Bundle {
 
     @Override
     public void run(Environment environment) {
-        log.info("Current files: {}", source.getSourceDir().listFiles());
+        log.info("Current files: {}", Arrays.toString(source.getSourceDir().toFile().listFiles()));
         log.info("Registering StaticBundle with name: {} for path {}", name, targetPath);
         environment.servlets()
                 .addServlet(name, new StaticServlet(source))

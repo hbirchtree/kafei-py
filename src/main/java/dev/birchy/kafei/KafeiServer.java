@@ -53,9 +53,6 @@ public class KafeiServer extends Application<KafeiConfiguration> {
         final Jdbi githubDb = jdbiFactory.build(
                 environment, configuration.getGitHooksDatabase(), "githooks");
 
-        reportDb.useHandle(handle -> handle.execute("set session search_path to reports;"));
-        githubDb.useHandle(handle -> handle.execute("set session search_path to githooks;"));
-
         /* Documentation APIs */
         environment.jersey().register(Overview.class);
 
