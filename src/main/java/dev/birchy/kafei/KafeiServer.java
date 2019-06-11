@@ -4,9 +4,13 @@ import com.codahale.metrics.health.HealthCheck;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.server.model.Resource;
 import org.jdbi.v3.core.Jdbi;
 
+import java.net.URI;
+
 import dev.birchy.kafei.endpoints.Overview;
+import dev.birchy.kafei.endpoints.WebProxy;
 import dev.birchy.kafei.github.HookShotBundle;
 import dev.birchy.kafei.reports.ReportsBundle;
 import io.dropwizard.Application;

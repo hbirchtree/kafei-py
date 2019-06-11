@@ -150,12 +150,5 @@ public final class StaticBundle implements Bundle {
         environment.servlets()
                 .addServlet(name, new StaticServlet(source))
                 .addMapping(targetPath + "/*");
-
-        environment.jersey().register(new AbstractBinder() {
-            @Override
-            protected void configure() {
-                bind(source).to(StaticSource.class);
-            }
-        });
     }
 }
