@@ -9,6 +9,7 @@ import java.util.List;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import jdk.net.SocketFlow;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,6 +23,7 @@ public final class Result<T> {
     @JsonInclude(Include.NON_NULL)
     private T data;
 
+    @JsonInclude(Include.NON_DEFAULT)
     private int code;
 
     @JsonInclude(Include.NON_NULL)
@@ -44,6 +46,11 @@ public final class Result<T> {
 
     public Response.ResponseBuilder withCode(Response.Status status) {
         return Response.status(status).entity(this);
+    }
+
+    public Result<T> removeMessage() {
+        message = null;
+        return this;
     }
 
     public Response wrapped() {

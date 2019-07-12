@@ -43,6 +43,7 @@ dependencies {
     compile "io.dropwizard:dropwizard-migrations:$dropwizardVersion"
     compile "io.dropwizard.modules:dropwizard-flyway:$dropwizardVersion-4"
     compileOnly "org.projectlombok:lombok:1.16.8"
+    compile 'org.glassfish.jersey.media:jersey-media-multipart:2.25.1'
 
     compile 'org.postgresql:postgresql:42.2.5'
 

@@ -1,0 +1,284 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>Reports</title>
+
+        <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0'/>
+        <meta name="theme-color" content="royalblue" />
+        <link rel="favicon" href="favicon.png" sizes="128x128" />
+
+        <style>
+            body, html {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                min-height: 100%;
+                width: 100%;
+
+                color: darkgray;
+                background-color: #151530;
+                margin: 0;
+
+
+                font-family: 'Ubuntu Mono', monospace;
+                z-index: -10;
+            }
+            body, main {
+                flex-grow: 1;
+            }
+            body {
+                align-items: stretch;
+            }
+            header {
+                width: 100%;
+                display:flex;
+                align-items: stretch;
+                height: 5em;
+                background-color: royalblue;
+                filter: drop-shadow(0 0 10px black);
+                user-select: none;
+            }
+            header h1 {
+                color: white;
+            }
+            header > img {
+                height: 5em;
+            }
+            a {
+                color: white;
+            }
+
+            a:hover {
+                color: darkgray;
+            }
+
+            a:active {
+                color: gray;
+            }
+            main {
+                padding-top: 1em;
+                display: flex;
+                flex-direction: column;
+                /*align-items: center;*/
+            }
+            footer {
+                background-color: midnightblue;
+                padding: 0.2em;
+                height: 1em;
+            }
+            .flex-row, #no-data, #no-crash {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-evenly;
+            }
+            .flex-row > span {
+                display: flex;
+                flex-basis: 25em;
+                max-width: 25em;
+            }
+            .flex-row > span:nth-child(1) {
+                flex-basis: 5em;
+                max-width: 5em;
+            }
+            .flex-row > span:nth-child(3) {
+                flex-basis: 15em;
+                max-width: 15em;
+            }
+            .flex-row > span:nth-child(4) {
+                flex-basis: 5em;
+                max-width: 5em;
+            }
+            .flex-row > span:nth-child(even) {
+                background-color: #252540;
+            }
+            #no-data, #no-crash {
+                color: gray;
+                padding-top: 2em;
+                padding-bottom: 2em;
+            }
+            input[type="button"] {
+                border: none;
+                background-color: rgba(0,0,0,0);
+                height: 100%;
+                color: white;
+                padding-left: 2em;
+                padding-right: 2em;
+                font-size: 1.2em;
+            }
+
+            main > div:nth-child(1) {
+                font-weight: 700;
+            }
+            main > div:nth-child(1) > span {
+                font-size: 1.0em;
+            }
+            main > hr {
+                width: 99%;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <img src="favicon.png">
+            <h1>Coffee Reports</h1>
+
+            <span style="margin-left: 2em;">
+                <input id="reportSelect" type="button" checked value="Reports">
+            </span>
+            <span>
+                <input id="crashSelect" type="button" value="Crashes">
+            </span>
+        </header>
+        <main id="reports">
+            <div class="flex-row">
+                <span>Report ID</span> <span>Device</span> <span>Submit time</span> <span>Data</span>
+            </div>
+            <hr/>
+            <div id="no-data">No data</div>
+        </main>
+        <main id="crash" style="display: none;">
+            <div class="flex-row">
+                <span>Crash ID</span> <span>Submit time</span> <span>Data</span>
+            </div>
+            <hr/>
+            <div id="no-crash">No crashes</div>
+        </main>
+        <footer>
+        </footer>
+
+
+        <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,400i,700&amp;subset=latin-ext" rel="stylesheet">
+
+        <script>
+            const server = "https://api.birchy.dev";
+
+            function $(arg) { return document.querySelector(arg); }
+
+            const reportMain = $("#reports");
+            const crashMain = $("#crash");
+            const reportSelect = $("#reportSelect");
+            const crashSelect = $("#crashSelect");
+            
+            reportSelect.style['background-color'] = 'midnightblue';
+
+            reportSelect.onclick = (e) => {
+                reportMain.style.display = "flex";
+                crashMain.style.display = "none";
+                reportSelect.style['background-color'] = 'midnightblue';
+                crashSelect.style['background-color'] = 'rgba(0,0,0,0)';
+            };
+            crashSelect.onclick = (e) => {
+                crashMain.style.display = "flex";
+                reportMain.style.display = "none";
+                crashSelect.style['background-color'] = 'midnightblue';
+                reportSelect.style['background-color'] = 'rgba(0,0,0,0)';
+            };
+
+            const reportList = $("main#reports");
+            const noDataLabel = reportList.querySelector("#no-data");
+            const reportTemplate = reportList.querySelector(".flex-row");
+
+            const getResource = (url, callback) => {
+                const resource = new XMLHttpRequest();
+
+                resource.onreadystatechange = (data) => {
+                    if(resource.readyState === XMLHttpRequest.DONE) {
+                        callback(resource.status, JSON.parse(resource.responseText), url);
+                    }
+                };
+                resource.open("GET", url);
+                resource.send();
+            };
+
+            getResource(server + "/v2/reports", (stat, data, url) => {
+                if(stat != 200)
+                {
+                    console.log("Failed");
+                    return;
+                }
+
+                data = data.data;
+
+                data.forEach(report => {
+                    const reportEntry = reportList.appendChild(reportTemplate.cloneNode(true));
+
+                    report.links.forEach(link => {
+                        link.uri = url.replace("/v2/reports", link.uri);
+                    });
+
+                    const fields = reportEntry.querySelectorAll("span");
+                    var i = 0;
+                    fields.forEach(field => {
+                        switch(i)
+                        {
+                            case 0:
+                                field.innerText = report.data.reportId;
+                                break;
+                            case 1:
+                                field.innerText = report.data.system;
+                                break;
+                            case 2:
+                                field.innerText = new Date(report.data.submitTime).toISOString();
+                                break;
+                            case 3:
+                                field.innerHTML = '<a target="blank_" href="' + report.links[2].uri + '">json</a>';
+                                break;
+                        }
+                        i++;
+                    });
+                });
+
+                if(data.length > 0)
+                    noDataLabel.style.display = "none";
+            });
+
+            const crashList = document.querySelector("main#crash");
+            const crashTemplate = crashList.querySelector(".flex-row");
+            const noCrashLabel = crashList.querySelector("#no-crash");
+
+            getResource(server + "/v2/crash", (stat, data, url) => {
+                if(stat != 200)
+                {
+                    console.log("Failed!");
+                    return;
+                }
+
+                data = data.data;
+
+                data.forEach(crash => {
+                    const crashEntry = crashList.appendChild(crashTemplate.cloneNode(true));
+
+                    crash.links.forEach(link => {
+                        link.uri = url.replace("/v2/crash", link.uri);
+                    });
+
+                    const fields = crashEntry.querySelectorAll("span");
+                    var i = 0;
+                    fields.forEach(field => {
+                        switch(i)
+                        {
+                            case 0:
+                                field.innerText = crash.data.crashId;
+                                break;
+                            case 1:
+                                field.innerText = new Date(crash.data.submitTime).toISOString();
+                                break;
+                            case 2:
+                                field.innerHTML =
+                                    '<a target="blank_" href="' + crash.links[1].uri + '">stdout</a> |' +
+                                    '<a target="blank_" href="' + crash.links[2].uri + '">stderr</a> |' +
+                                    '<a target="blank_" href="' + crash.links[3].uri + '">profile</a>';
+                                break;
+                        }
+                        i++;
+                    });
+                });
+
+                if(data.length > 0)
+                    noCrashLabel.style.display = "none";
+            });
+        </script>
+
+    </body>
+
+</html>

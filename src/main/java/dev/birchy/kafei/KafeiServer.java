@@ -4,11 +4,13 @@ import com.codahale.metrics.health.HealthCheck;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 import org.jdbi.v3.core.Jdbi;
 
 import java.net.URI;
 
+import dev.birchy.kafei.crash.endpoints.CrashSubmission;
 import dev.birchy.kafei.endpoints.Overview;
 import dev.birchy.kafei.endpoints.WebProxy;
 import dev.birchy.kafei.github.HookShotBundle;
@@ -56,11 +58,15 @@ public class KafeiServer extends Application<KafeiConfiguration> {
                 environment, configuration.getReportDatabase(), "reports");
         final Jdbi githubDb = jdbiFactory.build(
                 environment, configuration.getGitHooksDatabase(), "githooks");
+        final Jdbi crashDb = jdbiFactory.build(
+                environment, configuration.getCrashDatabase(), "crash");
 
         /* Documentation APIs */
         environment.jersey().register(Overview.class);
 
         environment.jersey().setUrlPattern("/api/*");
+
+        environment.jersey().register(MultiPartFeature.class);
 
         environment.jersey().register(new AbstractBinder() {
             @Override
@@ -68,6 +74,10 @@ public class KafeiServer extends Application<KafeiConfiguration> {
                 bind(environment.getObjectMapper()).to(ObjectMapper.class);
                 bind(reportDb).to(Jdbi.class).named("reportsDb");
                 bind(githubDb).to(Jdbi.class).named("githubDb");
+                bind(crashDb).to(Jdbi.class).named("crashDb");
+
+                bind(configuration.getCorsData()).to(CORSData.class);
+                bind(environment.getObjectMapper()).to(ObjectMapper.class);
             }
         });
 
@@ -77,6 +87,8 @@ public class KafeiServer extends Application<KafeiConfiguration> {
                 return Result.healthy();
             }
         });
+
+        environment.jersey().register(CrashSubmission.class);
     }
 
     public static void main(String[] args) throws Exception {

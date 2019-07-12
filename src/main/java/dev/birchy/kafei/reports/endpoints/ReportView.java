@@ -1,5 +1,6 @@
 package dev.birchy.kafei.reports.endpoints;
 
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -7,6 +8,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -17,6 +19,7 @@ import dev.birchy.kafei.reports.responses.ReportSummary;
 import dev.birchy.kafei.responses.CustomHeaders;
 import dev.birchy.kafei.responses.Result;
 import dev.birchy.kafei.reports.ReportService;
+import dev.birchy.kafei.responses.ShortLink;
 import jdk.nashorn.internal.ir.ObjectNode;
 
 @Path("/v2/reports")
@@ -32,8 +35,24 @@ public final class ReportView {
                 .ok(reportService.getReports()
                         .stream()
                         .map(ReportSummary::new)
+                        .map(report -> Result.ok(report).withLinks(Arrays.asList(
+                                ShortLink.fromResource(ReportView.class)
+                                        .path(report.getReportId() + "")
+                                        .requestMethod("GET")
+                                        .build(),
+                                ShortLink.fromResource(ReportView.class)
+                                        .path(report.getReportId() + "/raw")
+                                        .requestMethod("GET")
+                                        .build(),
+                                ShortLink.fromResource(ReportView.class)
+                                        .path(report.getReportId() + "/json")
+                                        .requestMethod("GET")
+                                        .build()
+                        )).removeMessage())
                         .collect(Collectors.toList()))
-                .wrapped();
+                .withCode(Response.Status.OK)
+                .header("Access-Control-Allow-Origin", "*")
+                .build();
     }
 
     @GET

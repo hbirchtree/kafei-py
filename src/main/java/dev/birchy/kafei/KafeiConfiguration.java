@@ -32,5 +32,17 @@ public final class KafeiConfiguration extends Configuration {
     @Getter
     @Setter
     @JsonProperty
+    private DataSourceFactory crashDatabase = new DataSourceFactory();
+
+    @Getter
+    @Setter
+    @JsonProperty
+    private CORSData corsData = new CORSData();
+
+    @Valid
+    @NonNull
+    @Getter
+    @Setter
+    @JsonProperty
     private FlywayFactory flyway = new FlywayFactory();
 }
