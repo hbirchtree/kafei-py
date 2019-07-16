@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public final class CrashSummary {
     private long crashId;
     private DateTime submitTime;
+    private int exitCode;
 }

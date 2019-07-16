@@ -3,12 +3,17 @@ package dev.birchy.kafei;
 import com.codahale.metrics.health.HealthCheck;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 import org.jdbi.v3.core.Jdbi;
 
 import java.net.URI;
+import java.util.EnumSet;
+
+import javax.servlet.DispatcherType;
+import javax.servlet.FilterRegistration;
 
 import dev.birchy.kafei.crash.endpoints.CrashSubmission;
 import dev.birchy.kafei.endpoints.Overview;
@@ -75,8 +80,6 @@ public class KafeiServer extends Application<KafeiConfiguration> {
                 bind(reportDb).to(Jdbi.class).named("reportsDb");
                 bind(githubDb).to(Jdbi.class).named("githubDb");
                 bind(crashDb).to(Jdbi.class).named("crashDb");
-
-                bind(configuration.getCorsData()).to(CORSData.class);
                 bind(environment.getObjectMapper()).to(ObjectMapper.class);
             }
         });
@@ -87,6 +90,18 @@ public class KafeiServer extends Application<KafeiConfiguration> {
                 return Result.healthy();
             }
         });
+
+        final FilterRegistration.Dynamic cors =
+                environment.servlets().addFilter("CORS", CrossOriginFilter.class);
+
+        cors.setInitParameter("allowedOrigins", configuration.getCorsData().getAllowOrigin() != null
+                ? configuration.getCorsData().getAllowOrigin()
+                : "*");
+        cors.setInitParameter("allowedMethods", configuration.getCorsData().getAllowMethods() != null
+                ? configuration.getCorsData().getAllowMethods()
+                : "GET");
+
+        cors.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
 
         environment.jersey().register(CrashSubmission.class);
     }

@@ -51,7 +51,6 @@ public final class ReportView {
                         )).removeMessage())
                         .collect(Collectors.toList()))
                 .withCode(Response.Status.OK)
-                .header("Access-Control-Allow-Origin", "*")
                 .build();
     }
 

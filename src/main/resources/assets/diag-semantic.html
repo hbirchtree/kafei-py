@@ -1,0 +1,266 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+        <title>Reports & Crashes</title>
+
+        <link rel="stylesheet" type="text/css" href="semantic/semantic.min.css">
+
+        <link rel="stylesheet" type="text/css" href="semantic/components/container.css">
+        <link rel="stylesheet" type="text/css" href="semantic/components/grid.css">
+        <link rel="stylesheet" type="text/css" href="semantic/components/header.css">
+        <link rel="stylesheet" type="text/css" href="semantic/components/menu.css">
+        <link rel="stylesheet" type="text/css" href="semantic/components/modal.css">
+        <link rel="stylesheet" type="text/css" href="semantic/components/tab.css">
+
+        <style>
+            body, .container, .inverted {
+                background-color: #151530 !important;
+            }
+            .ui.menu .item {
+                transition: background-color 0.5s;
+            }
+            h4 {
+                margin-top: 0em;
+            }
+            .ui.menu, .ui.menu > .ui.container {
+                background-color: royalblue !important;
+            }
+            .ui.footer, .ui.footer > .ui.container {
+                background-color: midnightblue !important;
+            }
+            .ui.menu > .ui.item.active, .ui.inverted.menu .active.item {
+                background-color: midnightblue !important;
+                transition: background-color 0.1s;
+            }
+            .tab {
+                margin-top: 4em;
+                min-height: 90%;
+            }
+            #reportLoader {
+                height: 100%;
+            }
+            #reportList {
+                opacity: 0;
+            }
+            .fade-fast {
+                transition: opacity 0.1s;
+            }
+            .ui.placeholder .line.table-value {
+                margin-bottom: 1em;
+                height: 0;
+            }
+            .ui.modal .header.inverted, .ui.modal .content.inverted {
+                background-color: midnightblue !important;
+            }
+            .ui.modal .header.inverted {
+                color: white;
+            }
+            .ui.grid .row.inverted:nth-child(even) {
+                background-color: #252540 !important;
+            }
+            .ui.tab {
+                padding-left: 0;
+                padding-right: 0;
+            }
+            .err-log .segment, .info-log .segment {
+                padding: 0.5em;
+                color: white;
+                font-family: monospace;
+            }
+            .err-log p, .info-log p {
+                margin-bottom: 0.2em;
+            }
+            .err-log, .info-log {
+                border-radius: 0.3rem;
+            }
+            .info-log .grid {
+                background-color: white;
+            }
+            .item {
+                filter: brightness(1);
+            }
+            .item:active {
+                filter: brightness(0.5);
+                background-color: midnightblue !important;
+                transition: filter 0.5s;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="ui inverted menu">
+            <div class="ui container">
+                <a data-tab="about" class="header item active">
+                    <img src="favicon.png">
+                    <h4 class="ui text big">Coffee Reports & Crash Site</h4>
+                </a>
+                <a data-tab="reports" class="item">Reports</a>
+                <a data-tab="crashes" class="item">Crashes</a>
+            </div>
+        </div>
+
+        <div class="ui inverted text tab segment active" data-tab="about">
+            <div class="ui inverted text container segment">
+                <h1 class="ui header">What is this?</h1>
+
+                <p>This website displays runtime and crash reports from applications.</p>
+            </div>
+        </div>
+
+        <!-- REPORT STUFF -->
+
+        <div class="ui inverted text tab segment" data-tab="reports">
+            <div class="ui modal centered" id="reportModal">
+                <div class="header">
+                    <i class="big file icon"></i><span class="stereotype-field"></span> #<span class="id-field"></span>
+                </div>
+                <i class="close icon"></i>
+                <div class="scrolling content">
+                    <div class="ui divided internally celled centered grid">
+                        <div class="row modal-field">
+                            <div class="one wide column header"><i class="big icon"></i></div>
+                            <div class="six wide column"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="reportLoader" class="ui active dimmer fade-fast">
+                <div class="ui text loader">Loading reports</div>
+            </div>
+
+            <div class="row inverted" style="display: none; cursor: pointer;" id="reportTemplate">
+                <div class="two wide column"></div>
+                <div class="one wide column"></div>
+                <div class="four wide column"></div>
+                <div class="two wide column header">
+                    <div class="ui fluid placeholder inverted"><div class="line table-value"></div></div>
+                    <div class="ui red basic label" style="display: none;">Failed to load</div>
+                </div>
+                <div class="three wide column header">
+                    <div class="ui fluid placeholder inverted"><div class="line table-value"></div></div>
+                    <div class="ui red basic label" style="display: none;">Failed to load</div>
+                </div>
+                <div class="two wide column"></div>
+                <div class="one wide column">
+                    <a class="profile-link">profile</a>
+                </div>
+            </div>
+            <div class="ui inverted divided internally celled centered grid fade-fast" id="reportList">
+                <div class="row inverted">
+                    <h3 class="two wide column header">Report ID</h3>
+                    <h3 class="one wide column header"></h3>
+                    <h3 class="four wide column header">System</h3>
+                    <h3 class="two wide column header">Application</h3>
+                    <h3 class="three wide column header">Build version/mode</h3>
+                    <h3 class="two wide column header">Submit time</h3>
+                    <h3 class="one wide column header">Links</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- CRASH STUFF -->
+
+        <div class="ui inverted text tab segment" data-tab="crashes">
+
+            <div class="ui modal centered fullscreen" id="crashModal">
+                <div class="header">
+                    <i class="big bug icon"></i><span class="stereotype-field">Crash</span> #<span class="id-field"></span>
+                </div>
+                <i class="close icon"></i>
+                <div class="scrolling content">
+                    <h4 class="ui horizontal divider header"><i class="info circle icon"></i>Information</h4>
+                    <div class="content inverted text info-log">
+                        <div class="ui divided internally celled centered grid">
+                            <div class="row modal-field app-details">
+                                <div class="one wide column header"><i class="big box icon"></i></div>
+                                <div class="eight wide column">
+                                    <h4 class="ui header">Application</h4>
+                                </div>
+                            </div>
+                            <div class="row modal-field build-details">
+                                <div class="one wide column header"><i class="big cog icon"></i></div>
+                                <div class="eight wide column">
+                                    <h4 class="ui header">Build</h4>
+                                </div>
+                            </div>
+                            <div class="row modal-field system-details">
+                                <div class="one wide column header"><i class="big microchip icon"></i></div>
+                                <div class="eight wide column">
+                                    <h4 class="ui header">System</h4>
+                                </div>
+                            </div>
+                            <div class="row modal-field graphics-details" style="display: none;">
+                                <div class="one wide column header"><i class="big tv icon"></i></div>
+                                <div class="eight wide column">
+                                    <h4 class="ui header">Graphics</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ui placeholder fluid">
+                            <div class="line"></div>
+                            <div class="line"></div>
+                            <div class="line"></div>
+                            <div class="line"></div>
+                        </div>
+                    </div>
+
+                    <h4 class="ui horizontal divider header"><i class="bug icon"></i>Crash log</h4>
+                    <div class="content inverted text err-log">
+                        <div class="ui placeholder fluid">
+                            <div class="line"></div>
+                            <div class="line"></div>
+                            <div class="line"></div>
+                            <div class="line"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="crashLoader" class="ui active dimmer fade-fast">
+                <div class="ui text loader">Loading crashes</div>
+            </div>
+
+            <div class="row inverted" style="display: none; cursor: pointer;" id="crashTemplate">
+                <div class="two wide column"></div>
+                <div class="three wide column"></div>
+                <div class="four wide column">
+                    <a class="stdout-link" target="_blank"><div class="ui label inverted"><i class="download icon"></i>stdout</div></a>
+                    <a class="stderr-link" target="_blank"><div class="ui label inverted"><i class="download icon"></i>stderr</div></a>
+                    <a class="profile-link" target="_blank"><div class="ui label inverted"><i class="download icon"></i>profile</div></a>
+                </div>
+            </div>
+            <div class="ui inverted divided internally celled centered grid fade-fast" id="crashList">
+                <div class="row inverted">
+                    <h3 class="two wide column header">Crash ID</h3>
+                    <h3 class="three wide column header">Submit time</h3>
+                    <h3 class="four wide column header">Links</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="ui inverted vertical footer segment centered">
+            <p class="ui container">Coffee!</p>
+        </div>
+
+        <script
+                src="https://code.jquery.com/jquery-3.1.1.min.js"
+                integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+                crossorigin="anonymous"></script>
+        <script src="semantic/semantic.min.js"></script>
+        <script src="get-resource.js"></script>
+        <script>
+            $('.menu .item').tab();
+            $('#reportLoader').progress();
+
+            const server = 'https://api.birchy.dev';
+        </script>
+        <script src="crash-report.js"></script>
+        <script src="runtime-report.js"></script>
+    </body>
+</html>
+
+
+

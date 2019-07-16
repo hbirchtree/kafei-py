@@ -45,19 +45,10 @@ public final class CrashSubmission {
     private UriInfo uriInfo;
 
     @Inject
-    private CORSData corsData;
-
-    @Inject
     private ObjectMapper mapper;
 
-    private Response.ResponseBuilder addCORS(Response.ResponseBuilder r) {
-        if(corsData != null)
-            return r.header("Access-Control-Allow-Origin", corsData.getAllowOrigin());
-        else
-            return r.header("Access-Control-Allow-Origin", "*");
-    }
-
     @POST
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @RespondsWith(CrashSummary.class)
     public Response postCrash(FormDataMultiPart outputs) {
         if(!outputs.getFields().containsKey("stdout") && !outputs.getFields().containsKey("stderr"))
@@ -66,9 +57,17 @@ public final class CrashSubmission {
                     .withCode(Response.Status.BAD_REQUEST)
                     .build();
 
+        int exitCode = outputs.getFields().containsKey("exitCode")
+                ? Integer.parseInt(outputs.getField("exitCode").getValue())
+                : 0;
+
         long crashId = crashDb.withExtension(CrashDao.class, (crash -> {
             String profile =  outputs.getFields().containsKey("profile")
                     ? outputs.getField("profile").getValue()
+                    : null;
+
+            String machineInfo = outputs.getFields().containsKey("machineProfile")
+                    ? outputs.getField("machineProfile").getValue()
                     : null;
 
             if(profile != null) {
@@ -84,10 +83,12 @@ public final class CrashSubmission {
                     new DateTime(),
                     outputs.getField("stdout").getValue().getBytes(),
                     outputs.getField("stderr").getValue().getBytes(),
-                    profile != null ? profile.getBytes() : null);
+                    profile != null ? profile.getBytes() : null,
+                    machineInfo != null ? machineInfo.getBytes() : null,
+                    exitCode);
         }));
 
-        return Result.ok(new CrashSummary(crashId, null))
+        return Result.ok(new CrashSummary(crashId, null, exitCode))
                 .withLinks(Arrays.asList(
                         ShortLink.fromResource(CrashSubmission.class)
                                 .path(crashId + "")
@@ -104,6 +105,10 @@ public final class CrashSubmission {
                         ShortLink.fromResource(CrashSubmission.class)
                                 .path(crashId + "/profile")
                                 .requestMethod("GET")
+                                .build(),
+                        ShortLink.fromResource(CrashSubmission.class)
+                                .path(crashId + "/machine")
+                                .requestMethod("GET")
                                 .build()))
                 .withCode(Response.Status.CREATED)
                 .build();
@@ -112,7 +117,7 @@ public final class CrashSubmission {
     @GET
     @RespondsWith(CrashSummary.class)
     public Response getCrashes() {
-        return addCORS(Result
+        return Result
                 .ok(crashDb.withExtension(CrashDao.class, crashDao -> crashDao.getCrashes())
                         .stream()
                         .map((crash ->
@@ -133,9 +138,13 @@ public final class CrashSubmission {
                                             ShortLink.fromResource(CrashSubmission.class)
                                                     .path(crash.getCrashId() + "/profile")
                                                     .requestMethod("GET")
+                                                    .build(),
+                                            ShortLink.fromResource(CrashSubmission.class)
+                                                    .path(crash.getCrashId() + "/machine")
+                                                    .requestMethod("GET")
                                                     .build()
                                     )).removeMessage())))
-                .withCode(Response.Status.OK))
+                .withCode(Response.Status.OK)
                 .build();
     }
 
@@ -144,10 +153,10 @@ public final class CrashSubmission {
     @RespondsWith(CrashSummary.class)
     public Response getCrash(@PathParam("id") long id) {
         return crashDb.withExtension(CrashDao.class, (crash) -> crash.getCrash(id))
-                .map((crashInfo) -> addCORS(Result.ok(crashInfo).withCode(Response.Status.OK)).build())
-                .orElseGet(() -> addCORS(Result
+                .map((crashInfo) -> Result.ok(crashInfo).withCode(Response.Status.OK).build())
+                .orElseGet(() -> Result
                         .error(Response.Status.NOT_FOUND)
-                        .withCode(Response.Status.NOT_FOUND))
+                        .withCode(Response.Status.NOT_FOUND)
                         .build());
     }
 
@@ -158,10 +167,10 @@ public final class CrashSubmission {
         Optional<byte[]> output =
                 crashDb.withExtension(CrashDao.class, (crash) -> crash.getCrashOut(id));
 
-        return output.map((out) -> addCORS(Response.ok(out).type(MediaType.TEXT_PLAIN)).build())
-                .orElseGet(() -> addCORS(Result
+        return output.map((out) -> Response.ok(out).type(MediaType.TEXT_PLAIN).build())
+                .orElseGet(() -> Result
                         .error(Response.Status.NOT_FOUND)
-                        .withCode(Response.Status.NOT_FOUND))
+                        .withCode(Response.Status.NOT_FOUND)
                         .build());
     }
 
@@ -173,10 +182,10 @@ public final class CrashSubmission {
                 crashDb.withExtension(CrashDao.class, (crash) -> crash.getCrashErr(id));
 
         return output
-                .map((out) -> addCORS(Response.ok(out).type(MediaType.TEXT_PLAIN)).build())
-                .orElseGet(() -> addCORS(Result
+                .map((out) -> Response.ok(out).type(MediaType.TEXT_PLAIN).build())
+                .orElseGet(() -> Result
                         .error(Response.Status.NOT_FOUND)
-                        .withCode(Response.Status.NOT_FOUND))
+                        .withCode(Response.Status.NOT_FOUND)
                         .build());
     }
 
@@ -188,10 +197,25 @@ public final class CrashSubmission {
                 crashDb.withExtension(CrashDao.class, (crash) -> crash.getCrashProfile(id));
 
         return output
-                .map((out) -> addCORS(Response.ok(out).type(MediaType.TEXT_PLAIN)).build())
-                .orElseGet(() -> addCORS(Result
+                .map((out) -> Response.ok(out).type(MediaType.TEXT_PLAIN).build())
+                .orElseGet(() -> Result
                         .error(Response.Status.NOT_FOUND)
-                        .withCode(Response.Status.NOT_FOUND))
+                        .withCode(Response.Status.NOT_FOUND)
+                        .build());
+    }
+
+    @GET
+    @Path("{id}/machine")
+    @RespondsWith(String.class)
+    public Response getCrashMachine(@PathParam("id") long id) {
+        Optional<byte[]> output =
+                crashDb.withExtension(CrashDao.class, (crash) -> crash.getCrashMachine(id));
+
+        return output
+                .map((out) -> Response.ok(out).type(MediaType.TEXT_PLAIN).build())
+                .orElseGet(() -> Result
+                        .error(Response.Status.NOT_FOUND)
+                        .withCode(Response.Status.NOT_FOUND)
                         .build());
     }
 }

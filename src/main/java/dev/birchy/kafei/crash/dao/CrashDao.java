@@ -14,7 +14,7 @@ import dev.birchy.kafei.crash.CrashSummary;
 
 public interface CrashDao {
 
-    @SqlQuery("select crash_id, submit_time from crash.outputs")
+    @SqlQuery("select crash_id, submit_time, exit_code from crash.outputs")
     @RegisterBeanMapper(CrashSummary.class)
     List<CrashSummary> getCrashes();
 
@@ -31,13 +31,18 @@ public interface CrashDao {
     @SqlQuery("select profile_file from crash.outputs where crash_id = :crashId")
     Optional<byte[]> getCrashProfile(@Bind("crashId") long crashId);
 
+    @SqlQuery("select machine_info from crash.outputs where crash_id = :crashId")
+    Optional<byte[]> getCrashMachine(@Bind("crashId") long crashId);
+
     @SqlUpdate("insert into crash.outputs" +
-            " (submit_time, stdout, stderr, profile_file)" +
-            " values(:submitTime, :stdout, :stderr, :profile)")
+            " (submit_time, stdout, stderr, profile_file, machine_info, exit_code)" +
+            " values(:submitTime, :stdout, :stderr, :profile, :machineInfo, :exitCode)")
     @GetGeneratedKeys
     long addCrash(
             @Bind("submitTime")DateTime submitTime,
             @Bind("stdout") byte[] stdOut,
             @Bind("stderr") byte[] stdErr,
-            @Bind("profile") byte[] profile);
+            @Bind("profile") byte[] profile,
+            @Bind("machineInfo") byte[] machineInfo,
+            @Bind("exitCode") int exitCode);
 }

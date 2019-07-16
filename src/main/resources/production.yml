@@ -32,4 +32,5 @@ crashDatabase:
   url: jdbc:postgresql://localhost/kafei
 
 corsData:
-  allowOrigin: "https://birchy.dev"
+  allowOrigin: "*"
+  allowMethods: "OPTIONS,GET,POST"
