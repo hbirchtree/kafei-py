@@ -7,8 +7,10 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 import dev.birchy.kafei.RespondsWith;
 import dev.birchy.kafei.reports.ReportFormat;
@@ -28,6 +30,8 @@ public final class ReportSubmit {
     private ObjectMapper mapper;
     @Inject
     private ReportService reportService;
+    @Context
+    private UriInfo uriInfo;
 
     @POST
     @Path("/reportSink")
@@ -44,7 +48,11 @@ public final class ReportSubmit {
         return Result
                 .ok(new ReportInfo(runId))
                 .withCode(Response.Status.CREATED)
-                .location(ShortLink.fromResource(ReportView.class).path("getReport").uri())
+                .location(uriInfo.getBaseUriBuilder()
+                        .path(ReportView.class)
+                        .path("{id}")
+                        .resolveTemplate("id", runId)
+                        .build())
                 .build();
     }
 }

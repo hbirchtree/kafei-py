@@ -24,6 +24,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import dev.birchy.kafei.RespondsWith;
+import dev.birchy.kafei.crash.endpoints.CrashSubmission;
 import dev.birchy.kafei.github.endpoints.GithubReleases;
 import dev.birchy.kafei.reports.endpoints.ReportStatistics;
 import dev.birchy.kafei.reports.endpoints.ReportSubmit;
@@ -121,6 +122,8 @@ public class Overview {
         overview.addAll(getLinks(ReportViewLegacy.class));
 
         overview.addAll(getLinks(GithubReleases.class));
+
+        overview.addAll(getLinks(CrashSubmission.class));
 
         Map<String, ObjectNode> returnTypes = new HashMap<>();
         detectedReturnTypes.stream().distinct().forEach((type) -> {

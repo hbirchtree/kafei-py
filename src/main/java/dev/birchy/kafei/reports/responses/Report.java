@@ -54,6 +54,8 @@ public class Report {
 
         private DateTime submitTime;
         private String system;
+        private String architecture;
+        private String kernel;
         private String cwd;
         private List<String> arguments;
 
@@ -130,7 +132,7 @@ public class Report {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Memory memory;
 
-    private Map<String, byte[]> extra;
+    private Map<String, String> extra;
 
     private List<ChromeTracePoint> traceEvents;
 }

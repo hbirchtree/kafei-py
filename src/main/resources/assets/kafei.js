@@ -133,7 +133,7 @@ function loadExamples()
         /* SHA is massif. Shorten it. */
         commitSha.innerText = shortenText(info.id, 23, 2);
         /* Format the date to look a bit more appealing */
-        commitDate.innerText = new Date(info_base.updated_at).toUTCString();
+        commitDate.innerText = new Date(info.timestamp).toUTCString();
     });
 
 

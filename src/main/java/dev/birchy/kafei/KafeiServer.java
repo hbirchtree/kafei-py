@@ -3,10 +3,21 @@ package dev.birchy.kafei;
 import com.codahale.metrics.health.HealthCheck;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.server.model.Resource;
 import org.jdbi.v3.core.Jdbi;
 
+import java.net.URI;
+import java.util.EnumSet;
+
+import javax.servlet.DispatcherType;
+import javax.servlet.FilterRegistration;
+
+import dev.birchy.kafei.crash.endpoints.CrashSubmission;
 import dev.birchy.kafei.endpoints.Overview;
+import dev.birchy.kafei.endpoints.WebProxy;
 import dev.birchy.kafei.github.HookShotBundle;
 import dev.birchy.kafei.reports.ReportsBundle;
 import io.dropwizard.Application;
@@ -52,14 +63,15 @@ public class KafeiServer extends Application<KafeiConfiguration> {
                 environment, configuration.getReportDatabase(), "reports");
         final Jdbi githubDb = jdbiFactory.build(
                 environment, configuration.getGitHooksDatabase(), "githooks");
-
-        reportDb.useHandle(handle -> handle.execute("set session search_path to reports;"));
-        githubDb.useHandle(handle -> handle.execute("set session search_path to githooks;"));
+        final Jdbi crashDb = jdbiFactory.build(
+                environment, configuration.getCrashDatabase(), "crash");
 
         /* Documentation APIs */
         environment.jersey().register(Overview.class);
 
         environment.jersey().setUrlPattern("/api/*");
+
+        environment.jersey().register(MultiPartFeature.class);
 
         environment.jersey().register(new AbstractBinder() {
             @Override
@@ -67,6 +79,8 @@ public class KafeiServer extends Application<KafeiConfiguration> {
                 bind(environment.getObjectMapper()).to(ObjectMapper.class);
                 bind(reportDb).to(Jdbi.class).named("reportsDb");
                 bind(githubDb).to(Jdbi.class).named("githubDb");
+                bind(crashDb).to(Jdbi.class).named("crashDb");
+                bind(environment.getObjectMapper()).to(ObjectMapper.class);
             }
         });
 
@@ -76,10 +90,24 @@ public class KafeiServer extends Application<KafeiConfiguration> {
                 return Result.healthy();
             }
         });
+
+        final FilterRegistration.Dynamic cors =
+                environment.servlets().addFilter("CORS", CrossOriginFilter.class);
+
+        cors.setInitParameter("allowedOrigins", configuration.getCorsData().getAllowOrigin() != null
+                ? configuration.getCorsData().getAllowOrigin()
+                : "*");
+        cors.setInitParameter("allowedMethods", configuration.getCorsData().getAllowMethods() != null
+                ? configuration.getCorsData().getAllowMethods()
+                : "GET");
+
+        cors.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
+
+        environment.jersey().register(CrashSubmission.class);
+        environment.jersey().register(FaviconResource.class);
     }
 
     public static void main(String[] args) throws Exception {
         new KafeiServer().run(args);
     }
 }
-

@@ -24,3 +24,13 @@ gitHooksDatabase:
   user: postgres
   password: postgres
   url: jdbc:postgresql://localhost/kafei
+
+crashDatabase:
+  driverClass: org.postgresql.Driver
+  user: postgres
+  password: postgres
+  url: jdbc:postgresql://localhost/kafei
+
+corsData:
+  allowOrigin: "*"
+  allowMethods: "OPTIONS,GET,POST"
