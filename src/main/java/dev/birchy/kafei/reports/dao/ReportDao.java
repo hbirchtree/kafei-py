@@ -32,9 +32,11 @@ public interface ReportDao {
     Optional<Long> addApplication(@BindBean Report.ApplicationInfo app);
 
     @SqlUpdate("insert into reports.run" +
-            "(build_version, cwd, memory, system, submit_time, commandline, build_mode)" +
+            "(build_version, cwd, memory, system, submit_time, commandline, build_mode," +
+            "    architecture, kernel)" +
             " values(:build.version, :run.cwd, :mem.bank, :run.system," +
-            "        :run.submitTime, :run.commandLine, :build.buildMode)")
+            "        :run.submitTime, :run.commandLine, :build.buildMode," +
+            "        :run.architecture, :run.kernel)")
     @GetGeneratedKeys
     long addRuntime(
             @BindBean("run") Report.RuntimeInfo runtime,
@@ -69,7 +71,7 @@ public interface ReportDao {
     void addRawReport(@Bind("runId") long runId, @BindBean("report") ReportData reportData);
 
     @SqlUpdate("insert into reports.run_extras(run_id, key, value) values(:runId, :key, :value)")
-    void addRunExtra(@Bind("runId") long runId, @Bind("key") String key, @Bind("value") byte[] value);
+    void addRunExtra(@Bind("runId") long runId, @Bind("key") String key, @Bind("value") String value);
 
     /*
      *

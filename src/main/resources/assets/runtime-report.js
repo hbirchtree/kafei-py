@@ -2,16 +2,6 @@ const reportList = document.querySelector('#reportList');
 const reportLoader = document.querySelector('#reportLoader');
 const reportModal = document.querySelector('#reportModal');
 
-const systemToIcon = (system) => {
-    const kernel = system.split('running')[1].trim().split(' ')[0];
-    console.log(kernel);
-    switch(kernel)
-    {
-        case 'Darwin': return 'apple';
-        default: return kernel.toLowerCase();
-    }
-};
-
 getResource(server + '/v2/reports', (stat, data, url) => {
     if(stat !== 200)
     {
@@ -25,7 +15,7 @@ getResource(server + '/v2/reports', (stat, data, url) => {
     modalStereotype.innerText = 'Report';
     const modalGrid = reportModal.querySelector('.grid');
 
-    for(var i=0; i<2; i++)
+    for(var i=0; i<3; i++)
         modalGrid.appendChild(modalField.cloneNode(true));
 
     const nameList = reportModal.querySelectorAll('.column.header');
@@ -44,12 +34,16 @@ getResource(server + '/v2/reports', (stat, data, url) => {
             case 2:
                 field.querySelector('.icon').classList.add('microchip');
                 break;
+            case 3:
+                field.querySelector('.icon').classList.add('tv');
+                break;
         }
         i++;
     });
 
     data.data.forEach(report => {
         const element = reportList.appendChild(document.querySelector('#reportTemplate').cloneNode(true));
+        const iconElement = element.querySelector('i.icon');
 
         var i = 0;
         element.querySelectorAll('.column').forEach(field => {
@@ -58,10 +52,6 @@ getResource(server + '/v2/reports', (stat, data, url) => {
                 case 0:
                     field.innerText = report.data.reportId;
                     break;
-                case 1:
-                    field.innerHTML =
-                        '<i class="large icon ' + systemToIcon(report.data.system) + '"></i>';
-                    break;
                 case 2:
                     field.innerText = report.data.system;
                     break;
@@ -69,12 +59,14 @@ getResource(server + '/v2/reports', (stat, data, url) => {
                     field.innerText = new Date(report.data.submitTime).toISOString();
                     break;
                 case 6:
-                    field.querySelector('.profile-link').href = + server + report.links[1].uri;
+                    field.querySelector('.profile-link').href = server + report.links[1].uri;
                     break;
             }
             i++;
         });
         element.style.display = 'block';
+
+        iconElement.classList.add(systemToIcon(report.data.system));
 
         const appField = element.querySelectorAll('.column')[3];
         const buildField = element.querySelectorAll('.column')[4];
@@ -88,6 +80,9 @@ getResource(server + '/v2/reports', (stat, data, url) => {
                 buildField.querySelector('.label').style.display = 'block';
                 return;
             }
+
+            console.log(data.data.device.version);
+            iconElement.classList.add(systemToIcon(data.data.device.version));
 
             element.addEventListener('click', () => {
                 const reportD = data.data;
@@ -119,6 +114,16 @@ getResource(server + '/v2/reports', (stat, data, url) => {
                                 "<p><strong>os</strong> "+ reportD.runtime.system + "</p>" +
                                 "<p><strong>os version</strong> "+ reportD.device.version + "</p>" +
                                 "<p><strong>processor</strong> "+ reportD.processor.model + "</p>";
+                            break;
+                        case 3:
+                            field.innerHTML =
+                                "<h4 class='ui header'>Graphics</h4>" +
+                                "<p><strong>library</strong> "+ reportD.extra['window:library'] + "</p>" +
+                                "<p><strong>renderer</strong> "+ reportD.extra['gl:renderer'] + "</p>" +
+                                "<p><strong>version</strong> "+ reportD.extra['gl:version'] + "</p>" +
+                                "<p><strong>driver</strong> "+ reportD.extra['gl:driver'] + "</p>" +
+                                "<p><strong>shader version</strong> "+ reportD.extra['gl:glsl_version'] + "</p>"
+                                ;
                             break;
                     }
                     i++;

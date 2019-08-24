@@ -24,7 +24,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import dev.birchy.kafei.CORSData;
 import dev.birchy.kafei.RespondsWith;
 import dev.birchy.kafei.crash.CrashSummary;
 import dev.birchy.kafei.crash.dao.CrashDao;

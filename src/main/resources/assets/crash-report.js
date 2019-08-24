@@ -60,6 +60,9 @@ getResource(server + '/v2/crash', (stat, data, url) => {
 
                 var log = data.substr(data.indexOf('exception encountered'));
                 if(log.length < 10)
+                    log = data.substr(data.indexOf('signal encountered'));
+
+                if(log.length < 10)
                 {
                     errLog.appendChild(createErrorElement('Crash was not automatically detected'));
                     log = data;
@@ -183,9 +186,21 @@ getResource(server + '/v2/crash', (stat, data, url) => {
                     field.innerText = crash.data.crashId;
                     break;
                 case 1:
-                    field.innerText = new Date(crash.data.submitTime).toISOString();
+                    getRawResource(server + crash.links[1].uri, (stat, data, url) => {
+                        if(stat !== 200)
+                        {
+                            element.querySelector('div.column:nth-child(2) .icon').classList.add('box');
+                            return;
+                        }
+
+                        const kernel = data.match("Device: (.*)").slice(1)[0];
+                        element.querySelector('div.column:nth-child(2) .icon').classList.add(systemToIcon(kernel));
+                    });
                     break;
                 case 2:
+                    field.innerText = new Date(crash.data.submitTime).toISOString();
+                    break;
+                case 3:
                     field.querySelector('.stdout-link').href = server + crash.links[1].uri;
                     field.querySelector('.stderr-link').href = server + crash.links[2].uri;
                     field.querySelector('.profile-link').href = server + crash.links[3].uri;

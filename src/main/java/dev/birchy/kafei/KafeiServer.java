@@ -104,10 +104,10 @@ public class KafeiServer extends Application<KafeiConfiguration> {
         cors.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
 
         environment.jersey().register(CrashSubmission.class);
+        environment.jersey().register(FaviconResource.class);
     }
 
     public static void main(String[] args) throws Exception {
         new KafeiServer().run(args);
     }
 }
-

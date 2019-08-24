@@ -5,5 +5,5 @@ import lombok.Data;
 @Data
 public final class ExtrasProperty {
     private String key;
-    private byte[] value;
+    private String value;
 }

@@ -47,7 +47,7 @@ public final class LegacyReport {
         final JsonNode extras = obj.get("extra");
         if(extras != null)
             extras.fieldNames().forEachRemaining((key) -> {
-                out.getExtra().put(key, extras.get(key).asText().getBytes());
+                out.getExtra().put(key, extras.get(key).asText());
             });
 
         out.setApplication(parseSubObject(obj, mapper, "application", Report.ApplicationInfo.class));

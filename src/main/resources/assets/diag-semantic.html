@@ -72,6 +72,7 @@
             }
             .err-log p, .info-log p {
                 margin-bottom: 0.2em;
+                word-break: break-all;
             }
             .err-log, .info-log {
                 border-radius: 0.3rem;
@@ -133,7 +134,7 @@
 
             <div class="row inverted" style="display: none; cursor: pointer;" id="reportTemplate">
                 <div class="two wide column"></div>
-                <div class="one wide column"></div>
+                <div class="one wide column"><i class="large icon"></i></div>
                 <div class="four wide column"></div>
                 <div class="two wide column header">
                     <div class="ui fluid placeholder inverted"><div class="line table-value"></div></div>
@@ -145,7 +146,7 @@
                 </div>
                 <div class="two wide column"></div>
                 <div class="one wide column">
-                    <a class="profile-link">profile</a>
+                    <a class="profile-link" target="_blank"><div class="ui label inverted"><i class="download icon"></i>profile</div></a>
                 </div>
             </div>
             <div class="ui inverted divided internally celled centered grid fade-fast" id="reportList">
@@ -225,6 +226,7 @@
 
             <div class="row inverted" style="display: none; cursor: pointer;" id="crashTemplate">
                 <div class="two wide column"></div>
+                <div class="one wide column"><i class="large icon"></i></div>
                 <div class="three wide column"></div>
                 <div class="four wide column">
                     <a class="stdout-link" target="_blank"><div class="ui label inverted"><i class="download icon"></i>stdout</div></a>
@@ -235,6 +237,7 @@
             <div class="ui inverted divided internally celled centered grid fade-fast" id="crashList">
                 <div class="row inverted">
                     <h3 class="two wide column header">Crash ID</h3>
+                    <h3 class="one wide column header">OS</h3>
                     <h3 class="three wide column header">Submit time</h3>
                     <h3 class="four wide column header">Links</h3>
                 </div>
@@ -256,6 +259,21 @@
             $('#reportLoader').progress();
 
             const server = 'https://api.birchy.dev';
+
+            const systemToIcon = (system) => {
+                var kernel = system.split('running')[1];
+
+                if(kernel !== undefined)
+                    kernel = kernel.trim().split(' ')[0];
+                else
+                    kernel = system.split(' ')[0].trim();
+
+                switch(kernel)
+                {
+                    case 'Darwin': return 'apple';
+                    default: return kernel.toLowerCase();
+                }
+            };
         </script>
         <script src="crash-report.js"></script>
         <script src="runtime-report.js"></script>
