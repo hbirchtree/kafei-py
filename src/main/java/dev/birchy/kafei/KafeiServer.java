@@ -20,6 +20,7 @@ import dev.birchy.kafei.endpoints.Overview;
 import dev.birchy.kafei.endpoints.WebProxy;
 import dev.birchy.kafei.github.HookShotBundle;
 import dev.birchy.kafei.reports.ReportsBundle;
+import dev.birchy.kafei.shortener.ShortLink;
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.configuration.ResourceConfigurationSourceProvider;
@@ -65,6 +66,8 @@ public class KafeiServer extends Application<KafeiConfiguration> {
                 environment, configuration.getGitHooksDatabase(), "githooks");
         final Jdbi crashDb = jdbiFactory.build(
                 environment, configuration.getCrashDatabase(), "crash");
+        final Jdbi shortenDb = jdbiFactory.build(
+                environment, configuration.getShortDatabase(), "shorten");
 
         /* Documentation APIs */
         environment.jersey().register(Overview.class);
@@ -81,6 +84,7 @@ public class KafeiServer extends Application<KafeiConfiguration> {
                 bind(githubDb).to(Jdbi.class).named("githubDb");
                 bind(crashDb).to(Jdbi.class).named("crashDb");
                 bind(environment.getObjectMapper()).to(ObjectMapper.class);
+                bind(shortenDb).to(Jdbi.class).named("shortenDb");
             }
         });
 
@@ -105,6 +109,8 @@ public class KafeiServer extends Application<KafeiConfiguration> {
 
         environment.jersey().register(CrashSubmission.class);
         environment.jersey().register(FaviconResource.class);
+
+        environment.jersey().register(ShortLink.class);
     }
 
     public static void main(String[] args) throws Exception {

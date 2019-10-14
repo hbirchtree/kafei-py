@@ -13,11 +13,14 @@ import java.io.IOException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -42,10 +45,13 @@ public final class GithubReleases {
     private Jdbi githubDb;
 
     @GET
-    @Path("/latestRelease")
-    public Response getLatest() {
+    @Path("/latestRelease/{repo}")
+    public Response getLatest(@PathParam("repo") @DefaultValue("hbirchtree/coffeecutie") final String repo) {
+        log.info("selecting {}", repo);
         return githubDb
-                .withExtension(GithubDao.class, (git) -> git.getReleases().stream().findFirst())
+                .withExtension(GithubDao.class, (git) -> git.getReleases().stream())
+                .filter((release) -> repo == null || (release.getGitsource() != null && release.getGitsource().equals(repo)))
+                .findFirst()
                 .map((release) ->
                 {
                     try {
@@ -61,10 +67,13 @@ public final class GithubReleases {
     }
 
     @GET
-    @Path("/updateInfo")
-    public Response getUpdate() {
+    @Path("/updateInfo/{repo}")
+    public Response getUpdate(@PathParam("repo") @DefaultValue("hbirchtree/coffeecutie") final String repo) {
+        log.info("selecting {}", repo);
         return githubDb
-                .withExtension(GithubDao.class, (git) -> git.getUpdates().stream().findFirst())
+                .withExtension(GithubDao.class, (git) -> git.getUpdates().stream())
+                .filter((release) -> repo == null || (release.getGitsource() != null && release.getGitsource().equals(repo)))
+                .findFirst()
                 .map((update) -> {
                     try {
                         return Result.ok(mapper.readValue(update.getRequest(), ObjectNode.class)).wrapped();
@@ -100,26 +109,32 @@ public final class GithubReleases {
             case "release": {
                 githubDb.useExtension(GithubDao.class, (git) -> {
                     GitRelease release = new GitRelease();
+                    log.debug("release: {}", payload.get("repository"));
+
                     release.setUpdateTime(
                             new DateTime(payload.get("release").get("published_at").asText()));
                     release.setRequest(mapper.writeValueAsBytes(payload));
+                    release.setGitsource(payload.get("repository").get("full_name").asText().replace("/", "_"));
 
                     git.insertRelease(release);
 
-                    git.cleanReleases(release.getUpdateTime());
+                    git.cleanReleases(release.getUpdateTime(), release.getGitsource());
                 });
                 break;
             }
             case "push": {
                 githubDb.useExtension(GithubDao.class, (git) -> {
                     GitUpdate update = new GitUpdate();
+                    log.debug("push: {}", payload);
+
                     update.setUpdateTime(
                             new DateTime(payload.get("head_commit").get("timestamp").asText()));
                     update.setRequest(mapper.writeValueAsBytes(payload));
+                    update.setGitsource(payload.get("repository").get("full_name").asText().replace("/", "_"));
 
                     git.insertUpdate(update);
 
-                    git.cleanUpdates(update.getUpdateTime());
+                    git.cleanUpdates(update.getUpdateTime(), update.getGitsource());
                 });
                 break;
             }

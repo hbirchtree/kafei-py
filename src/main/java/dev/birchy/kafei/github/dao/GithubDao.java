@@ -13,23 +13,23 @@ import dev.birchy.kafei.github.responses.GitRelease;
 import dev.birchy.kafei.github.responses.GitUpdate;
 
 public interface GithubDao {
-    @SqlQuery("select update_time, request from githooks.updates")
+    @SqlQuery("select update_time, request, gitsource from githooks.updates")
     @RegisterBeanMapper(GitUpdate.class)
     List<GitUpdate> getUpdates();
 
-    @SqlQuery("select update_time, request from githooks.releases")
+    @SqlQuery("select update_time, request, gitsource from githooks.releases")
     @RegisterBeanMapper(GitRelease.class)
     List<GitRelease> getReleases();
 
-    @SqlUpdate("insert into githooks.updates values(:updateTime, :request)")
+    @SqlUpdate("insert into githooks.updates values(:updateTime, :request, :gitsource)")
     void insertUpdate(@BindBean GitUpdate update);
 
-    @SqlUpdate("insert into githooks.releases values(:updateTime, :request)")
+    @SqlUpdate("insert into githooks.releases values(:updateTime, :request, :gitsource)")
     void insertRelease(@BindBean GitRelease release);
 
-    @SqlUpdate("delete from githooks.updates where update_time < :updateTime")
-    void cleanUpdates(@Bind("updateTime") DateTime updateTime);
+    @SqlUpdate("delete from githooks.updates where update_time < :updateTime and gitsource=:gitsource")
+    void cleanUpdates(@Bind("updateTime") DateTime updateTime, @Bind("gitsource") String gitsource);
 
-    @SqlUpdate("delete from githooks.releases where update_time < :updateTime")
-    void cleanReleases(@Bind("updateTime") DateTime updateTime);
+    @SqlUpdate("delete from githooks.releases where update_time < :updateTime and gitsource=:gitsource")
+    void cleanReleases(@Bind("updateTime") DateTime updateTime, @Bind("gitsource") String gitsource);
 }

@@ -31,6 +31,12 @@ crashDatabase:
   password: postgres
   url: jdbc:postgresql://localhost/kafei
 
+shortDatabase:
+  driverClass: org.postgresql.Driver
+  user: postgres
+  password: postgres
+  url: jdbc:postgresql://localhost/kafei
+
 corsData:
   allowOrigin: "*"
   allowMethods: "OPTIONS,GET,POST"

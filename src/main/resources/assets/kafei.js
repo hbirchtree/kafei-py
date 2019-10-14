@@ -93,7 +93,7 @@ function loadHome()
         bubLink.href = relLink.href;
     });
 
-    releaseInfo.open('GET', '/api/github/latestRelease');
+    releaseInfo.open('GET', '/api/github/latestRelease/hbirchtree_coffeecutie');
     releaseInfo.send();
 }
 
@@ -145,9 +145,9 @@ function loadExamples()
         releaseLink.href = release.release.html_url;
     });
 
-    updateInfo.open('GET', '/api/github/updateInfo');
+    updateInfo.open('GET', '/api/github/updateInfo/hbirchtree_coffeecutie');
     updateInfo.send();
-    releaseInfo.open('GET', '/api/github/latestRelease');
+    releaseInfo.open('GET', '/api/github/latestRelease/hbirchtree_coffeecutie');
     releaseInfo.send();
 }
 

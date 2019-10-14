@@ -34,6 +34,13 @@ public final class KafeiConfiguration extends Configuration {
     @JsonProperty
     private DataSourceFactory crashDatabase = new DataSourceFactory();
 
+    @Valid
+    @NonNull
+    @Getter
+    @Setter
+    @JsonProperty
+    private DataSourceFactory shortDatabase = new DataSourceFactory();
+
     @Getter
     @Setter
     @JsonProperty

@@ -8,4 +8,5 @@ import lombok.Data;
 public final class GitRelease {
     private DateTime updateTime;
     private byte[] request;
+    private String gitsource;
 }
