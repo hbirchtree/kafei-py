@@ -1,0 +1,24 @@
+html, body {
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+
+body, main, .container, .inverted {
+    background-color: #151530 !important;
+}
+
+body {
+	color: #333;
+	margin: 0;
+	padding: 8px;
+}
+
+.tab {
+    min-height: 90%;
+}
+
+* {
+    -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+    font-family: 'Ubuntu Mono', monospace;
+}
