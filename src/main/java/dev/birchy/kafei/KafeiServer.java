@@ -44,6 +44,8 @@ public class KafeiServer extends Application<KafeiConfiguration> {
         bootstrap.addBundle(new ReportsBundle());
         bootstrap.addBundle(new HookShotBundle());
 
+        bootstrap.addBundle(new BonziBundle("/bonziProxy"));
+
         bootstrap.addBundle(new FlywayBundle<KafeiConfiguration>() {
             @Override
             public PooledDataSourceFactory getDataSourceFactory(KafeiConfiguration kafeiConfiguration) {
