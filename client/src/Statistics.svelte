@@ -1,7 +1,13 @@
 <script>
     import Code from './Code.svelte';
+    import Graph from './Graph.svelte';
 
     export let endpoints;
+
+    async function create_graphs() {
+        create_graph(window.$("#os-version-view"), '/v1/statistics/os', 'system');
+        create_graph(window.$("#arch-view"), '/v1/statistics/arch', 'architecture');
+    }
 </script>
 
 <p>
@@ -19,4 +25,9 @@
 <Code>
     adb shell am start -n &lt;com.package/.Activity&gt; --es COFFEE_REPORT_URL {endpoints.profiler}
 </Code>
+
+<div class="ui stacked segments">
+    <Graph endpoints={endpoints} title="Operating Systems" source="/v1/statistics/os" sourceKey="system" chartType="doughnut" />
+    <Graph endpoints={endpoints} title="Architectures" source="/v1/statistics/arch" sourceKey="architecture" chartType="doughnut" />
+</div>
 

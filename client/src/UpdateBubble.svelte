@@ -3,19 +3,23 @@
         position: relative;
         display: flex;
         overflow: hidden;
-        align-items: stretch;
+        align-items: flex-start;
         margin: 0 0.2em;
 
         filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.4));
-        border-radius: 100px;
+        border-radius: 3em;
     }
     .bubble-image {
-        border-radius: 100px;
+        border-radius: 3em;
         min-width: 5em;
         min-height: 5em;
 
         display: flex;
-        align-items: stretch;
+        align-items: center;
+        transition: filter linear 0.2s;
+    }
+    .bubble-image:active {
+        filter: brightness(0.5);
     }
     .bubble-listing {
         display: flex;
@@ -30,6 +34,7 @@
 
     .update-bubble {
         background-color: #117;
+        transition: background-color linear 0.1s;
     }
     .update-bubble:hover {
         background-color: #117;

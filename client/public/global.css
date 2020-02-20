@@ -22,3 +22,8 @@ body {
     -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
     font-family: 'Ubuntu Mono', monospace;
 }
+
+h3, h4, .ui.menu {
+    margin: 0 !important;
+}
+

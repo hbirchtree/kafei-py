@@ -1,9 +1,14 @@
 <script>
     import Code from './Code.svelte';
     import UpdateBubble from './UpdateBubble.svelte';
+    import Badge from './Badge.svelte';
 
     export let github;
     export let endpoints;
+
+    export let releaseInfo;
+    export let imguiReleaseInfo;
+    export let nativeReleaseInfo;
 </script>
 
 <UpdateBubble userInfo={github}>
@@ -11,7 +16,13 @@
     All my code is on GitHub
 </UpdateBubble>
 
-<h1 class="ui header">Getting started</h1>
+<div class="ui container inverted">
+    <Badge repository="hbirchtree/coffeecutie" releaseInfo={releaseInfo} />
+    <Badge repository="hbirchtree/coffeecutie-imgui" releaseInfo={imguiReleaseInfo} />
+    <Badge repository="hbirchtree/native-library-bundle" releaseInfo={nativeReleaseInfo} />
+</div>
+
+<h2 class="ui header">Getting started</h2>
 
 <p>
     Get started by cloning the source code
@@ -36,3 +47,4 @@
 <Code>
     ./cb quick-build [ubuntu.amd64, fedora.amd64]
 </Code>
+
