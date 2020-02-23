@@ -3,6 +3,7 @@
     import Home from './Home.svelte';
     import Statistics from './Statistics.svelte';
     import Examples from './Examples.svelte';
+    import Diagnostics from './Diagnostics.svelte';
     import Footer from './Footer.svelte';
     import * as j from 'jquery';
 
@@ -33,7 +34,6 @@
                 return content.json(); 
             })
             .then((content) => {
-                console.log(content.data);
                 return content.data;
             }).catch((err) => {
                 console.err(err);
@@ -64,6 +64,7 @@
 
 <link rel="stylesheet" type="text/css" href="semantic/semantic.min.css">
 <link rel="stylesheet" type="text/css" href="semantic/components/container.min.css">
+<link rel="stylesheet" type="text/css" href="semantic/components/grid.min.css">
 <link rel="stylesheet" type="text/css" href="semantic/components/header.min.css">
 <link rel="stylesheet" type="text/css" href="semantic/components/menu.min.css">
 <link rel="stylesheet" type="text/css" href="semantic/components/modal.min.css">
@@ -80,15 +81,14 @@
 <div data-tab="nav::stats" class="ui inverted text tab segment">
     <Statistics endpoints={endpoints}/>
 </div>
-<div data-tab="nav::diag" class="ui inverted text tab segment">
-    Diagnostics
+<div data-tab="nav::diag" class="ui inverted text tab fluid segment">
+    <Diagnostics endpoints={endpoints} />
 </div>
-
 
 <Footer/>
 
 <style>
-    div.segment {
+    div.segment:not(.fluid) {
         max-width: 60em;
         margin-left: auto;
         margin-right: auto;

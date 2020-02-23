@@ -62,6 +62,12 @@
         left: 0.2em;
         top: 0.2em;
     }
+    .ui.dootable {
+        transition: filter linear 0.2s;
+    }
+    .ui.dootable:active {
+        filter: brightness(0.5);
+    }
 </style>
 
 <div class="ui inverted menu desktop">
@@ -76,7 +82,7 @@
                 <h3>{link.name} </h3><i style="margin-left: 0.4em;" class="icon external alternate"></i>
             </a>
         {/each}
-        <a href="{github.link}" class="ui tiny circular image">
+        <a href="{github.link}" class="ui tiny circular image dootable">
             <img src="{github.img}">
         </a>
     </div>
