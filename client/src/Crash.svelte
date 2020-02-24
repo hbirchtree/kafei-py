@@ -121,8 +121,8 @@
     }
     .crash-item {
         overflow: hidden;
-        margin-left: 0 !important;
-        margin-right: 0 !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
         transition: height linear 0.2s !important;
     }
     .crash-item:not(.active) {

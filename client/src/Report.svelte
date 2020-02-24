@@ -78,6 +78,8 @@
         margin-left: 0 !important;
         margin-right: 0 !important;
         transition: height linear 0.2s !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
     }
     .report-item:not(.active) {
         height: 0 !important;
