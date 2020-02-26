@@ -28,5 +28,3 @@ local.properties
 .gradle
 
 githubKey.json
-
-build/

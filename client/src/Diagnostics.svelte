@@ -13,7 +13,6 @@
         })
         .then((content) => {
             crashes = content.data.reverse();
-            console.log(crashes);
         });
     fetch(endpoints.data + '/v2/reports')
         .then((content) => {
@@ -21,7 +20,6 @@
         })
         .then((content) => {
             reports = content.data.reverse();
-            console.log(reports);
         });
 </script>
 
