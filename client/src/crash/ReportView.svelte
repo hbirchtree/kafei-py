@@ -17,11 +17,20 @@
     <Row name="compiler" content={report.build.compiler} />
     <Row name="architecture" content={report.build.architecture} />
 </Group>
-<Group icon="microchip" headerName="System">
-    <Row name="system" content={report.runtime.system} />
+<Group icon="server" headerName="System">
+    <Row name="system" content={report.runtime.system.split(' (')[0]} />
     <Row name="architecture" content={report.runtime.system.split('(')[1].split(')')[0]} />
     <Row name="device" content={report.device.name.split(' running ')[0]} />
 </Group>
+<Group icon="microchip" headerName="Processor">
+    <Row name="model" content={report.processor.model} />
+    <Row name="cores" content={report.processor.cores} />
+    <Row name="threads" content={report.processor.threads} />
+    {#if report.memory}
+        <Row name="memory" content="{report.memory.bank / (1024 * 1024 * 1024)} GB ({report.memory.bank} B)" />
+    {/if}
+</Group>
+{#if report.extra["window:library"]}
 <Group icon="desktop" headerName="Graphics">
     {#if report.extra["window:library"]}
         <Row name="windowing library" content={report.extra["window:library"]} />
@@ -39,4 +48,5 @@
         <Row name="graphics driver" content={report.extra["gl:driver"]} />
     {/if}
 </Group>
+{/if}
 
