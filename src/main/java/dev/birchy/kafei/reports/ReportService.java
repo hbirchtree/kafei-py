@@ -97,13 +97,13 @@ public final class ReportService {
             for(float f : newReport.getProcessor().getFrequencies())
                 reports.addProcessorFrequency(procId, f);
 
-            reports.addCompiler(newReport.getBuild().getCompiler());
+            reports.addCompiler(newReport.getBuild());
             reports.addArchitecture(newReport.getBuild().getArchitecture());
 
             reports.relateRuntimeApplication(runId, appId);
             reports.relateRuntimeArchitecture(runId, newReport.getBuild().getArchitecture());
-            reports.relateRuntimeCompiler(runId, newReport.getBuild().getCompiler());
-            reports.relateRuntimeDevice(runId, devId, newReport.getDevice());
+            reports.relateRuntimeCompiler(runId, newReport.getBuild());
+            reports.relateRuntimeDevice(runId, devId);
             reports.relateRuntimeProcessor(runId, procId);
 
             return runId;
@@ -145,8 +145,6 @@ public final class ReportService {
         out.setBuild(reports.getBuild(runId).orElse(null));
 
         out.getProcessor().setFrequencies(allReports.getProcessorFrequencies(out.getProcessor()));
-
-        out.getDevice().setVersion(reports.getDeviceVersion(runId).orElse(null));
 
         out.setExtra(new HashMap<>());
         for(ExtrasProperty prop : reports.getRunExtras(runId))

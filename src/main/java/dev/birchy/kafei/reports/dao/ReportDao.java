@@ -17,9 +17,9 @@ public interface ReportDao {
      * Adding functions
      *
      */
-    @SqlUpdate("insert into reports.compiler values(:compiler)" +
+    @SqlUpdate("insert into reports.compiler (compiler_name, version) values(:compiler, :compilerVersion)" +
             " on conflict do nothing")
-    void addCompiler(@Bind("compiler") String compiler);
+    void addCompiler(@BindBean Report.BuildInfo compiler);
 
     @SqlUpdate("insert into reports.architecture values(:arch)" +
             " on conflict do nothing")
@@ -33,10 +33,11 @@ public interface ReportDao {
 
     @SqlUpdate("insert into reports.run" +
             "(build_version, cwd, memory, system, submit_time, commandline, build_mode," +
-            "    architecture, kernel)" +
+            "    architecture, kernel, distro, distro_version, kernel_version, target)" +
             " values(:build.version, :run.cwd, :mem.bank, :run.system," +
             "        :run.submitTime, :run.commandLine, :build.buildMode," +
-            "        :run.architecture, :run.kernel)")
+            "        :run.architecture, :run.kernel, :run.distro, :run.distroVersion," +
+            "        :run.kernelVersion, :build.target)")
     @GetGeneratedKeys
     long addRuntime(
             @BindBean("run") Report.RuntimeInfo runtime,
@@ -61,8 +62,8 @@ public interface ReportDao {
     void addProcessorFirmware(@Bind("procId") long procId, @Bind("fw") String fw);
 
     @SqlUpdate("insert into reports.device" +
-            "(name, motherboard, chassis, platform, type, dpi)" +
-            " values(:name, :motherboard, :chassis, :platform, :type, :dpi)" +
+            "(name, motherboard, chassis, platform, type, dpi, motherboardVersion)" +
+            " values(:name, :motherboard, :chassis, :platform, :type, :dpi, :motherboardVersion)" +
             " on conflict do nothing")
     @GetGeneratedKeys
     Optional<Long> addDevice(@BindBean Report.DeviceInfo device);
@@ -82,8 +83,8 @@ public interface ReportDao {
     @SqlUpdate("insert into reports.run_arch values(:runId, :arch)")
     void relateRuntimeArchitecture(@Bind("runId") long runId, @Bind("arch") String arch);
 
-    @SqlUpdate("insert into reports.run_compiler values(:runId, :compiler)")
-    void relateRuntimeCompiler(@Bind("runId") long runId, @Bind("compiler") String compiler);
+    @SqlUpdate("insert into reports.run_compiler values(:runId, :compiler, :compilerVersion)")
+    void relateRuntimeCompiler(@Bind("runId") long runId, @BindBean Report.BuildInfo compiler);
 
     @SqlUpdate("insert into reports.run_app values(:runId, :appId)")
     void relateRuntimeApplication(@Bind("runId") long runId, @Bind("appId") long appId);
@@ -91,11 +92,10 @@ public interface ReportDao {
     @SqlUpdate("insert into reports.run_proc values(:runId, :procId)")
     void relateRuntimeProcessor(@Bind("runId") long runId, @Bind("procId") long procId);
 
-    @SqlUpdate("insert into reports.run_device values(:runId, :dev.version, :devId)")
+    @SqlUpdate("insert into reports.run_device values(:runId, :devId)")
     void relateRuntimeDevice(
             @Bind("runId") long runId,
-            @Bind("devId") long devId,
-            @BindBean("dev") Report.DeviceInfo dev);
+            @Bind("devId") long devId);
 
     /*
      *

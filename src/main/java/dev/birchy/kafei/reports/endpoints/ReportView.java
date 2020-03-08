@@ -101,4 +101,13 @@ public final class ReportView {
                         .withCode(Response.Status.NOT_FOUND)
                         .build());
     }
+
+    @GET
+    @Path("/{id}/events")
+    public Response getTraceData(@PathParam("id") long reportId) {
+        return Result
+                .error(Response.Status.NOT_FOUND)
+                .withCode(Response.Status.NOT_FOUND)
+                .build();
+    }
 }

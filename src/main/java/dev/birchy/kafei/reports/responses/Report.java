@@ -43,8 +43,10 @@ public class Report {
 
         private String version;
         private String compiler;
+        private String compilerVersion;
         private String architecture;
         private BuildMode buildMode;
+        private String target;
     }
 
     @Data
@@ -56,8 +58,11 @@ public class Report {
         private String system;
         private String architecture;
         private String kernel;
+        private String kernelVersion;
         private String cwd;
         private List<String> arguments;
+        private String distro;
+        private String distroVersion;
 
         @JsonIgnore
         public String getCommandLine() {
@@ -81,8 +86,8 @@ public class Report {
         private long devId;
 
         private String name;
-        private String version;
         private String motherboard;
+        private String motherboardVersion;
         private String chassis;
 
         private float dpi;

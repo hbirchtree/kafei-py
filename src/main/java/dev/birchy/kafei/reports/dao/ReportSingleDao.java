@@ -24,7 +24,12 @@ public interface ReportSingleDao {
     @SqlQuery("select distinct run_compiler.compiler_name as compiler," +
             "        run_arch.arch_name as architecture," +
             "        run.build_version as version," +
-            "        run.build_mode as build_mode" +
+            "        run.build_mode as build_mode," +
+            "        run.distro as distro," +
+            "        run.distro_version as distro_version," +
+            "        run.kernel_version as kernel_version," +
+            "        run_compiler.version as compiler_version," +
+            "        run.target as target" +
             " from reports.run_compiler" +
             " inner join reports.run_arch using (run_id)" +
             " inner join reports.run using (run_id)" +
