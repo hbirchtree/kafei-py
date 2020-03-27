@@ -1,6 +1,7 @@
 package dev.birchy.kafei.reports.responses;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -24,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 public class Report {
     @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class ApplicationInfo {
         @JsonIgnore
         private long appId;
@@ -34,6 +36,7 @@ public class Report {
     }
 
     @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class BuildInfo {
         public enum BuildMode {
             DEBUG,
@@ -50,6 +53,7 @@ public class Report {
     }
 
     @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class RuntimeInfo {
         @JsonIgnore
         private long runId;
@@ -81,6 +85,7 @@ public class Report {
     }
 
     @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class DeviceInfo {
         @JsonIgnore
         private long devId;
@@ -96,6 +101,7 @@ public class Report {
     }
 
     @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Processor {
         @JsonIgnore
         private long procId;

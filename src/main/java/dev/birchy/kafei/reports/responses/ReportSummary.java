@@ -8,8 +8,10 @@ import lombok.Data;
 public final class ReportSummary {
     public ReportSummary(Report source) {
         setReportId(source.getReportId());
-        setBuildVersion(source.getBuild().getVersion());
-        setSystem(source.getDevice().getName());
+        if(source.getBuild() != null)
+            setBuildVersion(source.getBuild().getVersion());
+        if(source.getDevice() != null)
+            setSystem(source.getDevice().getName());
         setSubmitTime(new DateTime(source.getRuntime().getSubmitTime()));
     }
 
@@ -18,3 +20,4 @@ public final class ReportSummary {
     private String system;
     private String buildVersion;
 }
+ 
