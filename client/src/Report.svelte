@@ -52,6 +52,13 @@
                         </div>
                     </a>
                 </Row>
+                <Row name="view report">
+                    <a href="https://trace.birchy.dev?source={report.links[2].uri}" slot="content">
+                        <div class="ui label inverted">
+                            <i class="external alternate icon"></i> View
+                        </div>
+                    </a>
+                </Row>
             </Group>
         {:else}
             <div class="ui active inline centered loader"></div>

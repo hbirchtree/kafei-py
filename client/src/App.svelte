@@ -16,7 +16,6 @@
             {name: "Diagnostics", target: "nav::diag", icon: "archive"}
     ];
     export let extLinks = [
-            {name: "Old diagnostics", target: "https://birchy.dev/diag-semantic.html"}
     ];
     export let github;
     export let repository;
