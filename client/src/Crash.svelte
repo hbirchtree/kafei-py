@@ -72,7 +72,7 @@
             <div class="ui container centered"><span class="center aligned">Something went wrong</span></div>
         {:else if fullInfo !== null}
             {#if !noProfile}
-                <ReportView report={fullInfo} />
+                <ReportView report={fullInfo} summary={crash.data} />
             {/if}
             <Group icon="bug" headerName="Crash log">
             </Group>

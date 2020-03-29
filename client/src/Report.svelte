@@ -44,7 +44,7 @@
         {#if errored}
             <div class="ui container centered"><span class="center aligned">Something went wrong</span></div>
         {:else if fullInfo !== null}
-            <ReportView report={fullInfo} />
+            <ReportView report={fullInfo} summary={report.data} />
             <Group icon="download" headerName="Raw format">
                 <Row name="raw report download">
                     <a href="{report.links[2].uri}" slot="content">
