@@ -78,11 +78,11 @@
             </Group>
             {#if !logErrorDetected}
             <div class="ui segment orange inverted top attached">
-                <i class="icon exclamation circle"></i>Crash was not automatically detected!
+                <i class="large icon exclamation circle"></i>Crash was not automatically detected!
             </div>
             {:else}
             <div class="ui segment blue inverted top attached">
-                <p><i class="icon info circle"></i><b>Likely culprit:</b></p>
+                <p><i class="large icon info circle"></i><b>Likely culprit:</b></p>
                 {#each logException.split('\n') as line}
                     <p>{line}</p>
                 {/each}
