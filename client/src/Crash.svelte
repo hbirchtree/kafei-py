@@ -63,7 +63,7 @@
                                     get_full_crash();
             }}>
         <div class="ui inverted fluid container preview-item" style="background-color: {backgroundColor} !important;">
-            <b>{crash.data.crashId}</b>
+            <b>{crash.data.crashId} - exited with {crash.data.exitCode} - {new Date(crash.data.submitTime).toGMTString()}</b>
             <i class="icon large chevron down"></i>
         </div>
     </a>
@@ -97,6 +97,9 @@
                 {#each stderr.split('\n') as line}
                     <p>{line}</p>
                 {/each}
+            </div>
+            <div class="ui segment left aligned inverted log-segment">
+                <p>Exited with {crash.data.exitCode}</p>
             </div>
             <div style="margin-bottom: 2em;"></div>
         {:else}
