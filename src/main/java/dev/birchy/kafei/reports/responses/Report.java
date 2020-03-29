@@ -134,6 +134,8 @@ public class Report {
     @JsonIgnore
     private long reportId;
 
+    private String displayTimeUnit;
+
     private ApplicationInfo application;
     private BuildInfo build;
     private RuntimeInfo runtime;
