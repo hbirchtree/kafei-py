@@ -20,4 +20,3 @@ public final class ReportSummary {
     private String system;
     private String buildVersion;
 }
- 
