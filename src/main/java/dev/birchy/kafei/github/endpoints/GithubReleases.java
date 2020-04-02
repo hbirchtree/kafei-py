@@ -101,7 +101,8 @@ public final class GithubReleases {
             String payload_) throws IOException {
 
         if(!verifyHmac(signature.split("=")[1], payload_))
-            return Result.error(Response.Status.UNAUTHORIZED).wrapped();
+            return Result.error(Response.Status.UNAUTHORIZED)
+                    .withCode(Response.Status.UNAUTHORIZED).build();
 
         ObjectNode payload = (ObjectNode) mapper.readTree(payload_);
 
@@ -143,7 +144,8 @@ public final class GithubReleases {
                 break;
             }
             default: {
-                return Result.error(Response.Status.BAD_REQUEST).wrapped();
+                return Result.error(Response.Status.BAD_REQUEST)
+                        .withCode(Response.Status.BAD_REQUEST).build();
             }
         }
 

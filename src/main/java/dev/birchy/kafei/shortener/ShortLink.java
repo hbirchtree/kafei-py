@@ -87,8 +87,9 @@ public final class ShortLink {
     public Response requestGet(@PathParam("name") final String name)
     {
         return createConnection(name)
-                .map(url -> Response.status(Response.Status.FOUND).location(url).build())
-                .orElse(Result.error(Response.Status.NOT_FOUND).wrapped());
+                .map(url -> Response.status(Response.Status.FOUND).location(url))
+                .orElse(Result.error(Response.Status.NOT_FOUND).withCode(Response.Status.NOT_FOUND))
+                .build();
     }
 
     @POST
@@ -96,7 +97,8 @@ public final class ShortLink {
     public Response requestPost(@PathParam("name") final String name)
     {
         return createConnection(name)
-                .map(url -> Response.status(Response.Status.FOUND).location(url).build())
-                .orElse(Result.error(Response.Status.NOT_FOUND).wrapped());
+                .map(url -> Response.status(Response.Status.FOUND).location(url))
+                .orElse(Result.error(Response.Status.NOT_FOUND).withCode(Response.Status.NOT_FOUND))
+                .build();
     }
 }
