@@ -11,9 +11,9 @@
 	
     export let navLinks = [
             {name: "Home", target: "nav::home", icon: "home"},
-            {name: "Examples", target: "nav::examples", icon: "box"},
-            {name: "Statistics", target: "nav::stats", icon: "chart pie"},
-            {name: "Diagnostics", target: "nav::diag", icon: "archive"}
+            {name: "Examples", target: "nav::examples", icon: "package"},
+            {name: "Statistics", target: "nav::stats", icon: "pie-chart"},
+            {name: "Diagnostics", target: "nav::diag", icon: "activity"}
     ];
     export let extLinks = [
     ];
@@ -58,7 +58,6 @@
         
         await get_resources();
     });
-
 </script>
 
 <link rel="stylesheet" type="text/css" href="semantic/semantic.min.css">

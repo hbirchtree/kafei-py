@@ -27,3 +27,13 @@ h3, h4, .ui.menu {
     margin: 0 !important;
 }
 
+.flex-centered-important {
+    display: flex !important;
+    align-items: center;
+}
+
+.flex-centered {
+    display: flex;
+    align-items: center;
+}
+

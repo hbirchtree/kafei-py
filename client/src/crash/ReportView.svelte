@@ -1,6 +1,12 @@
 <script>
     import Group from './Group.svelte';
     import Row from './Row.svelte';
+    import Icon from '../Icon.svelte';
+    import {onMount} from 'svelte';
+    
+    onMount(() => {
+        feather.replace();
+    });
 
     export let report;
     export let summary;
@@ -9,12 +15,12 @@
 <Group icon="box" headerName="General Info">
     <Row name="submission time" content="{new Date(summary.submitTime).toGMTString()}"/>
 </Group>
-<Group icon="box" headerName="Application">
+<Group icon="package" headerName="Application">
     <Row name="name" content={report.application.name} />
     <Row name="writer" content={report.application.organization} />
     <Row name="version" content={report.application.version} />
 </Group>
-<Group icon="cog" headerName="Build">
+<Group icon="tool" headerName="Build">
     <Row name="mode" content={report.build.buildMode} />
     <Row name="version" content={report.build.version} />
     {#if report.build.target}
@@ -24,11 +30,10 @@
     <Row name="architecture" content={report.build.architecture} />
 </Group>
 <Group headerName="System"
-       icon="{report.device.type == 4 ? "mobile alternate" : 
-                report.device.type == 3 ? "laptop" :
-                report.device.type == 2 ? "microchip" :
-                report.device.type == 5 ? "tablet alternate" :
-                report.device.type == 8 ? "hdd" :
+       icon="{report.device.type == 4 ? "smartphone" :
+                report.device.type == 2 ? "cpu" :
+                report.device.type == 5 ? "tablet" :
+                report.device.type == 8 ? "hard-drive" :
                 "server"}">
     {#if report.runtime.distro && report.runtime.distroVersion}
         <Row name="system" content="">
@@ -50,7 +55,7 @@
         <Row name="kernel" content="{report.runtime.kernel} {report.runtime.kernelVersion}" />
     {/if}
 </Group>
-<Group icon="microchip" headerName="Processor">
+<Group icon="cpu" headerName="Processor">
     <Row name="model" content={report.processor.model} />
     <Row name="cores" content={report.processor.cores} />
     <Row name="threads" content={report.processor.threads} />
@@ -59,7 +64,7 @@
     {/if}
 </Group>
 {#if report.extra["window:library"]}
-<Group icon="desktop" headerName="Graphics">
+<Group icon="tv" headerName="Graphics">
     {#if report.extra["window:library"]}
         <Row name="windowing library" content={report.extra["window:library"]} />
     {/if}

@@ -2,6 +2,12 @@
     import ReportView from './crash/ReportView.svelte';
     import Group from './crash/Group.svelte';
     import Row from './crash/Row.svelte';
+    import Icon from './Icon.svelte';
+    import {onMount} from 'svelte';
+    
+    onMount(() => {
+        feather.replace();
+    });
     
     export let endpoints;
     export let report;
@@ -45,18 +51,18 @@
             <div class="ui container centered"><span class="center aligned">Something went wrong</span></div>
         {:else if fullInfo !== null}
             <ReportView report={fullInfo} summary={report.data} />
-            <Group icon="download" headerName="Raw format">
+            <Group icon="file-text" headerName="Raw format">
                 <Row name="raw report download">
                     <a href="{report.links[2].uri}" slot="content">
-                        <div class="ui label inverted">
-                            <i class="download icon"></i> Download
+                        <div class="ui label inverted flex-centered-important">
+                            <Icon icon="download-cloud"/> Download
                         </div>
                     </a>
                 </Row>
                 <Row name="view report">
                     <a href="https://trace.birchy.dev?source=https://api.birchy.dev/{report.links[2].uri}" slot="content">
-                        <div class="ui label inverted">
-                            <i class="external alternate icon"></i> View
+                        <div class="ui label inverted flex-centered-important">
+                            <Icon icon="external-link"/> View
                         </div>
                     </a>
                 </Row>

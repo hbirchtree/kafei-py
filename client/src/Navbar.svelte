@@ -1,4 +1,6 @@
 <script>
+    import Icon from './Icon.svelte';
+
     export let links;
     export let externals;
     export let github;
@@ -98,14 +100,14 @@
             <a class="ui item" 
                 data-tab="{link.target}" 
                 on:click={() => window.$(mobileMenu).removeClass('active')}>
-                <i class="large icon {link.icon}"></i><b>{link.name}</b>
+                <Icon icon="{link.icon}"/><b>{link.name}</b>
             </a>
         {/each}
         {#each externals as link (link.name)}
             <a class="ui item" 
                 href="{link.target}" 
                 on:click={() => window.$(mobileMenu).removeClass('active')}>
-                <i class="large icon external alternate"></i><b>{link.name}</b>
+                <Icon icon="external-link"/><b>{link.name}</b>
             </a>
         {/each}
     </div>

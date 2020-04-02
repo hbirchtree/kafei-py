@@ -1,6 +1,12 @@
 <script>
     import Group from './crash/Group.svelte';
     import ReportView from './crash/ReportView.svelte';
+    import Icon from './Icon.svelte';
+    import {onMount} from 'svelte';
+    
+    onMount(() => {
+        feather.replace();
+    });
     
     export let endpoints;
     export let crash;
@@ -74,15 +80,17 @@
             {#if !noProfile}
                 <ReportView report={fullInfo} summary={crash.data} />
             {/if}
-            <Group icon="bug" headerName="Crash log">
+            <Group icon="file-text" headerName="Crash log">
             </Group>
             {#if !logErrorDetected}
-            <div class="ui segment orange inverted top attached">
-                <i class="large icon exclamation circle"></i>Crash was not automatically detected!
+            <div class="ui segment orange inverted top attached flex-centered-important">
+                <Icon icon="alert-triangle"/> Crash was not automatically detected!
             </div>
             {:else}
             <div class="ui segment blue inverted top attached">
-                <p><i class="large icon info circle"></i><b>Likely culprit:</b></p>
+                <p class="flex-centered">
+                    <Icon icon="info" /><b>Likely culprit:</b>
+                </p>
                 {#each logException.split('\n') as line}
                     <p>{line}</p>
                 {/each}

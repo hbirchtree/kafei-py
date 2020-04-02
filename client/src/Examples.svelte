@@ -1,5 +1,6 @@
 <script>
     import UpdateBubble from './UpdateBubble.svelte';
+    import Icon from './Icon.svelte';
 
     export let github;
     export let repository;
@@ -36,8 +37,8 @@
 
 <ul>
     {#if releaseInfo !== null}
-        <li><a href="{releaseInfo.release.html_url}">
-            <i class="big icon box"></i>Latest release ({releaseInfo.release.tag_name})</a>
+        <li class="flex-centered"><a href="{releaseInfo.release.html_url}" class="flex-centered">
+            <Icon icon="package" size=24/>Latest release ({releaseInfo.release.tag_name})</a>
         </li>
     {:else}
         <div class="ui active dimmer">
