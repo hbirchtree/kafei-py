@@ -28,6 +28,8 @@
             return "google";
         if(source.substr(0, 5) == "apple" || source.substr(0, 5) == "macos" || source.substr(0, 3) == "ios")
             return "apple";
+        if(source.substr(0, 7) == "samsung" || source.substr(0, 4) == "smdk")
+            return "samsung";
 
         // Operating systems
         if(source.substr(0, 5) == "linux")
