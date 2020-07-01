@@ -1,0 +1,25 @@
+name: Backend build
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        jdk-ver: [9, 10, 11]
+    steps:
+    - name: Checkout source
+      uses: actions/checkout@v2
+      with:
+        path: src
+    - name: Setup Java ${{ matrix.jdk-ver }}
+      uses: actions/setup-java@v1
+      with:
+        java-version: ${{ matrix.jdk-ver }}
+    - name: Gradle build
+      uses: eskatos/gradle-command-action@v1
+      with:
+        arguments: build
+        wrapper-cache-enabled: true
+        dependencies-cache-enabled: true
+        configuration-cache-enabled: true
+

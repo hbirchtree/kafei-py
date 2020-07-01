@@ -1,21 +1,21 @@
 name: Frontend build
 on: push
 jobs:
-    build:
-      runs-on: ubuntu-18.04
-      steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2-beta
-        with:
-          node-version: '12'
-      - name: Checkout source
-        uses: actions/checkout@v2
-        with:
-          path: src
-      - name: Install dependencies
-        run: npm install
-        working-directory: src/client
-      - name: Build Svelte app
-        run: npm run build
-        working-directory: src/client
+  build:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2-beta
+      with:
+        node-version: '12'
+    - name: Checkout source
+      uses: actions/checkout@v2
+      with:
+        path: src
+    - name: Install dependencies
+      run: npm install
+      working-directory: src/client
+    - name: Build Svelte app
+      run: npm run build
+      working-directory: src/client
 
