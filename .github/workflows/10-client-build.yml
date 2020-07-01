@@ -10,12 +10,10 @@ jobs:
         node-version: '12'
     - name: Checkout source
       uses: actions/checkout@v2
-      with:
-        path: src
     - name: Install dependencies
       run: npm install
-      working-directory: src/client
+      working-directory: client
     - name: Build Svelte app
       run: npm run build
-      working-directory: src/client
+      working-directory: client
 
