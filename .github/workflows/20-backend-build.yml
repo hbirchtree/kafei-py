@@ -9,8 +9,6 @@ jobs:
     steps:
     - name: Checkout source
       uses: actions/checkout@v2
-      with:
-        path: src
     - name: Setup Java ${{ matrix.jdk-ver }}
       uses: actions/setup-java@v1
       with:
