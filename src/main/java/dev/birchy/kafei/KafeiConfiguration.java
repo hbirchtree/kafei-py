@@ -2,9 +2,14 @@ package dev.birchy.kafei;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+import dev.birchy.kafei.proxy.ProxyEntry;
+import dev.birchy.kafei.sapi.SapiConfig;
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.flyway.FlywayFactory;
@@ -52,4 +57,18 @@ public final class KafeiConfiguration extends Configuration {
     @Setter
     @JsonProperty
     private FlywayFactory flyway = new FlywayFactory();
+
+    @Valid
+    @NonNull
+    @Getter
+    @Setter
+    @JsonProperty
+    private List<ProxyEntry> proxies = new ArrayList<>();
+
+    @Valid
+    @NonNull
+    @Getter
+    @Setter
+    @JsonProperty
+    private SapiConfig sapi = new SapiConfig();
 }

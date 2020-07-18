@@ -52,8 +52,9 @@ public final class CrashSubmission {
     public Response postCrash(FormDataMultiPart outputs) {
         if(!outputs.getFields().containsKey("stdout") && !outputs.getFields().containsKey("stderr"))
             return Result
-                    .error(Response.Status.BAD_REQUEST)
-                    .withCode(Response.Status.BAD_REQUEST)
+                    .error(Response.Status.NOT_ACCEPTABLE)
+                    .withMessage("Fields \"stdout\" and \"stderr\" are required")
+                    .withCode(Response.Status.NOT_ACCEPTABLE)
                     .build();
 
         int exitCode = outputs.getFields().containsKey("exitCode")
@@ -67,6 +68,10 @@ public final class CrashSubmission {
 
             String machineInfo = outputs.getFields().containsKey("machineProfile")
                     ? outputs.getField("machineProfile").getValue()
+                    : null;
+
+            String stacktrace = outputs.getFields().containsKey("stacktrace")
+                    ? outputs.getField("stacktrace").getValue()
                     : null;
 
             if(profile != null) {
@@ -84,6 +89,7 @@ public final class CrashSubmission {
                     outputs.getField("stderr").getValue().getBytes(),
                     profile != null ? profile.getBytes() : null,
                     machineInfo != null ? machineInfo.getBytes() : null,
+                    stacktrace != null ? stacktrace.getBytes() : null,
                     exitCode);
         }));
 
@@ -140,6 +146,10 @@ public final class CrashSubmission {
                                                     .build(),
                                             ShortLink.fromResource(CrashSubmission.class)
                                                     .path(crash.getCrashId() + "/machine")
+                                                    .requestMethod("GET")
+                                                    .build(),
+                                            ShortLink.fromResource(CrashSubmission.class)
+                                                    .path(crash.getCrashId() + "/stacktrace")
                                                     .requestMethod("GET")
                                                     .build()
                                     )).removeMessage())))
@@ -216,5 +226,15 @@ public final class CrashSubmission {
                         .error(Response.Status.NOT_FOUND)
                         .withCode(Response.Status.NOT_FOUND)
                         .build());
+    }
+
+    @GET
+    @Path("{id}/stacktrace")
+    @RespondsWith(String.class)
+    public Response getCrashStacktrace(@PathParam("id") long id) {
+        return Result
+                .error(Response.Status.NOT_IMPLEMENTED)
+                .withCode(Response.Status.NOT_IMPLEMENTED)
+                .build();
     }
 }

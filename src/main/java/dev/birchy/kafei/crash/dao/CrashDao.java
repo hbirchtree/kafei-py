@@ -35,8 +35,8 @@ public interface CrashDao {
     Optional<byte[]> getCrashMachine(@Bind("crashId") long crashId);
 
     @SqlUpdate("insert into crash.outputs" +
-            " (submit_time, stdout, stderr, profile_file, machine_info, exit_code)" +
-            " values(:submitTime, :stdout, :stderr, :profile, :machineInfo, :exitCode)")
+            " (submit_time, stdout, stderr, profile_file, machine_info, stacktrace, exit_code)" +
+            " values(:submitTime, :stdout, :stderr, :profile, :machineInfo, :stacktrace, :exitCode)")
     @GetGeneratedKeys
     long addCrash(
             @Bind("submitTime")DateTime submitTime,
@@ -44,5 +44,6 @@ public interface CrashDao {
             @Bind("stderr") byte[] stdErr,
             @Bind("profile") byte[] profile,
             @Bind("machineInfo") byte[] machineInfo,
+            @Bind("stacktrace") byte[] stacktrace,
             @Bind("exitCode") int exitCode);
 }

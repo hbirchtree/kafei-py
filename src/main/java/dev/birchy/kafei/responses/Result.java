@@ -48,6 +48,11 @@ public final class Result<T> {
         return Response.status(status).entity(this);
     }
 
+    public Result<T> withMessage(String message) {
+        this.message = message;
+        return this;
+    }
+
     public Result<T> removeMessage() {
         message = null;
         return this;

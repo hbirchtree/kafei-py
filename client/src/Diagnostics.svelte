@@ -7,20 +7,36 @@
     let crashes;
     let reports;
 
-    fetch(endpoints.data + '/v2/crash')
-        .then((content) => {
-            return content.json();
-        })
-        .then((content) => {
-            crashes = content.data.reverse();
-        });
-    fetch(endpoints.data + '/v2/reports')
-        .then((content) => {
-            return content.json();
-        })
-        .then((content) => {
-            reports = content.data.reverse();
-        });
+    function reload() {
+        fetch(endpoints.data + '/v2/crash')
+            .then((content) => {
+                return content.json();
+            })
+            .then((content) => {
+                crashes = content.data.reverse();
+            });
+        fetch(endpoints.data + '/v2/reports')
+            .then((content) => {
+                return content.json();
+            })
+            .then((content) => {
+                reports = content.data.reverse();
+            });
+    }
+    reload();
+
+    let listener = new Paho.MQTT.Client("birchy.dev", 8083, "/");
+
+    listener.onMessageArrived = (message) => {
+        crashes = null;
+        reports = null;
+        reload();
+    };
+    let listenerOptions = { timeout: 3, onSuccess: () => {
+        console.log("Connected to birchy.dev");
+        listener.subscribe("public/diagnostics/#");
+    }};
+    listener.connect(listenerOptions);
 </script>
 
 <div class="ui inverted top attached tabular menu">

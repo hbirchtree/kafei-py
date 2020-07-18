@@ -36,4 +36,17 @@ shortDatabase:
   url: jdbc:postgresql://25.57.48.59/kafei
 
 corsData:
-  allowOrigin: "http://localhost:8080"
+  allowOrigin: http://localhost:8080
+
+proxies:
+  - name: bonzi
+    targetHost: http://localhost:8080
+    targetResource: /api/sapi/speak.wav?pitch=150&text={say}
+    proxyResource: /api/bonziProxy
+    parameterMap:
+      say: text
+
+sapi:
+  host: localhost
+  port: 4000
+

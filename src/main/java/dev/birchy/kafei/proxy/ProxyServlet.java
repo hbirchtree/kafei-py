@@ -1,6 +1,8 @@
 package dev.birchy.kafei.proxy;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
 
@@ -25,7 +27,7 @@ public final class ProxyServlet extends HttpServlet {
     private void proxyRequest(
             final String method,
             final HttpServletRequest req,
-            final HttpServletResponse resp) {
+            final HttpServletResponse resp) throws IOException {
         resp.setStatus(Response.Status.OK.getStatusCode());
 
         UriBuilder builder = config.getUriBase();
@@ -40,18 +42,37 @@ public final class ProxyServlet extends HttpServlet {
 
         log.debug("Request to: {}", path.toString());
 
+        HttpURLConnection connection =
+                (HttpURLConnection) path.toURL().openConnection();
+        connection.setRequestProperty("Accept", "application/json");
         try {
-            HttpURLConnection connection =
-                    (HttpURLConnection) path.toURL().openConnection();
             connection.setRequestMethod(method);
-
             connection.connect();
 
-            int code = connection.getResponseCode();
+            byte[] data = new byte[connection.getContentLength()];
+            connection.getInputStream().read(data, 0, connection.getContentLength());
 
-            log.debug("Response: {}", code);
+            int code = connection.getResponseCode();
+            resp.setStatus(code);
+            resp.setContentType(connection.getContentType());
+            resp.getOutputStream().write(data);
+
         } catch (IOException e) {
-            e.printStackTrace();
+            /* If we can, forward the proxied host's message */
+            if(connection.getResponseCode() != 0)
+            {
+                byte[] body = new byte[connection.getContentLength()];
+                connection.getInputStream().read(body);
+
+                resp.sendError(connection.getResponseCode(), connection.getResponseMessage());
+                resp.getOutputStream().write(body);
+            }else {
+                resp.setStatus(Response.Status.BAD_GATEWAY.getStatusCode());
+
+                resp.getOutputStream().write(
+                        String.format("{\"message\":\"%s\",\"code\":502}",
+                                e.getMessage()).getBytes());
+            }
         }
     }
 

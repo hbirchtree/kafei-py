@@ -11,15 +11,23 @@ import org.jdbi.v3.core.Jdbi;
 
 import java.net.URI;
 import java.util.EnumSet;
+import java.util.List;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.core.UriBuilder;
 
 import dev.birchy.kafei.crash.endpoints.CrashSubmission;
 import dev.birchy.kafei.endpoints.Overview;
 import dev.birchy.kafei.endpoints.WebProxy;
 import dev.birchy.kafei.github.HookShotBundle;
+import dev.birchy.kafei.proxy.ProxyConfig;
+import dev.birchy.kafei.proxy.ProxyEntry;
+import dev.birchy.kafei.proxy.ProxyServlet;
 import dev.birchy.kafei.reports.ReportsBundle;
+import dev.birchy.kafei.sapi.SapiAdapter;
+import dev.birchy.kafei.sapi.SapiConfig;
 import dev.birchy.kafei.shortener.ShortLink;
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
@@ -34,6 +42,20 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class KafeiServer extends Application<KafeiConfiguration> {
+    private void addProxies(List<ProxyEntry> proxies, Environment env) {
+        for(ProxyEntry proxy : proxies) {
+            ProxyConfig config = new ProxyConfig(proxy.getParameterMap(),
+                    UriBuilder.fromUri(proxy.getTargetHost() + proxy.getTargetResource()));
+            env.servlets()
+                    .addServlet(proxy.getName(), new ProxyServlet(config))
+                    .addMapping(proxy.getProxyResource() + "/*");
+
+            log.debug("Proxying {} to {}",
+                    proxy.getProxyResource(),
+                    proxy.getTargetHost() + proxy.getTargetResource());
+        }
+    }
+
     @Override
     public void initialize(Bootstrap<KafeiConfiguration> bootstrap) {
         super.initialize(bootstrap);
@@ -43,8 +65,6 @@ public class KafeiServer extends Application<KafeiConfiguration> {
 
         bootstrap.addBundle(new ReportsBundle());
         bootstrap.addBundle(new HookShotBundle());
-
-        bootstrap.addBundle(new BonziBundle("/bonziProxy"));
 
         bootstrap.addBundle(new FlywayBundle<KafeiConfiguration>() {
             @Override
@@ -87,6 +107,7 @@ public class KafeiServer extends Application<KafeiConfiguration> {
                 bind(crashDb).to(Jdbi.class).named("crashDb");
                 bind(environment.getObjectMapper()).to(ObjectMapper.class);
                 bind(shortenDb).to(Jdbi.class).named("shortenDb");
+                bind(configuration.getSapi()).to(SapiConfig.class);
             }
         });
 
@@ -107,10 +128,13 @@ public class KafeiServer extends Application<KafeiConfiguration> {
                 ? configuration.getCorsData().getAllowMethods()
                 : "GET");
 
+        addProxies(configuration.getProxies(), environment);
+
         cors.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
 
         environment.jersey().register(CrashSubmission.class);
         environment.jersey().register(FaviconResource.class);
+        environment.jersey().register(SapiAdapter.class);
 
         environment.jersey().register(ShortLink.class);
     }
