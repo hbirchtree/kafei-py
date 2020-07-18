@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        jdk-ver: [8, 9, 11]
+        jdk-ver: [8, 9]
     steps:
     - name: Checkout source
       uses: actions/checkout@v2
