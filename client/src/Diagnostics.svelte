@@ -25,7 +25,7 @@
     }
     reload();
 
-    let listener = new Paho.MQTT.Client("birchy.dev", 8083, "/");
+    let listener = new Paho.MQTT.Client("wss://birchy.dev:8083/", "kafei.dev");
 
     listener.onMessageArrived = (message) => {
         crashes = null;

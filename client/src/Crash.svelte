@@ -23,6 +23,7 @@
     let stderr = null;
     let logErrorDetected = true;
     let logException;
+    let stack = null;
 
     async function get_full_crash() {
         if(fullInfo !== null || errored)
@@ -36,6 +37,9 @@
         const err = await fetch(endpoints.data + crash.links[2].uri)
                     .then((content) => {return content.text();})
                     .catch(e => { errored = true; console.log(e);});
+        const stack_ = await fetch(endpoints.data + crash.links[5].uri)
+                    .then((content) => {return content.text();})
+                    .catch(e => {console.log(e);});
 
         if(info.code && info.code !== 200)
             errored = true;
@@ -45,6 +49,17 @@
             errored = false;
             noProfile = true;
             info = {};
+        }
+
+        if(stack_)
+        {
+            let parsedStack = null;
+            try {
+                parsedStack = JSON.parse(stack_);
+            } catch(e) {
+                parsedStack = JSON.parse(stack_ + "{}]");
+            }
+            stack = parsedStack;
         }
 
         if(!errored)
@@ -96,6 +111,17 @@
                 {/each}
             </div>
             {/if}
+            {#if stack && stack.length > 0}
+            <Group icon="file-text" headerName="Stacktrace">
+                <div class="ui segment left aligned inverted stack-segment">
+                    {#each stack as frame}
+                        {#if frame.frame}
+                            <p> - {frame.frame} ({frame.ip})</p>
+                        {/if}
+                    {/each}
+                </div>
+            </Group>
+            {/if}
             <div class="ui segment left aligned inverted log-segment">
                 {#each stdout.split('\n') as line}
                     <p>{line}</p>
@@ -146,6 +172,13 @@
     }
     .log-segment p {
         margin-bottom: 0 !important;
+    }
+    .stack-segment {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+    .stack-segment p:nth-child(even) {
+        background-color: rgb(32, 32, 53) !important;
     }
 </style>
 
