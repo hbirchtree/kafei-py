@@ -6,8 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 
+import dev.birchy.kafei.mqtt.MqttConfig;
 import dev.birchy.kafei.proxy.ProxyEntry;
 import dev.birchy.kafei.sapi.SapiConfig;
 import io.dropwizard.Configuration;
@@ -71,4 +71,11 @@ public final class KafeiConfiguration extends Configuration {
     @Setter
     @JsonProperty
     private SapiConfig sapi = new SapiConfig();
+
+    @Valid
+    @NonNull
+    @Getter
+    @Setter
+    @JsonProperty
+    private MqttConfig mqtt = new MqttConfig();
 }

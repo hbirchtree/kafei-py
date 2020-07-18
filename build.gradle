@@ -50,6 +50,8 @@ dependencies {
     compile 'commons-codec:commons-codec:1.12' // For HMAC-SHA1
     compile 'org.apache.tika:tika-core:1.20' // For MIME-types
     compile 'commons-io:commons-io:2.6' // For FilenameUtils
+
+    compile 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
 }
 
 // Configure the oneJar task

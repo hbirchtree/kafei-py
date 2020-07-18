@@ -3,6 +3,8 @@ package dev.birchy.kafei.reports.endpoints;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import org.eclipse.paho.client.mqttv3.MqttException;
+
 import java.io.IOException;
 
 import javax.inject.Inject;
@@ -17,11 +19,16 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import dev.birchy.kafei.RespondsWith;
+import dev.birchy.kafei.mqtt.MqttPublisher;
 import dev.birchy.kafei.reports.ReportFormat;
 import dev.birchy.kafei.reports.ReportService;
 import dev.birchy.kafei.reports.responses.Report;
 import dev.birchy.kafei.reports.responses.ReportInfo;
 import dev.birchy.kafei.responses.Result;
+import dev.birchy.kafei.responses.ShortLink;
+import dev.birchy.kafei.responses.SmolMessage;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -35,13 +42,21 @@ public final class ReportSubmit {
     private ReportService reportService;
     @Context
     private UriInfo uriInfo;
+    @Inject
+    private MqttPublisher publisher;
+
+    @Data
+    @AllArgsConstructor
+    public static final class NewReport {
+        private long runId;
+    }
 
     @POST
     @Path("/reportSink")
     @RespondsWith(ReportInfo.class)
     public Response postReport(
             @HeaderParam("X-Coffee-Token") String coffeeToken,
-            String reportRawData) throws IOException {
+            String reportRawData) throws IOException, MqttException {
         Report reportData = mapper.readValue(reportRawData, Report.class);
 
         final long runId = reportService.putReport(reportData);
@@ -53,6 +68,8 @@ public final class ReportSubmit {
                 .ifPresent((report) -> {
                     reportService.putRawReport(runId, report);
                 });
+
+        publisher.publish("public/diagnostics/reports", new NewReport(runId));
 
         return Result
                 .ok(new ReportInfo(runId))

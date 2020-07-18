@@ -1,8 +1,10 @@
 package dev.birchy.kafei.crash.endpoints;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.jdbi.v3.core.Jdbi;
 import org.joda.time.DateTime;
@@ -27,8 +29,12 @@ import javax.ws.rs.core.UriInfo;
 import dev.birchy.kafei.RespondsWith;
 import dev.birchy.kafei.crash.CrashSummary;
 import dev.birchy.kafei.crash.dao.CrashDao;
+import dev.birchy.kafei.mqtt.MqttPublisher;
+import dev.birchy.kafei.reports.endpoints.ReportSubmit;
 import dev.birchy.kafei.responses.Result;
 import dev.birchy.kafei.responses.ShortLink;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -40,16 +46,25 @@ public final class CrashSubmission {
     @Named
     private Jdbi crashDb;
 
+    @Inject
+    private MqttPublisher publisher;
+
     @Context
     private UriInfo uriInfo;
 
     @Inject
     private ObjectMapper mapper;
 
+    @Data
+    @AllArgsConstructor
+    public static final class NewCrash {
+        private long crashId;
+    }
+
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @RespondsWith(CrashSummary.class)
-    public Response postCrash(FormDataMultiPart outputs) {
+    public Response postCrash(FormDataMultiPart outputs) throws MqttException, JsonProcessingException {
         if(!outputs.getFields().containsKey("stdout") && !outputs.getFields().containsKey("stderr"))
             return Result
                     .error(Response.Status.NOT_ACCEPTABLE)
@@ -92,6 +107,8 @@ public final class CrashSubmission {
                     stacktrace != null ? stacktrace.getBytes() : null,
                     exitCode);
         }));
+
+        publisher.publish("public/diagnostics/crashes", new NewCrash(crashId));
 
         return Result.ok(new CrashSummary(crashId, null, exitCode))
                 .withLinks(Arrays.asList(
@@ -206,7 +223,7 @@ public final class CrashSubmission {
                 crashDb.withExtension(CrashDao.class, (crash) -> crash.getCrashProfile(id));
 
         return output
-                .map((out) -> Response.ok(out).type(MediaType.TEXT_PLAIN).build())
+                .map((out) -> Response.ok(out).type(MediaType.APPLICATION_JSON).build())
                 .orElseGet(() -> Result
                         .error(Response.Status.NOT_FOUND)
                         .withCode(Response.Status.NOT_FOUND)
@@ -221,7 +238,7 @@ public final class CrashSubmission {
                 crashDb.withExtension(CrashDao.class, (crash) -> crash.getCrashMachine(id));
 
         return output
-                .map((out) -> Response.ok(out).type(MediaType.TEXT_PLAIN).build())
+                .map((out) -> Response.ok(out).type(MediaType.APPLICATION_JSON).build())
                 .orElseGet(() -> Result
                         .error(Response.Status.NOT_FOUND)
                         .withCode(Response.Status.NOT_FOUND)
@@ -232,9 +249,13 @@ public final class CrashSubmission {
     @Path("{id}/stacktrace")
     @RespondsWith(String.class)
     public Response getCrashStacktrace(@PathParam("id") long id) {
-        return Result
-                .error(Response.Status.NOT_IMPLEMENTED)
-                .withCode(Response.Status.NOT_IMPLEMENTED)
-                .build();
+        Optional<byte[]> output =
+                crashDb.withExtension(CrashDao.class, (crash) -> crash.getCrashStacktrace(id));
+
+        return output.map((out) -> Response.ok(out).type(MediaType.APPLICATION_JSON).build())
+                .orElseGet(() -> Result
+                        .error(Response.Status.NOT_FOUND)
+                        .withCode(Response.Status.NOT_FOUND)
+                        .build());
     }
 }

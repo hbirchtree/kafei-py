@@ -34,6 +34,9 @@ public interface CrashDao {
     @SqlQuery("select machine_info from crash.outputs where crash_id = :crashId")
     Optional<byte[]> getCrashMachine(@Bind("crashId") long crashId);
 
+    @SqlQuery("select stacktrace from crash.outputs where crash_id = :crashId")
+    Optional<byte[]> getCrashStacktrace(@Bind("crashId") long crashId);
+
     @SqlUpdate("insert into crash.outputs" +
             " (submit_time, stdout, stderr, profile_file, machine_info, stacktrace, exit_code)" +
             " values(:submitTime, :stdout, :stderr, :profile, :machineInfo, :stacktrace, :exitCode)")

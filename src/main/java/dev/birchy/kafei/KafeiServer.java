@@ -4,24 +4,27 @@ import com.codahale.metrics.health.HealthCheck;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.eclipse.jetty.servlets.CrossOriginFilter;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.glassfish.jersey.server.model.Resource;
 import org.jdbi.v3.core.Jdbi;
 
-import java.net.URI;
+import java.net.SocketException;
 import java.util.EnumSet;
 import java.util.List;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
-import javax.ws.rs.client.Client;
 import javax.ws.rs.core.UriBuilder;
 
 import dev.birchy.kafei.crash.endpoints.CrashSubmission;
 import dev.birchy.kafei.endpoints.Overview;
-import dev.birchy.kafei.endpoints.WebProxy;
 import dev.birchy.kafei.github.HookShotBundle;
+import dev.birchy.kafei.mqtt.MqttConfig;
+import dev.birchy.kafei.mqtt.MqttPublisher;
 import dev.birchy.kafei.proxy.ProxyConfig;
 import dev.birchy.kafei.proxy.ProxyEntry;
 import dev.birchy.kafei.proxy.ProxyServlet;
@@ -56,6 +59,27 @@ public class KafeiServer extends Application<KafeiConfiguration> {
         }
     }
 
+    private MqttClient createMqttClient(MqttConfig config) throws MqttException {
+        MqttClient client = new MqttClient(
+                String.format(
+                        "%s://%s:%s",
+                        config.getProtocol(),
+                        config.getHost(),
+                        config.getPort()),
+                KafeiServer.class.getName(),
+                new MemoryPersistence());
+
+
+        final MqttConnectOptions options = new MqttConnectOptions();
+        options.setCleanSession(true);
+        options.setAutomaticReconnect(true);
+        options.setUserName(config.getUsername());
+        options.setPassword(config.getPassword().toCharArray());
+
+        client.connect(options);
+        return client;
+    }
+
     @Override
     public void initialize(Bootstrap<KafeiConfiguration> bootstrap) {
         super.initialize(bootstrap);
@@ -80,7 +104,7 @@ public class KafeiServer extends Application<KafeiConfiguration> {
     }
 
     @Override
-    public void run(KafeiConfiguration configuration, Environment environment) {
+    public void run(KafeiConfiguration configuration, Environment environment) throws MqttException {
         final JdbiFactory jdbiFactory = new JdbiFactory();
         final Jdbi reportDb = jdbiFactory.build(
                 environment, configuration.getReportDatabase(), "reports");
@@ -90,6 +114,8 @@ public class KafeiServer extends Application<KafeiConfiguration> {
                 environment, configuration.getCrashDatabase(), "crash");
         final Jdbi shortenDb = jdbiFactory.build(
                 environment, configuration.getShortDatabase(), "shorten");
+
+        final MqttClient mqttClient = createMqttClient(configuration.getMqtt());
 
         /* Documentation APIs */
         environment.jersey().register(Overview.class);
@@ -108,6 +134,8 @@ public class KafeiServer extends Application<KafeiConfiguration> {
                 bind(environment.getObjectMapper()).to(ObjectMapper.class);
                 bind(shortenDb).to(Jdbi.class).named("shortenDb");
                 bind(configuration.getSapi()).to(SapiConfig.class);
+                bind(mqttClient).to(MqttClient.class);
+                bind(MqttPublisher.class).to(MqttPublisher.class);
             }
         });
 
