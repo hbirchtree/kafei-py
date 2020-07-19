@@ -42,7 +42,7 @@ public interface CrashDao {
             " values(:submitTime, :stdout, :stderr, :profile, :machineInfo, :stacktrace, :exitCode)")
     @GetGeneratedKeys
     long addCrash(
-            @Bind("submitTime")DateTime submitTime,
+            @Bind("submitTime") DateTime submitTime,
             @Bind("stdout") byte[] stdOut,
             @Bind("stderr") byte[] stdErr,
             @Bind("profile") byte[] profile,

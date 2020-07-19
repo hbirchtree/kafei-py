@@ -33,6 +33,7 @@ import dev.birchy.kafei.mqtt.MqttPublisher;
 import dev.birchy.kafei.reports.endpoints.ReportSubmit;
 import dev.birchy.kafei.responses.Result;
 import dev.birchy.kafei.responses.ShortLink;
+import javassist.bytecode.ByteArray;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +55,29 @@ public final class CrashSubmission {
 
     @Inject
     private ObjectMapper mapper;
+
+    private byte[] cleanTerminalOutput(byte[] input_) {
+        String input = new String(input_);
+
+        while(true)
+        {
+            /* Find the start of the control code, indicated by 0x1b or \033 */
+            int index = input.indexOf(0x1b);
+
+            if(index == -1)
+                break;
+
+            /* Find the end, indicated by 0x6d or 'm' */
+            int end = input.indexOf(0x6d, index);
+
+            if(end != -1)
+            {
+                input = input.substring(0, index) + input.substring(end + 1);
+            }
+        }
+
+        return input.getBytes();
+    }
 
     @Data
     @AllArgsConstructor
@@ -208,7 +232,7 @@ public final class CrashSubmission {
                 crashDb.withExtension(CrashDao.class, (crash) -> crash.getCrashErr(id));
 
         return output
-                .map((out) -> Response.ok(out).type(MediaType.TEXT_PLAIN).build())
+                .map((out) -> Response.ok(cleanTerminalOutput(out)).type(MediaType.TEXT_PLAIN).build())
                 .orElseGet(() -> Result
                         .error(Response.Status.NOT_FOUND)
                         .withCode(Response.Status.NOT_FOUND)

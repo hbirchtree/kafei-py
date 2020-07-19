@@ -63,7 +63,10 @@ public final class GithubReleases {
                         return Result.error(Response.Status.INTERNAL_SERVER_ERROR).wrapped();
                     }
                 })
-                .orElse(Result.error(Response.Status.NOT_FOUND).wrapped());
+                .orElse(Result
+                        .error(Response.Status.NOT_FOUND)
+                        .withCode(Response.Status.NOT_FOUND)
+                        .build());
     }
 
     @GET
@@ -81,7 +84,10 @@ public final class GithubReleases {
                         log.error("{}", e);
                         return Result.error(Response.Status.INTERNAL_SERVER_ERROR).wrapped();
                     }
-                }).orElse(Result.error(Response.Status.NOT_FOUND).wrapped());
+                }).orElse(Result
+                        .error(Response.Status.NOT_FOUND)
+                        .withCode(Response.Status.NOT_FOUND)
+                        .build());
     }
 
     private boolean verifyHmac(String signature, String payload) {

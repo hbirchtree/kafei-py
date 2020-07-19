@@ -41,7 +41,7 @@
                                     get_full_report();
             }}>
         <div class="ui inverted fluid container preview-item" style="background-color: {backgroundColor} !important;">
-            <b>{report.data.reportId} - {report.data.system.split(' running ')[0]} - {new Date(report.data.submitTime).toGMTString()}</b>
+            <b>{report.data.reportId} - {report.data.system ? report.data.system.split(' running ')[0] : "Unknown"} - {new Date(report.data.submitTime).toGMTString()}</b>
             <b></b>
             <i class="icon large chevron down"></i>
         </div>

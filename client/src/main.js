@@ -4,9 +4,9 @@ const app = new App({
 	target: document.body,
 	props: {
         endpoints: {
-            data: "https://api.birchy.dev",
-            profiler: "https://coffee.birchy.dev",
-            crash: "https://crash.birchy.dev"
+            data: process.env.IS_PUBLIC ? "https://api.birchy.dev" : "http://localhost:8080/api",
+            profiler: process.env.IS_PUBLIC ? "https://coffee.birchy.dev" : "http://localhost:8080/api/v2/reportSink",
+            crash: process.env.IS_PUBLIC ? "https://crash.birchy.dev" : "http://localhost:8080/api/v2/crash"
         },
         github: {
             link: "https://github.com/hbirchtree", 

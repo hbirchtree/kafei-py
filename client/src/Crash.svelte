@@ -1,5 +1,6 @@
 <script>
     import Group from './crash/Group.svelte';
+    import Code from './Code.svelte';
     import ReportView from './crash/ReportView.svelte';
     import Icon from './Icon.svelte';
     import {onMount} from 'svelte';
@@ -114,11 +115,13 @@
             {#if stack && stack.length > 0}
             <Group icon="file-text" headerName="Stacktrace">
                 <div class="ui segment left aligned inverted stack-segment">
-                    {#each stack as frame}
-                        {#if frame.frame}
-                            <p> - {frame.frame} ({frame.ip})</p>
-                        {/if}
-                    {/each}
+                    <Code lang="cpp">
+                        {#each stack as frame}
+                            {#if frame.frame}
+                                {frame.frame.startsWith('void ') ? '' : 'auto '}{frame.frame.indexOf('(') !== -1 ? frame.frame : frame.frame + '(...)'}{'\n'}
+                            {/if}
+                        {/each}
+                    </Code>
                 </div>
             </Group>
             {/if}

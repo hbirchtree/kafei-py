@@ -8,7 +8,7 @@
     export let commitInfo;
 </script>
 
-{#if releaseInfo !== null && commitInfo !== null }
+{#if releaseInfo && commitInfo}
     <UpdateBubble userInfo={github}>
         <p>
             <b>updated</b> {commitInfo.head_commit.timestamp} 
@@ -36,7 +36,7 @@
 </p>
 
 <ul>
-    {#if releaseInfo !== null}
+    {#if releaseInfo}
         <li class="flex-centered"><a href="{releaseInfo.release.html_url}" class="flex-centered">
             <Icon icon="package" size=24/>Latest release ({releaseInfo.release.tag_name})</a>
         </li>

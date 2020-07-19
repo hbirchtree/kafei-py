@@ -36,7 +36,7 @@ shortDatabase:
   url: jdbc:postgresql://25.57.48.59/kafei
 
 corsData:
-  allowOrigin: http://localhost:8080
+  allowOrigin: '*'
 
 proxies:
   - name: bonzi
