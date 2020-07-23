@@ -4,9 +4,69 @@
     export let links;
     export let externals;
     export let github;
+    export let authLinks;
+    export let authState;
 
     let mobileMenu;
+    let authDropdown;
+
+    function handleAuthClick() {
+        window.$(authDropdown).toggleClass('displayed');
+    }
 </script>
+
+<div class="ui inverted menu desktop">
+    <div class="ui container">
+        {#each links as link (link.target)}
+            <a data-tab="{link.target}" class="ui item">
+                <h3>{link.name}</h3>
+            </a>
+        {/each}
+        {#each externals as link (link.name)}
+            <a class="ui item" href="{link.target}">
+                <h3>{link.name} </h3><i style="margin-left: 0.4em;" class="icon external alternate"></i>
+            </a>
+        {/each}
+        <a class="ui tiny image" style="height: 80px;">
+            <img src="{github.img}" class="ui tiny circular image dootable {authState.loggedIn ? 'logged-in' : ''}" on:click={handleAuthClick}>
+
+            <div class="ui container auth-menu">
+                <div class="ui container auth-content displayed" bind:this={authDropdown}>
+                    <div class="ui container dropdown-arrow">
+                    </div>
+                    {#each authLinks as link}
+                        <button class="ui {link.color} button" on:click={link.action()}>
+                            {link.text}
+                        </button>
+                    {/each}
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="ui inverted vertical menu mobile fluid">
+    <a class="ui container horizontal fluid" on:click={() => window.$(mobileMenu).toggleClass('active')}>
+        <i style="color: white;" class="huge icon bars"></i> 
+        <b>birchy.dev</b>
+    </a>
+    <div bind:this={mobileMenu} class="ui container mobile-links">
+        {#each links as link (link.target)}
+            <a class="ui item" 
+                data-tab="{link.target}" 
+                on:click={() => window.$(mobileMenu).removeClass('active')}>
+                <Icon icon="{link.icon}"/><b>{link.name}</b>
+            </a>
+        {/each}
+        {#each externals as link (link.name)}
+            <a class="ui item" 
+                href="{link.target}" 
+                on:click={() => window.$(mobileMenu).removeClass('active')}>
+                <Icon icon="external-link"/><b>{link.name}</b>
+            </a>
+        {/each}
+    </div>
+</div>
 
 <style>
     a {
@@ -70,45 +130,46 @@
     .ui.dootable:active {
         filter: brightness(0.5);
     }
+    img.ui {
+        transition: border-color linear 0.5s, filter linear 0.2s !important ;
+        border-color: #ff4a4a;
+        border-style: solid;
+    }
+    img.ui.logged-in {
+        border-color: #4aff4a;
+    }
+    .auth-menu {
+        position: relative;
+        display: inline-block;
+    }
+    .auth-content {
+        position: absolute;
+        filter: drop-shadow(10px 10px 4px rgba(0, 0, 10, 1));
+        border-radius: 10px;
+
+        left: -100px;
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+        padding: 10px 2px;
+        min-width: 200px;
+    }
+    .auth-content button {
+        margin: 0;
+    }
+    .auth-content:not(.displayed) {
+        display: none;
+    }
+    .dropdown-arrow {
+        position: absolute;
+        top: -12px;
+        left: 115px;
+        background-color: white;
+        z-index: -1;
+        width: 50px;
+        height: 50px;
+        transform: rotate(45deg);
+        border-radius: 5px;
+    }
 </style>
 
-<div class="ui inverted menu desktop">
-    <div class="ui container">
-        {#each links as link (link.target)}
-            <a data-tab="{link.target}" class="ui item">
-                <h3>{link.name}</h3>
-            </a>
-        {/each}
-        {#each externals as link (link.name)}
-            <a class="ui item" href="{link.target}">
-                <h3>{link.name} </h3><i style="margin-left: 0.4em;" class="icon external alternate"></i>
-            </a>
-        {/each}
-        <a href="{github.link}" class="ui tiny circular image dootable">
-            <img src="{github.img}">
-        </a>
-    </div>
-</div>
-
-<div class="ui inverted vertical menu mobile fluid">
-    <a class="ui container horizontal fluid" on:click={() => window.$(mobileMenu).toggleClass('active')}>
-        <i style="color: white;" class="huge icon bars"></i> 
-        <b>birchy.dev</b>
-    </a>
-    <div bind:this={mobileMenu} class="ui container mobile-links">
-        {#each links as link (link.target)}
-            <a class="ui item" 
-                data-tab="{link.target}" 
-                on:click={() => window.$(mobileMenu).removeClass('active')}>
-                <Icon icon="{link.icon}"/><b>{link.name}</b>
-            </a>
-        {/each}
-        {#each externals as link (link.name)}
-            <a class="ui item" 
-                href="{link.target}" 
-                on:click={() => window.$(mobileMenu).removeClass('active')}>
-                <Icon icon="external-link"/><b>{link.name}</b>
-            </a>
-        {/each}
-    </div>
-</div>

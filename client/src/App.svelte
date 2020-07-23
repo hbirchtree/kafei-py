@@ -9,16 +9,41 @@
 
     import {onMount} from 'svelte';
 	
-    export let navLinks = [
+    let navLinks = [
             {name: "Home", target: "nav::home", icon: "home"},
             {name: "Examples", target: "nav::examples", icon: "package"},
             {name: "Statistics", target: "nav::stats", icon: "pie-chart"},
             {name: "Diagnostics", target: "nav::diag", icon: "activity"}
     ];
-    export let extLinks = [
+    let extLinks = [
     ];
     export let github;
     export let repository;
+    let authOutLinks = [
+            {text: "Sign in", color: "green", action: async () => {
+                if(await isLoggedIn())
+                    return;
+                const token = await auth_resource('/v2/users/authenticate', {
+                                    username: prompt('Username'),
+                                    password: prompt('Password')
+                                });
+                if(!token)
+                    return;
+                loggedInCycle(token);
+            }},
+            {text: "Register", color: "blue", action: async () => {
+                
+            }}
+    ];
+    let authInLinks = [
+            {text: "Sign out", color: "red", action: async () => { loggedOutCycle(); }}
+    ];
+    let authLinks = authOutLinks;
+    let authState = {
+        loggedIn: false,
+        username: null,
+        profileImg: null
+    };
 
     export let releaseInfo = null;
     export let imguiReleaseInfo = null;
@@ -26,6 +51,56 @@
     export let commitInfo = null;
 
     export let endpoints;
+
+    async function isLoggedIn() {
+        try {
+            let currToken = JSON.parse(localStorage['Kafei-Api-Token']);
+
+            if(currToken) {
+                const isLoggedIn = await auth_resource(
+                    '/v2/users/checkAuthenticate', currToken);
+                
+                if(isLoggedIn)
+                {
+                    loggedInCycle(currToken);
+                    return true;
+                }
+            }
+        } catch(err) {}
+        return false;
+    }
+
+    function loggedInCycle(token) {
+        localStorage['Kafei-Api-Token'] = JSON.stringify(token);
+        authState.loggedIn = true;
+        authState.username = token.username;
+        authLinks = authInLinks;
+    }
+    function loggedOutCycle() {
+        localStorage.removeItem('Kafei-Api-Token');
+        authState.loggedIn = false;
+        authState.username = null;
+        authLinks = authOutLinks;
+    }
+
+    async function auth_resource(source, data) {
+        return await fetch(endpoints.data + source, {
+                method: 'POST',
+                mode: 'cors',
+                cache: 'no-cache',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify(data)
+            }).then((content) => {
+                return content.json();
+            }).then((content) => {
+                if(content.data)
+                    return content.data;
+                else
+                    return content;
+            }).catch((err) => {
+                console.log(err);
+            });
+    }
 
     async function get_resource(source) {
         return fetch(endpoints.data + source)
@@ -35,7 +110,7 @@
             .then((content) => {
                 return content.data;
             }).catch((err) => {
-                console.err(err);
+                console.log(err);
             });
     }
 
@@ -57,6 +132,8 @@
         window.$('.ui.menu .item').tab();
         
         await get_resources();
+
+        await isLoggedIn();
     });
 </script>
 
@@ -68,7 +145,7 @@
 <link rel="stylesheet" type="text/css" href="semantic/components/modal.min.css">
 <link rel="stylesheet" type="text/css" href="semantic/components/tab.min.css">
 
-<Navbar links={navLinks} externals={extLinks} github={github}/>
+<Navbar links={navLinks} externals={extLinks} github={github} authLinks={authLinks} authState={authState}/>
 
 <div data-tab="nav::home" class="ui inverted text tab segment active">
     <Home github={github} endpoints={endpoints} releaseInfo={releaseInfo} imguiReleaseInfo={imguiReleaseInfo} nativeReleaseInfo={nativeReleaseInfo}/>

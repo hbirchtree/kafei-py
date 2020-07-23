@@ -1,4 +1,4 @@
-package dev.birchy.kafei.crash.dao;
+package dev.birchy.kafei.crash;
 
 import org.jdbi.v3.sqlobject.config.RegisterBeanMapper;
 import org.jdbi.v3.sqlobject.customizer.Bind;
@@ -49,4 +49,7 @@ public interface CrashDao {
             @Bind("machineInfo") byte[] machineInfo,
             @Bind("stacktrace") byte[] stacktrace,
             @Bind("exitCode") int exitCode);
+
+    @SqlUpdate("delete from crash.outputs where crash_id = :crashId")
+    int deleteCrash(@Bind("crashId") long crashId);
 }

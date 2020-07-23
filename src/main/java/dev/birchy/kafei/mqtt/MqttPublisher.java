@@ -23,6 +23,12 @@ public final class MqttPublisher {
             String topic,
             Object message)
             throws MqttException, JsonProcessingException {
+
+        if(!client.isConnected()) {
+            log.warn("MQTT not connected");
+            return;
+        }
+
         byte[] messageBytes = mapper.writeValueAsBytes(message);
         log.debug("Notifying topic={}, message={}",
                 topic,

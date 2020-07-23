@@ -97,6 +97,9 @@ public interface ReportDao {
             @Bind("runId") long runId,
             @Bind("devId") long devId);
 
+    @SqlUpdate("delete from reports.run where run_id = :runId")
+    int deleteReport(@Bind("runId") long runId);
+
     /*
      *
      * ID functions for insertion

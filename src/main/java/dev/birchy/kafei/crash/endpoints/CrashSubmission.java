@@ -10,38 +10,45 @@ import org.jdbi.v3.core.Jdbi;
 import org.joda.time.DateTime;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.Optional;
 
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import dev.birchy.kafei.RespondsWith;
 import dev.birchy.kafei.crash.CrashSummary;
-import dev.birchy.kafei.crash.dao.CrashDao;
+import dev.birchy.kafei.crash.CrashDao;
 import dev.birchy.kafei.mqtt.MqttPublisher;
-import dev.birchy.kafei.reports.endpoints.ReportSubmit;
 import dev.birchy.kafei.responses.Result;
 import dev.birchy.kafei.responses.ShortLink;
-import javassist.bytecode.ByteArray;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import static dev.birchy.kafei.auth.AccessScope.DIAGNOSTICS_CRASHES;
+import static dev.birchy.kafei.auth.AccessScope.PERM_WRITE;
+
 @Slf4j
 @Path("/v2/crash")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.MULTIPART_FORM_DATA)
+@Consumes(MediaType.APPLICATION_JSON)
 public final class CrashSubmission {
     @Inject
     @Named
@@ -88,7 +95,9 @@ public final class CrashSubmission {
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @RespondsWith(CrashSummary.class)
-    public Response postCrash(FormDataMultiPart outputs) throws MqttException, JsonProcessingException {
+    public Response postCrash(@Context HttpHeaders headers, FormDataMultiPart outputs)
+            throws MqttException, JsonProcessingException, MalformedURLException {
+
         if(!outputs.getFields().containsKey("stdout") && !outputs.getFields().containsKey("stderr"))
             return Result
                     .error(Response.Status.NOT_ACCEPTABLE)
@@ -134,6 +143,11 @@ public final class CrashSubmission {
 
         publisher.publish("public/diagnostics/crashes", new NewCrash(crashId));
 
+        log.debug("Parameters: abs={}, req={} headers={}",
+                uriInfo.getAbsolutePath(), uriInfo.getRequestUri(), headers.getRequestHeaders());
+
+        final String linkTo = headers.getHeaderString("X-Link-To");
+
         return Result.ok(new CrashSummary(crashId, null, exitCode))
                 .withLinks(Arrays.asList(
                         ShortLink.fromResource(CrashSubmission.class)
@@ -156,7 +170,11 @@ public final class CrashSubmission {
                                 .path(crashId + "/machine")
                                 .requestMethod("GET")
                                 .build()))
-                .withCode(Response.Status.CREATED)
+                .withCreated(Optional
+                        .ofNullable(linkTo != null ? UriBuilder.fromUri(linkTo) : null)
+                        .orElse(uriInfo.getAbsolutePathBuilder())
+                        .path(crashId + "")
+                        .build())
                 .build();
     }
 
@@ -208,6 +226,26 @@ public final class CrashSubmission {
                         .error(Response.Status.NOT_FOUND)
                         .withCode(Response.Status.NOT_FOUND)
                         .build());
+    }
+
+    @DELETE
+    @Path("/{id}")
+    @RolesAllowed(DIAGNOSTICS_CRASHES + "+" + PERM_WRITE)
+    public Response deleteCrash(@PathParam("id") long crashId) {
+        int deleted = crashDb.withExtension(CrashDao.class, (crash) ->
+                        crash.deleteCrash(crashId));
+
+        if(deleted > 1)
+            throw new WebApplicationException("deleted more than one element");
+
+        return deleted == 1 ? Result
+                .ok()
+                .withCode(Response.Status.OK)
+                .build()
+                : Result
+                .error(Response.Status.NOT_FOUND)
+                .withCode(Response.Status.NOT_FOUND)
+                .build();
     }
 
     @GET

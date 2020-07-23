@@ -2,6 +2,7 @@ package dev.birchy.kafei.reports;
 
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
+import dev.birchy.kafei.reports.endpoints.ReportManage;
 import dev.birchy.kafei.reports.endpoints.ReportStatistics;
 import dev.birchy.kafei.reports.endpoints.ReportSubmit;
 import dev.birchy.kafei.reports.endpoints.ReportSubmitLegacy;
@@ -22,6 +23,7 @@ public final class ReportsBundle implements Bundle {
         environment.jersey().register(ReportSubmit.class);
         environment.jersey().register(ReportView.class);
         environment.jersey().register(ReportStatistics.class);
+        environment.jersey().register(ReportManage.class);
 
         /* v1 APIs */
         environment.jersey().register(ReportSubmitLegacy.class);

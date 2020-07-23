@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import java.net.URI;
 import java.util.List;
 
 import javax.ws.rs.core.MediaType;
@@ -46,6 +47,9 @@ public final class Result<T> {
 
     public Response.ResponseBuilder withCode(Response.Status status) {
         return Response.status(status).entity(this);
+    }
+    public Response.ResponseBuilder withCreated(URI uri) {
+        return Response.created(uri).entity(this);
     }
 
     public Result<T> withMessage(String message) {

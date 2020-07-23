@@ -37,9 +37,15 @@ shortDatabase:
   password: postgres
   url: jdbc:postgresql://localhost/kafei
 
+authDatabase:
+  driverClass: org.postgresql.Driver
+  user: postgres
+  password: postgres
+  url: jdbc:postgresql://localhost/kafei?currentSchema=public
+
 corsData:
   allowOrigin: "*"
-  allowMethods: "OPTIONS,GET,POST"
+  allowMethods: "OPTIONS,GET,DELETE,PUT,POST"
 
 proxies:
   - name: bonzi
@@ -53,3 +59,8 @@ sapi:
   host: localhost
   port: 4000
 
+mqtt:
+  host: localhost
+  port: 1883
+  username: kafeis
+  password: bonus

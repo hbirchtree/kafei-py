@@ -10,9 +10,9 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 import org.jdbi.v3.core.Jdbi;
 
-import java.net.SocketException;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -20,6 +20,11 @@ import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import javax.ws.rs.core.UriBuilder;
 
+import dev.birchy.kafei.auth.authenticate.TokenAuthenticator;
+import dev.birchy.kafei.auth.authenticate.TokenAuthorizer;
+import dev.birchy.kafei.auth.authenticate.TokenUser;
+import dev.birchy.kafei.auth.authenticate.UnauthenticatedHandler;
+import dev.birchy.kafei.auth.endpoints.UserManage;
 import dev.birchy.kafei.crash.endpoints.CrashSubmission;
 import dev.birchy.kafei.endpoints.Overview;
 import dev.birchy.kafei.github.HookShotBundle;
@@ -34,6 +39,9 @@ import dev.birchy.kafei.sapi.SapiConfig;
 import dev.birchy.kafei.shortener.ShortLink;
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
+import io.dropwizard.auth.AuthDynamicFeature;
+import io.dropwizard.auth.AuthValueFactoryProvider;
+import io.dropwizard.auth.oauth.OAuthCredentialAuthFilter;
 import io.dropwizard.configuration.ResourceConfigurationSourceProvider;
 import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.flyway.FlywayBundle;
@@ -114,6 +122,8 @@ public class KafeiServer extends Application<KafeiConfiguration> {
                 environment, configuration.getCrashDatabase(), "crash");
         final Jdbi shortenDb = jdbiFactory.build(
                 environment, configuration.getShortDatabase(), "shorten");
+        final Jdbi authDb = jdbiFactory.build(
+                environment, configuration.getAuthDatabase(), "auth");
 
         final MqttClient mqttClient = createMqttClient(configuration.getMqtt());
 
@@ -131,8 +141,8 @@ public class KafeiServer extends Application<KafeiConfiguration> {
                 bind(reportDb).to(Jdbi.class).named("reportsDb");
                 bind(githubDb).to(Jdbi.class).named("githubDb");
                 bind(crashDb).to(Jdbi.class).named("crashDb");
-                bind(environment.getObjectMapper()).to(ObjectMapper.class);
                 bind(shortenDb).to(Jdbi.class).named("shortenDb");
+                bind(authDb).to(Jdbi.class).named("authDb");
                 bind(configuration.getSapi()).to(SapiConfig.class);
                 bind(mqttClient).to(MqttClient.class);
                 bind(MqttPublisher.class).to(MqttPublisher.class);
@@ -146,25 +156,36 @@ public class KafeiServer extends Application<KafeiConfiguration> {
             }
         });
 
-        final FilterRegistration.Dynamic cors =
-                environment.servlets().addFilter("CORS", CrossOriginFilter.class);
-
-        cors.setInitParameter("allowedOrigins", configuration.getCorsData().getAllowOrigin() != null
-                ? configuration.getCorsData().getAllowOrigin()
-                : "*");
-        cors.setInitParameter("allowedMethods", configuration.getCorsData().getAllowMethods() != null
-                ? configuration.getCorsData().getAllowMethods()
-                : "GET");
-
         addProxies(configuration.getProxies(), environment);
 
-        cors.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
-
         environment.jersey().register(CrashSubmission.class);
+        environment.jersey().register(UserManage.class);
         environment.jersey().register(FaviconResource.class);
         environment.jersey().register(SapiAdapter.class);
 
         environment.jersey().register(ShortLink.class);
+
+        final FilterRegistration.Dynamic cors =
+                environment.servlets().addFilter("CORS", CrossOriginFilter.class);
+
+        cors.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
+        cors.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM, configuration.getCorsData().getAllowOrigin() != null
+                ? configuration.getCorsData().getAllowOrigin()
+                : "*");
+        cors.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM, configuration.getCorsData().getAllowMethods() != null
+                ? configuration.getCorsData().getAllowMethods()
+                : "GET,POST,PUT");
+
+        environment.jersey().register(new AuthDynamicFeature(
+                new OAuthCredentialAuthFilter.Builder<TokenUser>()
+                        .setAuthenticator(new TokenAuthenticator(authDb))
+                        .setAuthorizer(new TokenAuthorizer())
+                        .setUnauthorizedHandler(new UnauthenticatedHandler())
+                        .setPrefix("Bearer")
+                        .buildAuthFilter()));
+
+        environment.jersey().register(RolesAllowedDynamicFeature.class);
+        environment.jersey().register(new AuthValueFactoryProvider.Binder<>(TokenUser.class));
     }
 
     public static void main(String[] args) throws Exception {
