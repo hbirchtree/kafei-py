@@ -3,6 +3,7 @@
     import Group from './crash/Group.svelte';
     import Row from './crash/Row.svelte';
     import Icon from './Icon.svelte';
+    import Button from './Button.svelte';
     import {onMount} from 'svelte';
     
     onMount(() => {
@@ -13,6 +14,8 @@
     export let report;
     export let alternate;
     export let backgroundColor = alternate ? "#202035" : "#151530";
+
+    export let authState;
 
     let errored = false;
 
@@ -33,6 +36,17 @@
         if(!errored)
             fullInfo = info.data;
     }
+
+    async function delete_report() {
+        authState.fetch('/v2/reports/' + report.data.reportId, 'DELETE');
+    }
+    function raw_report() {
+        console.log("hello");
+        window.open(report.links[2].uri, '_blank');
+    }
+    function view_report() {
+        window.open("https://trace.birchy.dev?source=https://api.birchy.dev/" + report.links[2].uri, '_blank');
+    }
 </script>
 
 <div class="ui inverted container fluid report-row">
@@ -50,22 +64,19 @@
         {#if errored}
             <div class="ui container centered"><span class="center aligned">Something went wrong</span></div>
         {:else if fullInfo !== null}
+            {#if authState.loggedIn}
+                <Group icon="archive" headerName="Manage">
+                    <Button label="Delete" onclick={delete_report} icon="trash-2" color="red" />
+                </Group>
+            {/if}
             <ReportView report={fullInfo} summary={report.data} />
             <Group icon="file-text" headerName="Raw format">
-                <Row name="raw report download">
-                    <a href="{report.links[2].uri}" slot="content">
-                        <div class="ui label inverted flex-centered-important">
-                            <Icon icon="download-cloud"/> Download
-                        </div>
-                    </a>
-                </Row>
-                <Row name="view report">
-                    <a href="https://trace.birchy.dev?source=https://api.birchy.dev/{report.links[2].uri}" slot="content">
-                        <div class="ui label inverted flex-centered-important">
-                            <Icon icon="external-link"/> View
-                        </div>
-                    </a>
-                </Row>
+                <Button label="Download raw" icon="download-cloud" 
+                    onclick={raw_report} 
+                    />
+                <Button label="View" icon="external-link" 
+                    onclick={view_report} 
+                    />
             </Group>
         {:else}
             <div class="ui active inline centered loader"></div>

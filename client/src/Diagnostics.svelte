@@ -3,6 +3,7 @@
     import Report from './Report.svelte';
 
     export let endpoints;
+    export let authState;
 
     let crashes;
     let reports;
@@ -47,7 +48,7 @@
 <div data-tab="diag::crash" class="ui inverted bottom attached tab segment active">
 {#if crashes}
     {#each crashes as crash, i (crash.data.crashId)}
-        <Crash crash={crash} endpoints={endpoints} alternate={i % 2 == 0} />
+        <Crash crash={crash} endpoints={endpoints} alternate={i % 2 == 0} authState={authState} />
     {/each}
 {:else}
     <div class="ui active dimmer">
@@ -59,7 +60,7 @@
 <div data-tab="diag::report" class="ui inverted bottom attached tab segment">
 {#if reports}
     {#each reports as report, i (report.data.reportId)}
-        <Report report={report} endpoints={endpoints} alternate={i % 2 == 0} />
+        <Report report={report} endpoints={endpoints} alternate={i % 2 == 0} authState={authState} />
     {/each}
 {:else}
     <div class="ui active dimmer">

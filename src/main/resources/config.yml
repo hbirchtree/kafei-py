@@ -35,6 +35,12 @@ shortDatabase:
   password: admin
   url: jdbc:postgresql://25.57.48.59/kafei
 
+authDatabase:
+  driverClass: org.postgresql.Driver
+  user: postgres
+  password: admin
+  url: jdbc:postgresql://25.57.48.59/kafei?currentSchema=public
+
 corsData:
   allowOrigin: '*'
 

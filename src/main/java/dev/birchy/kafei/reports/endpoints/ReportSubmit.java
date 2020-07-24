@@ -19,6 +19,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import dev.birchy.kafei.RespondsWith;
+import dev.birchy.kafei.mqtt.GlobalTopics;
 import dev.birchy.kafei.mqtt.MqttPublisher;
 import dev.birchy.kafei.reports.ReportFormat;
 import dev.birchy.kafei.reports.ReportService;
@@ -69,7 +70,7 @@ public final class ReportSubmit {
                     reportService.putRawReport(runId, report);
                 });
 
-        publisher.publish("public/diagnostics/reports", new NewReport(runId));
+        publisher.publish(GlobalTopics.REPORT_UPDATE, new NewReport(runId));
 
         return Result
                 .ok(new ReportInfo(runId))

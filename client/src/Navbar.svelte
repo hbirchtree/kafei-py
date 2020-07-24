@@ -1,5 +1,6 @@
 <script>
     import Icon from './Icon.svelte';
+    import Button from './Button.svelte';
 
     export let links;
     export let externals;
@@ -31,13 +32,17 @@
             <img src="{github.img}" class="ui tiny circular image dootable {authState.loggedIn ? 'logged-in' : ''}" on:click={handleAuthClick}>
 
             <div class="ui container auth-menu">
-                <div class="ui container auth-content displayed" bind:this={authDropdown}>
+                <div class="ui container auth-content displayed" style="padding: 1em;" bind:this={authDropdown}>
                     <div class="ui container dropdown-arrow">
                     </div>
+                    {#if authState.loggedIn}
+                        <a class="ui teal image label" style="margin-bottom: 2em;">
+                            <img />
+                            Signed in as {authState.username}
+                        </a>
+                    {/if}
                     {#each authLinks as link}
-                        <button class="ui {link.color} button" on:click={link.action()}>
-                            {link.text}
-                        </button>
+                        <Button icon={link.icon} label={link.text} color={link.color} onclick={link.action} margin=0/>
                     {/each}
                 </div>
             </div>
@@ -85,7 +90,7 @@
         background: solid midnightblue !important;
         background-color: midnightblue !important;
     }
-    a.image {
+    a.tiny.image {
         margin-left: auto;
         margin-right: 0;
     }
@@ -153,9 +158,6 @@
         flex-direction: column;
         padding: 10px 2px;
         min-width: 200px;
-    }
-    .auth-content button {
-        margin: 0;
     }
     .auth-content:not(.displayed) {
         display: none;

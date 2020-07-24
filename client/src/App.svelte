@@ -20,7 +20,7 @@
     export let github;
     export let repository;
     let authOutLinks = [
-            {text: "Sign in", color: "green", action: async () => {
+            {text: "Sign in", icon: "log-in", color: "green", action: async () => {
                 if(await isLoggedIn())
                     return;
                 const token = await auth_resource('/v2/users/authenticate', {
@@ -31,19 +31,20 @@
                     return;
                 loggedInCycle(token);
             }},
-            {text: "Register", color: "blue", action: async () => {
+            {text: "Register", icon: "edit-2", color: "blue", action: async () => {
                 
             }}
     ];
     let authInLinks = [
-            {text: "Sign out", color: "red", action: async () => { loggedOutCycle(); }}
+            {text: "Sign out", icon: "log-out", color: "red", action: async () => { loggedOutCycle(); }}
     ];
-    let authLinks = authOutLinks;
     let authState = {
         loggedIn: false,
         username: null,
-        profileImg: null
+        profileImg: null,
+        fetch: authenticated_fetch,
     };
+    let authLinks = authState.loggedIn ? authInLinks : authOutLinks;
 
     export let releaseInfo = null;
     export let imguiReleaseInfo = null;
@@ -102,6 +103,36 @@
             });
     }
 
+    async function authenticated_fetch(source, method, data) {
+        if(!method)
+            method = 'GET';
+
+        const token = JSON.parse(localStorage['Kafei-Api-Token']).token;
+
+        if(!token)
+            return null;
+
+        return await fetch(endpoints.data + source, {
+               method: method,
+               cache: 'no-cache',
+               headers: { 
+                   'Accept': 'application/json',
+                   'Authorization': 'Bearer ' + token,
+                   'Content-Type': 'application/json',
+               },
+               body: data ? JSON.stringify(data) : undefined,
+           }).then((content) => {
+               return content.json();
+           }).then((content) => {
+               if(content.data)
+                   return content.data;
+               else
+                   return content;
+           }).catch((err) => {
+               console.log(err);
+           });
+    }
+
     async function get_resource(source) {
         return fetch(endpoints.data + source)
             .then((content) => {
@@ -157,7 +188,7 @@
     <Statistics endpoints={endpoints}/>
 </div>
 <div data-tab="nav::diag" class="ui inverted text tab fluid segment">
-    <Diagnostics endpoints={endpoints} />
+    <Diagnostics endpoints={endpoints} authState={authState} />
 </div>
 
 <Footer/>

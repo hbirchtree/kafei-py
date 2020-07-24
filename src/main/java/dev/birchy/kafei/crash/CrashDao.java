@@ -7,6 +7,7 @@ import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 import org.joda.time.DateTime;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,19 +24,19 @@ public interface CrashDao {
     Optional<CrashSummary> getCrash(@Bind("crashId") long crashId);
 
     @SqlQuery("select stdout from crash.outputs where crash_id = :crashId")
-    Optional<byte[]> getCrashOut(@Bind("crashId") long crashId);
+    InputStream getCrashOut(@Bind("crashId") long crashId);
 
     @SqlQuery("select stderr from crash.outputs where crash_id = :crashId")
-    Optional<byte[]> getCrashErr(@Bind("crashId") long crashId);
+    InputStream getCrashErr(@Bind("crashId") long crashId);
 
     @SqlQuery("select profile_file from crash.outputs where crash_id = :crashId")
-    Optional<byte[]> getCrashProfile(@Bind("crashId") long crashId);
+    InputStream getCrashProfile(@Bind("crashId") long crashId);
 
     @SqlQuery("select machine_info from crash.outputs where crash_id = :crashId")
-    Optional<byte[]> getCrashMachine(@Bind("crashId") long crashId);
+    InputStream getCrashMachine(@Bind("crashId") long crashId);
 
     @SqlQuery("select stacktrace from crash.outputs where crash_id = :crashId")
-    Optional<byte[]> getCrashStacktrace(@Bind("crashId") long crashId);
+    InputStream getCrashStacktrace(@Bind("crashId") long crashId);
 
     @SqlUpdate("insert into crash.outputs" +
             " (submit_time, stdout, stderr, profile_file, machine_info, stacktrace, exit_code)" +
@@ -43,11 +44,11 @@ public interface CrashDao {
     @GetGeneratedKeys
     long addCrash(
             @Bind("submitTime") DateTime submitTime,
-            @Bind("stdout") byte[] stdOut,
-            @Bind("stderr") byte[] stdErr,
-            @Bind("profile") byte[] profile,
-            @Bind("machineInfo") byte[] machineInfo,
-            @Bind("stacktrace") byte[] stacktrace,
+            @Bind("stdout") InputStream stdOut,
+            @Bind("stderr") InputStream stdErr,
+            @Bind("profile") InputStream profile,
+            @Bind("machineInfo") InputStream machineInfo,
+            @Bind("stacktrace") InputStream stacktrace,
             @Bind("exitCode") int exitCode);
 
     @SqlUpdate("delete from crash.outputs where crash_id = :crashId")

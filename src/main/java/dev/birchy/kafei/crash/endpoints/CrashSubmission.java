@@ -6,10 +6,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.jdbi.v3.core.Jdbi;
 import org.joda.time.DateTime;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.Optional;
@@ -35,6 +41,7 @@ import javax.ws.rs.core.UriInfo;
 import dev.birchy.kafei.RespondsWith;
 import dev.birchy.kafei.crash.CrashSummary;
 import dev.birchy.kafei.crash.CrashDao;
+import dev.birchy.kafei.mqtt.GlobalTopics;
 import dev.birchy.kafei.mqtt.MqttPublisher;
 import dev.birchy.kafei.responses.Result;
 import dev.birchy.kafei.responses.ShortLink;
@@ -86,62 +93,107 @@ public final class CrashSubmission {
         return input.getBytes();
     }
 
+    private InputStream fileToStream(File f) throws FileNotFoundException {
+        return new FileInputStream(f);
+    }
+
+    public enum CrashChange {
+        ADDED,
+        MODIFIED,
+        DELETED,
+    };
+
     @Data
     @AllArgsConstructor
-    public static final class NewCrash {
+    public static final class CrashUpdate {
         private long crashId;
+        private CrashChange change;
     }
 
     @POST
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @RespondsWith(CrashSummary.class)
-    public Response postCrash(@Context HttpHeaders headers, FormDataMultiPart outputs)
-            throws MqttException, JsonProcessingException, MalformedURLException {
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public Response postCrash(
+            @Context HttpHeaders headers,
+            @FormDataParam("stdout") File stdout,
+            @FormDataParam("stderr") File stderr,
+            @FormDataParam("exitCode") int exitCode,
+            @FormDataParam("profile") File profile,
+            @FormDataParam("machineProfile") File machineInfo,
+            @FormDataParam("stacktrace") File stacktrace
+//            FormDataMultiPart outputs
+    )
+            throws MqttException, JsonProcessingException, MalformedURLException, FileNotFoundException {
 
-        if(!outputs.getFields().containsKey("stdout") && !outputs.getFields().containsKey("stderr"))
+        if(stdout == null || stderr == null) {
             return Result
-                    .error(Response.Status.NOT_ACCEPTABLE)
-                    .withMessage("Fields \"stdout\" and \"stderr\" are required")
-                    .withCode(Response.Status.NOT_ACCEPTABLE)
+                    .error(Response.Status.BAD_REQUEST)
+                    .withMessage("Missing fields stdout and stderr")
+                    .withCode(Response.Status.BAD_REQUEST)
                     .build();
+        }
 
-        int exitCode = outputs.getFields().containsKey("exitCode")
-                ? Integer.parseInt(outputs.getField("exitCode").getValue())
-                : 0;
+        long crashId = crashDb.inTransaction((t -> {
+            CrashDao crash = t.attach(CrashDao.class);
 
-        long crashId = crashDb.withExtension(CrashDao.class, (crash -> {
-            String profile =  outputs.getFields().containsKey("profile")
-                    ? outputs.getField("profile").getValue()
-                    : null;
-
-            String machineInfo = outputs.getFields().containsKey("machineProfile")
-                    ? outputs.getField("machineProfile").getValue()
-                    : null;
-
-            String stacktrace = outputs.getFields().containsKey("stacktrace")
-                    ? outputs.getField("stacktrace").getValue()
-                    : null;
-
-            if(profile != null) {
-                try {
-                    mapper.readTree(profile);
-                } catch (JsonParseException e) {
-                    profile = profile + "{}]}";
-                } catch (IOException e) {
-                }
+            try {
+                return crash.addCrash(
+                        new DateTime(),
+                        fileToStream(stdout),
+                        fileToStream(stderr),
+                        fileToStream(profile),
+                        fileToStream(machineInfo),
+                        fileToStream(stacktrace),
+                        exitCode);
+            } catch (FileNotFoundException e) {
+                return new Long(-1);
             }
-
-            return crash.addCrash(
-                    new DateTime(),
-                    outputs.getField("stdout").getValue().getBytes(),
-                    outputs.getField("stderr").getValue().getBytes(),
-                    profile != null ? profile.getBytes() : null,
-                    machineInfo != null ? machineInfo.getBytes() : null,
-                    stacktrace != null ? stacktrace.getBytes() : null,
-                    exitCode);
         }));
 
-        publisher.publish("public/diagnostics/crashes", new NewCrash(crashId));
+//        if(!outputs.getFields().containsKey("stdout") && !outputs.getFields().containsKey("stderr"))
+//            return Result
+//                    .error(Response.Status.BAD_REQUEST)
+//                    .withMessage("Fields \"stdout\" and \"stderr\" are required")
+//                    .withCode(Response.Status.BAD_REQUEST)
+//                    .build();
+//
+//        int exitCode = outputs.getFields().containsKey("exitCode")
+//                ? Integer.parseInt(outputs.getField("exitCode").getValue())
+//                : 0;
+//
+//        long crashId = crashDb.withExtension(CrashDao.class, (crash -> {
+//            String profile =  outputs.getFields().containsKey("profile")
+//                    ? outputs.getField("profile").getValue()
+//                    : null;
+//
+//            String machineInfo = outputs.getFields().containsKey("machineProfile")
+//                    ? outputs.getField("machineProfile").getValue()
+//                    : null;
+//
+//            String stacktrace = outputs.getFields().containsKey("stacktrace")
+//                    ? outputs.getField("stacktrace").getValue()
+//                    : null;
+//
+//            if(profile != null) {
+//                try {
+//                    mapper.readTree(profile);
+//                } catch (JsonParseException e) {
+//                    profile = profile + "{}]}";
+//                } catch (IOException e) {
+//                }
+//            }
+//
+//            return crash.addCrash(
+//                    new DateTime(),
+//                    outputs.getField("stdout"),
+//                    outputs.getField("stderr").getValue().getBytes(),
+//                    profile != null ? profile.getBytes() : null,
+//                    machineInfo != null ? machineInfo.getBytes() : null,
+//                    stacktrace != null ? stacktrace.getBytes() : null,
+//                    exitCode);
+//        }));
+
+        publisher.publish(GlobalTopics.CRASH_UPDATE, new CrashUpdate(crashId, CrashChange.ADDED));
 
         log.debug("Parameters: abs={}, req={} headers={}",
                 uriInfo.getAbsolutePath(), uriInfo.getRequestUri(), headers.getRequestHeaders());
@@ -231,12 +283,15 @@ public final class CrashSubmission {
     @DELETE
     @Path("/{id}")
     @RolesAllowed(DIAGNOSTICS_CRASHES + "+" + PERM_WRITE)
-    public Response deleteCrash(@PathParam("id") long crashId) {
+    public Response deleteCrash(@PathParam("id") long crashId) throws MqttException, JsonProcessingException {
         int deleted = crashDb.withExtension(CrashDao.class, (crash) ->
                         crash.deleteCrash(crashId));
 
         if(deleted > 1)
             throw new WebApplicationException("deleted more than one element");
+
+        if(deleted == 1)
+            publisher.publish(GlobalTopics.CRASH_UPDATE, new CrashUpdate(crashId, CrashChange.DELETED));
 
         return deleted == 1 ? Result
                 .ok()
@@ -252,8 +307,8 @@ public final class CrashSubmission {
     @Path("{id}/stdout")
     @RespondsWith(String.class)
     public Response getCrashOut(@PathParam("id") long id) {
-        Optional<byte[]> output =
-                crashDb.withExtension(CrashDao.class, (crash) -> crash.getCrashOut(id));
+        Optional<InputStream> output = Optional.ofNullable(
+                crashDb.inTransaction((t) -> t.attach(CrashDao.class).getCrashOut(id)));
 
         return output.map((out) -> Response.ok(out).type(MediaType.TEXT_PLAIN).build())
                 .orElseGet(() -> Result
@@ -266,11 +321,11 @@ public final class CrashSubmission {
     @Path("{id}/stderr")
     @RespondsWith(String.class)
     public Response getCrashErr(@PathParam("id") long id) {
-        Optional<byte[]> output =
-                crashDb.withExtension(CrashDao.class, (crash) -> crash.getCrashErr(id));
+        Optional<InputStream> output = Optional.ofNullable(
+                crashDb.inTransaction((t) -> t.attach(CrashDao.class).getCrashErr(id)));
 
         return output
-                .map((out) -> Response.ok(cleanTerminalOutput(out)).type(MediaType.TEXT_PLAIN).build())
+                .map((out) -> Response.ok(out).type(MediaType.TEXT_PLAIN).build())
                 .orElseGet(() -> Result
                         .error(Response.Status.NOT_FOUND)
                         .withCode(Response.Status.NOT_FOUND)
@@ -281,8 +336,8 @@ public final class CrashSubmission {
     @Path("{id}/profile")
     @RespondsWith(String.class)
     public Response getCrashProfile(@PathParam("id") long id) {
-        Optional<byte[]> output =
-                crashDb.withExtension(CrashDao.class, (crash) -> crash.getCrashProfile(id));
+        Optional<InputStream> output = Optional.ofNullable(
+                crashDb.inTransaction((t) -> t.attach(CrashDao.class).getCrashProfile(id)));
 
         return output
                 .map((out) -> Response.ok(out).type(MediaType.APPLICATION_JSON).build())
@@ -296,8 +351,8 @@ public final class CrashSubmission {
     @Path("{id}/machine")
     @RespondsWith(String.class)
     public Response getCrashMachine(@PathParam("id") long id) {
-        Optional<byte[]> output =
-                crashDb.withExtension(CrashDao.class, (crash) -> crash.getCrashMachine(id));
+        Optional<InputStream> output = Optional.ofNullable(
+                crashDb.inTransaction((t) -> t.attach(CrashDao.class).getCrashMachine(id)));
 
         return output
                 .map((out) -> Response.ok(out).type(MediaType.APPLICATION_JSON).build())
@@ -311,8 +366,8 @@ public final class CrashSubmission {
     @Path("{id}/stacktrace")
     @RespondsWith(String.class)
     public Response getCrashStacktrace(@PathParam("id") long id) {
-        Optional<byte[]> output =
-                crashDb.withExtension(CrashDao.class, (crash) -> crash.getCrashStacktrace(id));
+        Optional<InputStream> output = Optional.ofNullable(
+                crashDb.inTransaction((t) -> t.attach(CrashDao.class).getCrashStacktrace(id)));
 
         return output.map((out) -> Response.ok(out).type(MediaType.APPLICATION_JSON).build())
                 .orElseGet(() -> Result

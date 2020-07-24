@@ -25,6 +25,8 @@ import dev.birchy.kafei.auth.authenticate.TokenAuthorizer;
 import dev.birchy.kafei.auth.authenticate.TokenUser;
 import dev.birchy.kafei.auth.authenticate.UnauthenticatedHandler;
 import dev.birchy.kafei.auth.endpoints.UserManage;
+import dev.birchy.kafei.crash.InputStreamMapperFactory;
+import dev.birchy.kafei.crash.LargeObjectMapper;
 import dev.birchy.kafei.crash.endpoints.CrashSubmission;
 import dev.birchy.kafei.endpoints.Overview;
 import dev.birchy.kafei.github.HookShotBundle;
@@ -88,6 +90,34 @@ public class KafeiServer extends Application<KafeiConfiguration> {
         return client;
     }
 
+    private void addCors(Environment environment) {
+        final FilterRegistration.Dynamic cors =
+                environment.servlets().addFilter("CORS", CrossOriginFilter.class);
+
+        cors.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM, "*");
+        cors.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM, "*");
+        cors.setInitParameter(CrossOriginFilter.ALLOW_CREDENTIALS_PARAM, "true");
+        cors.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM, "Authorization,Accept,Content-Type,Content-Length,Origin");
+        cors.setInitParameter(CrossOriginFilter.CHAIN_PREFLIGHT_PARAM, "false");
+
+        cors.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
+
+        environment.jersey().register(DisableCORSNonsense.class);
+    }
+
+    private void addAuth(Environment environment, Jdbi authDb) {
+        environment.jersey().register(new AuthDynamicFeature(
+                new OAuthCredentialAuthFilter.Builder<TokenUser>()
+                        .setAuthenticator(new TokenAuthenticator(authDb))
+                        .setAuthorizer(new TokenAuthorizer())
+                        .setUnauthorizedHandler(new UnauthenticatedHandler())
+                        .setPrefix("Bearer")
+                        .buildAuthFilter()));
+
+        environment.jersey().register(RolesAllowedDynamicFeature.class);
+        environment.jersey().register(new AuthValueFactoryProvider.Binder<>(TokenUser.class));
+    }
+
     @Override
     public void initialize(Bootstrap<KafeiConfiguration> bootstrap) {
         super.initialize(bootstrap);
@@ -125,14 +155,10 @@ public class KafeiServer extends Application<KafeiConfiguration> {
         final Jdbi authDb = jdbiFactory.build(
                 environment, configuration.getAuthDatabase(), "auth");
 
+        crashDb.registerColumnMapper(new LargeObjectMapper());
+        crashDb.registerArgument(new InputStreamMapperFactory(0));
+
         final MqttClient mqttClient = createMqttClient(configuration.getMqtt());
-
-        /* Documentation APIs */
-        environment.jersey().register(Overview.class);
-
-        environment.jersey().setUrlPattern("/api/*");
-
-        environment.jersey().register(MultiPartFeature.class);
 
         environment.jersey().register(new AbstractBinder() {
             @Override
@@ -149,43 +175,32 @@ public class KafeiServer extends Application<KafeiConfiguration> {
             }
         });
 
+        addCors(environment);
+        addAuth(environment, authDb);
+        addProxies(configuration.getProxies(), environment);
+
+        /* Add some dynamic features */
+        environment.jersey().register(MultiPartFeature.class);
+
+        /* All Jersey endpoints start at /api */
+        environment.jersey().setUrlPattern("/api/*");
+
+        /* Documentation APIs */
+        environment.jersey().register(Overview.class);
+
+        /* Add some smaller interfaces */
+        environment.jersey().register(CrashSubmission.class);
+        environment.jersey().register(UserManage.class);
+        environment.jersey().register(FaviconResource.class); /* Favicon resource, exposes favicon.ico */
+        environment.jersey().register(SapiAdapter.class);
+        environment.jersey().register(ShortLink.class);
+
         environment.healthChecks().register("alive", new HealthCheck() {
             @Override
             protected Result check() {
                 return Result.healthy();
             }
         });
-
-        addProxies(configuration.getProxies(), environment);
-
-        environment.jersey().register(CrashSubmission.class);
-        environment.jersey().register(UserManage.class);
-        environment.jersey().register(FaviconResource.class);
-        environment.jersey().register(SapiAdapter.class);
-
-        environment.jersey().register(ShortLink.class);
-
-        final FilterRegistration.Dynamic cors =
-                environment.servlets().addFilter("CORS", CrossOriginFilter.class);
-
-        cors.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
-        cors.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM, configuration.getCorsData().getAllowOrigin() != null
-                ? configuration.getCorsData().getAllowOrigin()
-                : "*");
-        cors.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM, configuration.getCorsData().getAllowMethods() != null
-                ? configuration.getCorsData().getAllowMethods()
-                : "GET,POST,PUT");
-
-        environment.jersey().register(new AuthDynamicFeature(
-                new OAuthCredentialAuthFilter.Builder<TokenUser>()
-                        .setAuthenticator(new TokenAuthenticator(authDb))
-                        .setAuthorizer(new TokenAuthorizer())
-                        .setUnauthorizedHandler(new UnauthenticatedHandler())
-                        .setPrefix("Bearer")
-                        .buildAuthFilter()));
-
-        environment.jersey().register(RolesAllowedDynamicFeature.class);
-        environment.jersey().register(new AuthValueFactoryProvider.Binder<>(TokenUser.class));
     }
 
     public static void main(String[] args) throws Exception {

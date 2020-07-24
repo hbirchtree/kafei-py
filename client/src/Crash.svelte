@@ -3,6 +3,7 @@
     import Code from './Code.svelte';
     import ReportView from './crash/ReportView.svelte';
     import Icon from './Icon.svelte';
+    import Button from './Button.svelte';
     import {onMount} from 'svelte';
     
     onMount(() => {
@@ -13,6 +14,8 @@
     export let crash;
     export let alternate;
     export let backgroundColor = alternate ? "#202035" : "#151530";
+
+    export let authState;
 
     let errored = false;
 
@@ -25,6 +28,10 @@
     let logErrorDetected = true;
     let logException;
     let stack = null;
+
+    async function delete_crash() {
+        authState.fetch('/v2/crash/' + crash.data.crashId, 'DELETE')
+    }
 
     async function get_full_crash() {
         if(fullInfo !== null || errored)
@@ -93,6 +100,11 @@
         {#if errored}
             <div class="ui container centered"><span class="center aligned">Something went wrong</span></div>
         {:else if fullInfo !== null}
+            {#if authState.loggedIn}
+            <Group icon="archive" headerName="Manage">
+                <Button label="Delete" onclick={delete_crash} icon="trash-2" color="red" />
+            </Group>
+            {/if}
             {#if !noProfile}
                 <ReportView report={fullInfo} summary={crash.data} />
             {/if}
