@@ -15,32 +15,32 @@ flyway:
 
 reportDatabase:
   driverClass: org.postgresql.Driver
-  user: postgres
-  password: postgres
+  user: kafei
+  password: ${DB_PASSWORD}
   url: jdbc:postgresql://localhost/kafei
 
 gitHooksDatabase:
   driverClass: org.postgresql.Driver
-  user: postgres
-  password: postgres
+  user: kafei
+  password: ${DB_PASSWORD}
   url: jdbc:postgresql://localhost/kafei
 
 crashDatabase:
   driverClass: org.postgresql.Driver
-  user: postgres
-  password: postgres
+  user: kafei
+  password: ${DB_PASSWORD}
   url: jdbc:postgresql://localhost/kafei
 
 shortDatabase:
   driverClass: org.postgresql.Driver
-  user: postgres
-  password: postgres
+  user: kafei
+  password: ${DB_PASSWORD}
   url: jdbc:postgresql://localhost/kafei
 
 authDatabase:
   driverClass: org.postgresql.Driver
-  user: postgres
-  password: postgres
+  user: kafei
+  password: ${DB_PASSWORD}
   url: jdbc:postgresql://localhost/kafei?currentSchema=public
 
 corsData:
@@ -60,7 +60,8 @@ sapi:
   port: 4000
 
 mqtt:
+  protocol: tcp
   host: localhost
   port: 1883
-  username: kafeis
-  password: bonus
+  username: kafei
+  password: ${MQTT_PASSWORD}

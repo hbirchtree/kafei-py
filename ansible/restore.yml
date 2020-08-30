@@ -1,0 +1,8 @@
+---
+
+- name: kafei restore
+  hosts: webservers
+  roles:
+    - pgrestore
+  vars:
+    db: kafei

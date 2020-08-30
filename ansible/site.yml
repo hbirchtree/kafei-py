@@ -1,0 +1,15 @@
+---
+
+- name: set config
+  hosts: webservers
+  roles:
+      - config
+
+- name: configure server
+  hosts: webservers
+  roles:
+    - nginx
+    - jdk
+    - mosquitto
+    - postgres
+

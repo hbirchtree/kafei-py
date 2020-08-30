@@ -1,0 +1,32 @@
+---
+
+- hosts: localhost
+  tasks:
+    - lightsail:
+        state: absent
+        name: kafei
+        region: eu-central-1
+    - lightsail:
+        state: present
+        name: kafei
+        region: eu-central-1
+        zone: eu-central-1a
+        blueprint_id: ubuntu_18_04
+        bundle_id: nano_2_0
+        key_pair_name: id_rsa.nopass
+        user_data: "echo 'hello world' > /home/ubuntu/test.txt"
+        wait_timeout: 500
+    - lightsail:
+        state: running
+        name: kafei
+        region: eu-central-1
+        zone: eu-central-1a
+      register: kafei
+  
+    - debug:
+        msg: "Created instance {{ kafei.instance.name }} with {{ kafei.instance.hardware }}\n{{kafei.instance}}"
+    - debug:
+        msg: 'Deploying to {{ kafei.instance.public_ip_address }}'
+    - shell: |
+        echo "[webservers]" > provisioned
+        echo "{{ kafei.instance.username }}@{{ kafei.instance.public_ip_address }} # {{ kafei.instance.name }}" >> provisioned

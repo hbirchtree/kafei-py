@@ -44,7 +44,9 @@ import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.auth.AuthDynamicFeature;
 import io.dropwizard.auth.AuthValueFactoryProvider;
 import io.dropwizard.auth.oauth.OAuthCredentialAuthFilter;
+import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.ResourceConfigurationSourceProvider;
+import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.flyway.FlywayBundle;
 import io.dropwizard.flyway.FlywayFactory;
@@ -86,7 +88,11 @@ public class KafeiServer extends Application<KafeiConfiguration> {
         options.setUserName(config.getUsername());
         options.setPassword(config.getPassword().toCharArray());
 
-        client.connect(options);
+        try {
+            client.connect(options);
+        } catch(MqttException e) {
+            return null;
+        }
         return client;
     }
 
@@ -139,6 +145,11 @@ public class KafeiServer extends Application<KafeiConfiguration> {
                 return config.getFlyway();
             }
         });
+
+        bootstrap.setConfigurationSourceProvider(
+                new SubstitutingSourceProvider(
+                        bootstrap.getConfigurationSourceProvider(),
+                        new EnvironmentVariableSubstitutor()));
     }
 
     @Override
@@ -170,12 +181,13 @@ public class KafeiServer extends Application<KafeiConfiguration> {
                 bind(shortenDb).to(Jdbi.class).named("shortenDb");
                 bind(authDb).to(Jdbi.class).named("authDb");
                 bind(configuration.getSapi()).to(SapiConfig.class);
-                bind(mqttClient).to(MqttClient.class);
+                if (mqttClient != null)
+                    bind(mqttClient).to(MqttClient.class);
                 bind(MqttPublisher.class).to(MqttPublisher.class);
             }
         });
 
-        addCors(environment);
+//        addCors(environment);
         addAuth(environment, authDb);
         addProxies(configuration.getProxies(), environment);
 

@@ -1,0 +1,25 @@
+- name: install nginx
+  become: yes
+  apt:
+    name:
+      - nginx
+      - certbot
+
+- name: add configuration
+  become: yes
+  template: src={{item}}.conf dest=/etc/nginx/sites-available/{{item}}.conf mode=644
+  with_items:
+    - '10-kafei'
+    - '20-shortener'
+
+- name: enable sites
+  become: yes
+  file:
+      src: /etc/nginx/sites-available/{{ item }}.conf
+      dest: /etc/nginx/sites-enabled/{{ item }}.conf
+      state: link
+  with_items:
+    - '10-kafei'
+    - '20-shortener'
+  notify:
+    - restart nginx

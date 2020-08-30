@@ -43,6 +43,7 @@ authDatabase:
 
 corsData:
   allowOrigin: '*'
+  allowMethods: "OPTIONS,HEAD,GET,DELETE,PUT,POST"
 
 proxies:
   - name: bonzi
@@ -56,3 +57,8 @@ sapi:
   host: localhost
   port: 4000
 
+mqtt:
+  host: birchy.dev
+  port: 8883
+  username: kafei
+  password: bonus

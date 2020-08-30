@@ -1,0 +1,78 @@
+---
+
+# App directories
+deployroot: /var/app-deploy
+dataroot: /var/app-data
+
+appusers:
+  - kafei
+  - playground
+
+# OpenJDK for applications
+jdkversion: 8
+
+# Certbot
+certdomains: birchy.dev,api.birchy.dev,bonzi.birchy.dev,coffee.birchy.dev,crash.birchy.dev,mq.birchy.dev,s.birchy.dev,trace.birchy.dev
+certdir: /etc/letsencrypt/live/birchy.dev
+
+# Mosquitto settings
+mqtt_host: 127.0.0.1
+mqtt_wsport: 8083
+mqtt_pubport: 8883
+mqtt_tcpport: 1883
+mqtt_users:
+  - name: kafei
+    password: "{{ lookup('password', 'roles/kafei/files/{{ inventory_hostname }}/mqtt') }}"
+mqtt_defaultuser: hbjerke
+
+# Nginx settings
+bonziroot: '{{ deployroot }}/bonzi'
+traceroot: '{{ dataroot }}/trace'
+
+kafeiserver: 127.0.0.1:8040
+kafeiname: birchy.dev
+
+# Kafei deployment
+kafei:
+  deploy: '{{ deployroot }}/kafei/kafei-py'
+  data: '{{ dataroot }}/kafei'
+
+# PostgreSQL settings
+pgport: 5432
+pginterface: localhost
+pgusers:
+  - name: kafei
+    db: kafei
+    password: "{{ lookup('password', 'roles/kafei/files/{{ inventory_hostname }}/postgresql') }}"
+  - name: app1
+    db: apps
+    password: "{{ lookup('password', 'roles/app1/files/{{ inventory_hostname }}/postgresql') }}"
+pgdatabases:
+  - name: kafei
+    owner: kafei
+  - name: apps
+    owner: maintenance
+
+kafeidb:
+  schemas:
+    - name: crash
+      crypto: absent
+      db: kafei
+      roles: kafei
+    - name: reports
+      crypto: absent
+      db: kafei
+      roles: kafei
+    - name: short
+      crypto: absent
+      db: kafei
+      roles: kafei
+    - name: githooks
+      crypto: absent
+      db: kafei
+      roles: kafei
+    - name: auth
+      crypto: present
+      db: kafei
+      roles: kafei
+

@@ -1,0 +1,12 @@
+- hosts: webservers
+  name: deploy kafei server
+  roles:
+    - deployservice
+  vars:
+    appname: kafei
+    servicename: Kafei Services
+    execpath: /bin/sh '{{ kafei.data }}/startup.sh' '{{ kafei.deploy }}/bin/kafei-py'
+    migration_args: db migrate production.yml
+    service_args: server production.yml
+    working_dir: '{{ kafei.data }}'
+    source: kafei-py.tar

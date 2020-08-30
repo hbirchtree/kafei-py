@@ -1,0 +1,90 @@
+- name: install postgres
+  become: yes
+  apt: 
+    name:
+      - postgresql
+      - postgresql-contrib
+      - python3-psycopg2
+      - python-psycopg2
+  notify: start postgresql
+
+- name: create databases
+  become: yes
+  become_user: postgres
+  postgresql_db:
+    name: '{{ item.name }}'
+  with_items: '{{ pgdatabases }}'
+
+- name: set up maintenance user
+  become: yes
+  become_user: postgres
+  postgresql_user:
+      name: maintenance
+      db: '{{ item.name }}'
+      role_attr_flags: 'SUPERUSER'
+  with_items: '{{ pgdatabases }}'
+
+- name: set up users
+  become: yes
+  become_user: maintenance
+  postgresql_user:
+    name: '{{ item.name }}'
+    password: '{{ item.password }}'
+    db: kafei
+    login_user: maintenance
+  with_items: '{{ pgusers }}'
+
+- name: assign database owners
+  become: yes
+  become_user: maintenance
+  postgresql_owner:
+    db: '{{ item.name }}'
+    new_owner: '{{ item.owner }}'
+    obj_type: database
+    login_user: maintenance
+  with_items: '{{ pgdatabases }}'
+
+- name: grant access to database
+  become: yes
+  become_user: maintenance
+  postgresql_privs:
+    database: '{{ item.name }}'
+    objs: '{{ item.name }}'
+    type: database
+    privs: CONNECT,CREATE
+    roles: '{{ item.owner }}'
+    login_user: maintenance
+  with_items: '{{ pgdatabases }}'
+
+- name: set up schemas
+  become: yes
+  become_user: kafei
+  postgresql_schema:
+    name: '{{ item.name }}'
+    db: '{{ item.db }}'
+    login_user: '{{ item.roles }}'
+  with_items: '{{ kafeidb.schemas }}'
+
+- name: grant access to schemas
+  become: yes
+  become_user: maintenance
+  postgresql_privs:
+    database: '{{ item.db }}'
+    objs: '{{ item.name }}'
+    type: schema
+    roles: '{{ item.roles }}'
+    privs: USAGE
+    login_user: maintenance
+  with_items: '{{ kafeidb.schemas }}'
+
+- name: set up crypto extension
+  become: yes
+  become_user: maintenance
+  postgresql_ext:
+    name: pgcrypto
+    db: '{{ item.db }}'
+    schema: '{{ item.name }}'
+    state: '{{ item.crypto }}'
+    login_user: maintenance
+  with_items: '{{ kafeidb.schemas }}'
+

@@ -1,0 +1,12 @@
+- name: 'backing up database {{ db }}'
+  become: yes
+  become_user: maintenance
+  postgresql_db:
+    name: '{{ db }}'
+    state: dump
+    target: '/tmp/{{ db }}_dump.sql.gz'
+    login_user: maintenance
+- name: fetch backup
+  fetch:
+    src: '/tmp/{{ db }}_dump.sql.gz'
+    dest: backup

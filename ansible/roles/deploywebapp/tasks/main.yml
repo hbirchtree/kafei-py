@@ -1,0 +1,57 @@
+---
+
+# Required variables:
+#  appname
+#  indexfile
+- name: create webapp user
+  become: yes
+  user:
+    name: '{{ appname }}'
+    shell: /bin/sh
+    createhome: yes
+    home: '{{ dataroot }}/{{ appname }}'
+    group: apps
+    system: yes
+
+- name: make www directory
+  become: yes
+  become_user: '{{ appname }}'
+  file:
+    path: '{{ dataroot }}/{{ appname }}/www'
+    state: directory
+
+- name: 'copy {{ appname }} to server'
+  become: yes
+  become_user: '{{ appname }}'
+  unarchive: src={{ source }} dest={{ dataroot }}/{{ appname}}/www mode=0755
+
+- name: install nginx config
+  become: yes
+  template: src=serve.conf dest=/etc/nginx/sites-available/99-{{ appname }}.conf mode=0644
+  vars:
+    appdomain: '{{ appname }}.{{ kafeiname }}'
+    approot: '{{ dataroot }}/{{ appname }}/www'
+
+- name: enable nginx config
+  become: yes
+  file:
+    state: link
+    src: '/etc/nginx/sites-available/99-{{ appname }}.conf'
+    dest: '/etc/nginx/sites-enabled/99-{{ appname }}.conf'
+
+- name: stop nginx
+  become: yes
+  service: name=nginx state=stopped
+
+- name: get certificate for webapp
+  become: yes
+  shell: certbot --nginx -d '{{ appname }}.{{ kafeiname }}' -n --agree-tos -m h0wy36@gmail.com
+
+- name: kill certbot nginx
+  become: yes
+  shell: killall nginx
+
+- name: start nginx
+  become: yes
+  service: name=nginx state=started
+

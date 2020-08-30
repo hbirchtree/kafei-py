@@ -1,0 +1,9 @@
+- name: deploy trace webapp
+  hosts: webservers
+  roles:
+    - deploywebapp
+  vars:
+    appname: trace
+    indexfile: ChromeTraceView
+    source: trace.tar.gz
+

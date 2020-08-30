@@ -39,7 +39,7 @@ public interface AuthDao {
             "insert into auth.tokens" +
                 " (user_id, expiry, utility, token)" +
                 " values(:userId, :expiry, :utility, crypt(:expiry, gen_salt('bf')))" +
-            " on conflict on constraint USER_NAME_UNIQUENESS" +
+            " on conflict on constraint USER_UTILITY_PKEY" +
                 " do update set expiry = :expiry, token = crypt(:expiry, gen_salt('bf')) " +
             " returning token")
     @GetGeneratedKeys

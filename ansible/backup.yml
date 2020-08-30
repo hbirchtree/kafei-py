@@ -1,0 +1,7 @@
+---
+- name: kafei backup
+  hosts: webservers
+  roles:
+    - pgbackup
+  vars:
+    db: kafei

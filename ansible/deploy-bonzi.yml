@@ -1,0 +1,9 @@
+- name: deploy bonzi webapp
+  hosts: webservers
+  roles:
+    - deploywebapp
+  vars:
+    appname: bonzi
+    indexfile: PurpleMonkeyFella
+    source: bonzi.tar.xz
+

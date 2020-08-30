@@ -1,0 +1,5 @@
+- name: get certs
+  hosts: webservers
+  roles:
+    - nginx
+    - letsencrypt

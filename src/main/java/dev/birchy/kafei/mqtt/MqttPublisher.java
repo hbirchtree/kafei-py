@@ -24,7 +24,7 @@ public final class MqttPublisher {
             Object message)
             throws MqttException, JsonProcessingException {
 
-        if(!client.isConnected()) {
+        if(client == null || !client.isConnected()) {
             log.warn("MQTT not connected");
             return;
         }

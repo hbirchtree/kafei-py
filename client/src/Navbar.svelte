@@ -32,7 +32,7 @@
             <img src="{github.img}" class="ui tiny circular image dootable {authState.loggedIn ? 'logged-in' : ''}" on:click={handleAuthClick}>
 
             <div class="ui container auth-menu">
-                <div class="ui container auth-content displayed" style="padding: 1em;" bind:this={authDropdown}>
+                <div class="ui container auth-content" style="padding: 1em;" bind:this={authDropdown}>
                     <div class="ui container dropdown-arrow">
                     </div>
                     {#if authState.loggedIn}
