@@ -1,14 +1,11 @@
-<script>
+<script lang="ts">
     import Code from './Code.svelte';
     import UpdateBubble from './UpdateBubble.svelte';
     import Badge from './Badge.svelte';
+    import type { GithubProfile, GithubRelease } from './Types';
 
-    export let github;
-    export let endpoints;
-
-    export let releaseInfo;
-    export let imguiReleaseInfo;
-    export let nativeReleaseInfo;
+    export let github: GithubProfile;
+    export let releases: GithubRelease[];
 </script>
 
 <UpdateBubble userInfo={github}>
@@ -17,9 +14,14 @@
 </UpdateBubble>
 
 <div class="ui container inverted">
-    <Badge repository="hbirchtree/coffeecutie" releaseInfo={releaseInfo} />
-    <Badge repository="hbirchtree/coffeecutie-imgui" releaseInfo={imguiReleaseInfo} />
-    <Badge repository="hbirchtree/native-library-bundle" releaseInfo={nativeReleaseInfo} />
+    {#each releases as release}
+        <Badge
+            repository={release.repository.full_name}
+            releaseInfo={release}
+        />
+    {/each}
+    <!-- <Badge repository="hbirchtree/coffeecutie-imgui" releaseInfo={imguiReleaseInfo} />
+    <Badge repository="hbirchtree/native-library-bundle" releaseInfo={nativeReleaseInfo} /> -->
 </div>
 
 <h2 class="ui header">Getting started</h2>

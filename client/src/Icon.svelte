@@ -1,16 +1,19 @@
-<script>
+<script lang="ts">
     import {onMount} from 'svelte';
+    import type { Color } from './Types';
+    
+    export let icon: string;
+    export let size: number = 20;
+    export let rounded: boolean = false;
+    export let fgColor: string = "white";
+    export let bgColor: string = "rgb(64, 105, 225)";
+
+    export let spacing: number = 4;
+
     onMount(() => {
         feather.replace();
     });
 
-    export let icon;
-    export let size = 20;
-    export let rounded = false;
-    export let fgColor = "white";
-    export let bgColor = "rgb(64, 105, 225)";
-
-    export let spacing = 4;
 </script>
 
 {#if rounded}

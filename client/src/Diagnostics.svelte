@@ -1,43 +1,10 @@
-<script>
+<script lang="ts">
     import Crash from './Crash.svelte';
     import Report from './Report.svelte';
+    import { onMount } from 'svelte';
+    import type { DiagnosticState } from './States';
 
-    export let endpoints;
-    export let authState;
-
-    let crashes;
-    let reports;
-
-    function reload() {
-        fetch(endpoints.data + '/v2/crash')
-            .then((content) => {
-                return content.json();
-            })
-            .then((content) => {
-                crashes = content.data.reverse();
-            });
-        fetch(endpoints.data + '/v2/reports')
-            .then((content) => {
-                return content.json();
-            })
-            .then((content) => {
-                reports = content.data.reverse();
-            });
-    }
-    reload();
-
-    let listener = new Paho.MQTT.Client("wss://birchy.dev:8083/", "kafei.dev");
-
-    listener.onMessageArrived = (message) => {
-        crashes = null;
-        reports = null;
-        reload();
-    };
-    let listenerOptions = { timeout: 3, onSuccess: () => {
-        console.log("Connected to birchy.dev");
-        listener.subscribe("public/diagnostics/#");
-    }};
-    listener.connect(listenerOptions);
+    export let state: DiagnosticState;
 </script>
 
 <div class="ui inverted top attached tabular menu">
@@ -46,9 +13,12 @@
 </div>
 
 <div data-tab="diag::crash" class="ui inverted bottom attached tab segment active">
-{#if crashes}
-    {#each crashes as crash, i (crash.data.crashId)}
-        <Crash crash={crash} endpoints={endpoints} alternate={i % 2 == 0} authState={authState} />
+{#if state.crashes}
+    {#each state.crashes as crash, i}
+        <Crash
+            state={crash}
+            loadState={crash.state}
+        />
     {/each}
 {:else}
     <div class="ui active dimmer">
@@ -58,10 +28,14 @@
 </div>
 
 <div data-tab="diag::report" class="ui inverted bottom attached tab segment">
-{#if reports}
-    {#each reports as report, i (report.data.reportId)}
-        <Report report={report} endpoints={endpoints} alternate={i % 2 == 0} authState={authState} />
-    {/each}
+{#if state.reports}
+    <!-- {#each state.reports as report, i (report.data.reportId)}
+        <Report
+            report={report.data}
+            endpoints={state.endpoints}
+            alternate={i % 2 == 0}
+            authState={state.auth} />
+    {/each} -->
 {:else}
     <div class="ui active dimmer">
         <div class="ui loader"></div>

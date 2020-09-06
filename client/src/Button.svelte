@@ -1,11 +1,12 @@
-<script>
+<script lang="ts">
     import Icon from './Icon.svelte';
+    import type { Color } from './Types';
 
-    export let icon;
-    export let label;
-    export let color = "blue";
-    export let onclick = () => {};
-    export let margin = '1em';
+    export let icon: string;
+    export let label: string;
+    export let color: Color = "blue";
+    export let onclick: () => Promise<void> = async () => {};
+    export let margin: string = '1em';
 </script>
 
 <button on:click={onclick} class="ui {color} button flex-centered-important" style="margin: {margin};">

@@ -1,10 +1,11 @@
-<script>
+<script lang="ts">
     import Icon from './Icon.svelte';
+    import type { Color } from './Types';
 
-    export let icon;
-    export let size = 24;
+    export let icon: string;
+    export let size: number = 24;
 
-    export let color = "white";
+    export let color: Color = "white";
 </script>
 
 {#if icon}

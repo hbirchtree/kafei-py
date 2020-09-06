@@ -1,15 +1,13 @@
-<script>
+<script lang="ts">
     import { onMount } from 'svelte';
 
-    export let lang = "bash";
+    export let lang: string = "bash";
 
-    let codeTag;
+    let codeTag: HTMLElement;
 
     onMount(async () => {
         hljs.highlightBlock(codeTag);
     });
-//        color: white;
-//        background-color: rgba(255, 255, 255, 0.1);
 </script>
 <style>
     code {

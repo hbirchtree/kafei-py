@@ -1,21 +1,17 @@
-<script>
+<script lang="ts">
     import ReportView from './crash/ReportView.svelte';
     import Group from './crash/Group.svelte';
     import Row from './crash/Row.svelte';
     import Icon from './Icon.svelte';
     import Button from './Button.svelte';
     import {onMount} from 'svelte';
+    import type { ReportState } from './States';
     
     onMount(() => {
         feather.replace();
     });
     
-    export let endpoints;
-    export let report;
-    export let alternate;
-    export let backgroundColor = alternate ? "#202035" : "#151530";
-
-    export let authState;
+    export let state: ReportState;
 
     let errored = false;
 
@@ -23,19 +19,19 @@
 
     let fullInfo = null;
 
-    async function get_full_report() {
-        if(fullInfo !== null || errored)
-            return;
-        const info = await fetch(endpoints.data + report.links[0].uri)
-                    .then((content) => {return content.json();})
-                    .catch(e => { errored = true; });
+    // async function get_full_report() {
+    //     if(fullInfo !== null || errored)
+    //         return;
+    //     const info = await fetch(state.endpoints.data + report.links[0].uri)
+    //                 .then((content) => {return content.json();})
+    //                 .catch(e => { errored = true; });
 
-        if(info.code && info.code !== 200)
-            errored = true;
+    //     if(info.code && info.code !== 200)
+    //         errored = true;
 
-        if(!errored)
-            fullInfo = info.data;
-    }
+    //     if(!errored)
+    //         fullInfo = info.data;
+    // }
 
     async function delete_report() {
         authState.fetch('/v2/reports/' + report.data.reportId, 'DELETE');
@@ -52,10 +48,10 @@
 <div class="ui inverted container fluid report-row">
     <a class="ui inverted container fluid" on:click={() => { 
                                     window.$(container).toggleClass("active");
-                                    get_full_report();
+                                    state.expand();
             }}>
         <div class="ui inverted fluid container preview-item" style="background-color: {backgroundColor} !important;">
-            <b>{report.data.reportId} - {report.data.system ? report.data.system.split(' running ')[0] : "Unknown"} - {new Date(report.data.submitTime).toGMTString()}</b>
+            <b>{report.data.reportId} - {state.data.system ? state.data.system.split(' running ')[0] : "Unknown"} - {new Date(state.data.submitTime).toGMTString()}</b>
             <b></b>
             <i class="icon large chevron down"></i>
         </div>

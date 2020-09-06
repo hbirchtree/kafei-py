@@ -44,8 +44,9 @@
     }
 </style>
 
-<script>
-    export let userInfo;
+<script lang="ts">
+    import type { GithubProfile } from "./Types";
+    export let userInfo: GithubProfile;
 </script>
 
 <div class="update-bubble">
@@ -58,4 +59,3 @@
         </slot>
     </div>
 </div>
-

@@ -1,6 +1,7 @@
 <script>
     import Icon from './Icon.svelte';
     import {onMount} from 'svelte';
+    
     onMount(() => {
         feather.replace();
     });

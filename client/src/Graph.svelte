@@ -1,29 +1,30 @@
-<script>
-    export let source;
-    export let sourceKey;
-    export let chartType;
-    export let endpoints;
-    export let title;
+<script lang="ts">
+    import type { EndpointConfig, RESTMessage } from "./Types";
 
-    let canvas;
+    export let source: string;
+    export let sourceKey: string;
+    export let chartType: string;
+    export let endpoints: EndpointConfig;
+    export let title: string;
 
-    async function get_json_data(source) {
+    let canvas: HTMLCanvasElement;
+
+    async function get_json_data<T>(source: string) {
         return fetch(endpoints.data + source)
-                .then((content) => {
-                    return content.json();
-                })
-                .then((content) => {
-                    return content;
-                })
-                .catch((err) => {console.log(err)});
+                .then((content) =>  content.json() as RESTMessage<any>)
+                .catch((err) => err as RESTMessage<void>);
     }
 
     async function create_graph() {
-        let glabels = [];
-        let gcounts = [];
+        let glabels: string[] = [];
+        let gcounts: number[] = [];
        
-        const data = (await get_json_data(source)).data;
-        data.forEach(datapoint =>
+        const request = await get_json_data<any>(source);
+
+        if(!request.data)
+            return;
+
+        request.data.forEach((datapoint: any) =>
         {
             glabels = glabels.concat(datapoint[sourceKey]);
             gcounts = gcounts.concat(datapoint.count);

@@ -1,13 +1,9 @@
-<script>
+<script lang="ts">
     import Code from './Code.svelte';
     import Graph from './Graph.svelte';
+    import type { EndpointConfig } from './Types';
 
-    export let endpoints;
-
-    async function create_graphs() {
-        create_graph(window.$("#os-version-view"), '/v1/statistics/os', 'system');
-        create_graph(window.$("#arch-view"), '/v1/statistics/arch', 'architecture');
-    }
+    export let endpoints: EndpointConfig;
 </script>
 
 <p>

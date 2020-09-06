@@ -1,8 +1,8 @@
-<script>
+<script lang="ts">
     import Icon from '../Icon.svelte';
 
-    export let icon;
-    export let headerName;
+    export let icon: string;
+    export let headerName: string;
 </script>
 
 <div class="ui container inverted">

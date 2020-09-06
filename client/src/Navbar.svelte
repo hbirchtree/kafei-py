@@ -1,15 +1,16 @@
-<script>
+<script lang="ts">
     import Icon from './Icon.svelte';
     import Button from './Button.svelte';
+    import type { GithubProfile, MenuLink, NavLink } from './Types';
+    import type { LoginState } from './Auth';
 
-    export let links;
-    export let externals;
-    export let github;
-    export let authLinks;
-    export let authState;
+    export let links: NavLink[];
+    export let externals: NavLink[];
+    export let github: GithubProfile;
+    export let login: LoginState;
 
-    let mobileMenu;
-    let authDropdown;
+    let mobileMenu: HTMLDivElement;
+    let authDropdown: HTMLDivElement;
 
     function handleAuthClick() {
         window.$(authDropdown).toggleClass('displayed');
@@ -29,20 +30,26 @@
             </a>
         {/each}
         <a class="ui tiny image" style="height: 80px;">
-            <img src="{github.img}" class="ui tiny circular image dootable {authState.loggedIn ? 'logged-in' : ''}" on:click={handleAuthClick}>
+            <img src="{github.img}" alt="" class="ui tiny circular image dootable {login.authState.loggedIn ? 'logged-in' : ''}" on:click={handleAuthClick}>
 
             <div class="ui container auth-menu">
                 <div class="ui container auth-content" style="padding: 1em;" bind:this={authDropdown}>
                     <div class="ui container dropdown-arrow">
                     </div>
-                    {#if authState.loggedIn}
+                    {#if login.authState.loggedIn}
                         <a class="ui teal image label" style="margin-bottom: 2em;">
                             <img />
-                            Signed in as {authState.username}
+                            Signed in as {login.authState.username}
                         </a>
                     {/if}
-                    {#each authLinks as link}
-                        <Button icon={link.icon} label={link.text} color={link.color} onclick={link.action} margin=0/>
+                    {#each login.links as link}
+                        <Button
+                            icon={link.icon}
+                            label={link.text}
+                            color={link.color}
+                            onclick={link.action}
+                            margin=0
+                        />
                     {/each}
                 </div>
             </div>

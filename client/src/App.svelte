@@ -1,4 +1,5 @@
-<script>
+<script lang="ts">
+    import {onMount} from 'svelte';
     import Navbar from './Navbar.svelte';
     import Home from './Home.svelte';
     import Statistics from './Statistics.svelte';
@@ -6,152 +7,152 @@
     import Diagnostics from './Diagnostics.svelte';
     import Footer from './Footer.svelte';
     import * as j from 'jquery';
-
-    import {onMount} from 'svelte';
+    import type { 
+        NavLink,
+        GithubProfile,
+        GithubRepository,
+        MenuLink, 
+        EndpointConfig,
+        HTTPMethod,
+        GithubCommit,
+        RESTMessage,
+        GithubRelease,
+        CrashData,
+        ReportData,
+    } from './Types';
+    import type {
+        AuthState,
+        AuthToken,
+        AuthVerification,
+    } from './Auth';
+    import {
+        LoginState,
+    } from './Auth.ts';
+	import type {
+        DiagnosticState
+    } from './States';
+    import {
+        crashFactory,
+        NetState,
+    } from './States.ts';
+    import {
+        ScopedFetch,
+        endpointFetch,
+        ServerListener,
+    } from './Netcode.ts';
 	
-    let navLinks = [
+    export let github: GithubProfile;
+    export let repository: { link: string };
+    export let endpoints: EndpointConfig;
+
+    let navLinks: NavLink[] = [
             {name: "Home", target: "nav::home", icon: "home"},
             {name: "Examples", target: "nav::examples", icon: "package"},
             {name: "Statistics", target: "nav::stats", icon: "pie-chart"},
             {name: "Diagnostics", target: "nav::diag", icon: "activity"}
     ];
-    let extLinks = [
+    let extLinks: NavLink[] = [
     ];
-    export let github;
-    export let repository;
-    let authOutLinks = [
-            {text: "Sign in", icon: "log-in", color: "green", action: async () => {
-                if(await isLoggedIn())
-                    return;
-                const token = await auth_resource('/v2/users/authenticate', {
-                                    username: prompt('Username'),
-                                    password: prompt('Password')
-                                });
+    let login: LoginState = new LoginState(
+        {
+            loggedIn: false,
+            username: null,
+            profileImg: null,
+            fetch: async (source: string, method?: HTTPMethod, data?: any) => {
+                const token: AuthToken = JSON.parse(localStorage['Kafei-Api-Token']);
+
                 if(!token)
                     return;
-                loggedInCycle(token);
-            }},
-            {text: "Register", icon: "edit-2", color: "blue", action: async () => {
-                
-            }}
-    ];
-    let authInLinks = [
-            {text: "Sign out", icon: "log-out", color: "red", action: async () => { loggedOutCycle(); }}
-    ];
-    let authState = {
-        loggedIn: false,
-        username: null,
-        profileImg: null,
-        fetch: authenticated_fetch,
-    };
-    let authLinks = authState.loggedIn ? authInLinks : authOutLinks;
 
-    export let releaseInfo = null;
-    export let imguiReleaseInfo = null;
-    export let nativeReleaseInfo = null;
-    export let commitInfo = null;
-
-    export let endpoints;
-
-    async function isLoggedIn() {
-        try {
-            let currToken = JSON.parse(localStorage['Kafei-Api-Token']);
-
-            if(currToken) {
-                const isLoggedIn = await auth_resource(
-                    '/v2/users/checkAuthenticate', currToken);
-                
-                if(isLoggedIn)
+                return await fetch(endpoints.data + source, {
+                        method: method ? method : 'GET',
+                        cache: 'no-cache',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Authorization': 'Bearer ' + token.token,
+                            'Content-Type': 'application/json',
+                        },
+                        body: data ? JSON.stringify(data) : undefined,
+                    }).then((content) => {
+                        return content.json();
+                    }).then((content: RESTMessage<any>) => {
+                        if(content.data)
+                            return content.data;
+                        else
+                            return content;
+                    }).catch((err) => {
+                        console.log(err);
+                    });
+            },
+        },
+        [
+            {
+                text: "Sign in",
+                icon: "log-in",
+                color: "green",
+                action: async () => 
                 {
-                    loggedInCycle(currToken);
-                    return true;
+                    if(await login.isLoggedIn(endpoints))
+                        return;
+                    const token: AuthToken | undefined = 
+                        await login.authState.fetch('/v2/users/authenticate', 'POST', {
+                            username: prompt('Username'),
+                            password: prompt('Password')
+                        })
+                        .then(content => content as AuthToken);
+                    if(!token)
+                        return;
+                    login.loggedInCycle(token);
                 }
+            },
+            {
+                text: "Register",
+                icon: "edit-2",
+                color: "blue",
+                action: async () => {}
             }
-        } catch(err) {}
-        return false;
-    }
+        ],
+        [
+            {
+                text: "Sign out",
+                icon: "log-out",
+                color: "red",
+                action: async () => login.loggedOutCycle()
+            }
+        ],
+    );
+    login.links = login.outLinks;
 
-    function loggedInCycle(token) {
-        localStorage['Kafei-Api-Token'] = JSON.stringify(token);
-        authState.loggedIn = true;
-        authState.username = token.username;
-        authLinks = authInLinks;
-    }
-    function loggedOutCycle() {
-        localStorage.removeItem('Kafei-Api-Token');
-        authState.loggedIn = false;
-        authState.username = null;
-        authLinks = authOutLinks;
-    }
+    let net: NetState = {
+        plain: new ScopedFetch(
+            (resource: string, method?: HTTPMethod, data?: any) => 
+                endpointFetch(endpoints, resource, method, data)),
+        auth: new ScopedFetch(login.authState.fetch),
+    };
 
-    async function auth_resource(source, data) {
-        return await fetch(endpoints.data + source, {
-                method: 'POST',
-                mode: 'cors',
-                cache: 'no-cache',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify(data)
-            }).then((content) => {
-                return content.json();
-            }).then((content) => {
-                if(content.data)
-                    return content.data;
-                else
-                    return content;
-            }).catch((err) => {
-                console.log(err);
-            });
-    }
-
-    async function authenticated_fetch(source, method, data) {
-        if(!method)
-            method = 'GET';
-
-        const token = JSON.parse(localStorage['Kafei-Api-Token']).token;
-
-        if(!token)
-            return null;
-
-        return await fetch(endpoints.data + source, {
-               method: method,
-               cache: 'no-cache',
-               headers: { 
-                   'Accept': 'application/json',
-                   'Authorization': 'Bearer ' + token,
-                   'Content-Type': 'application/json',
-               },
-               body: data ? JSON.stringify(data) : undefined,
-           }).then((content) => {
-               return content.json();
-           }).then((content) => {
-               if(content.data)
-                   return content.data;
-               else
-                   return content;
-           }).catch((err) => {
-               console.log(err);
-           });
-    }
-
-    async function get_resource(source) {
-        return fetch(endpoints.data + source)
-            .then((content) => {
-                return content.json(); 
-            })
-            .then((content) => {
-                return content.data;
-            }).catch((err) => {
-                console.log(err);
-            });
-    }
+    let releases: [string, GithubRelease][] = [];
+    let releasesMap: Map<string, GithubRelease> = new Map();
+    let commitInfo: GithubCommit | undefined;
 
     async function initialize_releases() {
-        releaseInfo = await get_resource('/github/latestRelease/hbirchtree_coffeecutie');
-        imguiReleaseInfo = await get_resource('/github/latestRelease/hbirchtree_coffeecutie-imgui');
-        nativeReleaseInfo = await get_resource('/github/latestRelease/hbirchtree_native-library-bundle');
+        [
+            '/github/latestRelease/hbirchtree_coffeecutie',
+            '/github/latestRelease/hbirchtree_coffeecutie-imgui',
+            '/github/latestRelease/hbirchtree_native-library-bundle',
+        ].map(async rel => 
+            await net.plain.fetch<GithubRelease>(rel)
+                .then(rel => {
+                    if(rel.data) {
+                        releases.push([rel.data.repository.name, rel.data]);
+                        releasesMap.set(rel.data.repository.name, rel.data);
+                    }
+                }));
     }
     async function initialize_commit() {
-        commitInfo = await get_resource('/github/updateInfo/hbirchtree_coffeecutie');
+        const update = await net.plain.fetch<GithubCommit>(
+            '/github/updateInfo/hbirchtree_coffeecutie');
+        if(update.data)
+            commitInfo = update.data;
     }
 
     async function get_resources() {
@@ -163,9 +164,31 @@
         window.$('.ui.menu .item').tab();
         
         await get_resources();
-
-        await isLoggedIn();
+        // await login.isLoggedIn(endpoints);
     });
+
+    const diagState: DiagnosticState = {
+        endpoints,
+        auths: login.authState,
+        auth: net.auth,
+        plain: net.plain,
+        mqtt: new ServerListener(['public/diagnostics/#'])
+    };
+
+    (async () => {
+        const crashes = await net.plain.fetch<RESTMessage<CrashData>[]>(
+            '/v2/crash');
+        if(crashes.data)
+            diagState.crashes = crashes.data.reverse().map((c, i) =>         
+                crashFactory(diagState, c, i));
+        const reports = await net.plain.fetch<RESTMessage<ReportData>[]>(
+            '/v2/reports');
+        if(reports.data)
+            diagState.reports = reports.data.reverse().map((r, i) =>
+                {data: r});
+        
+        console.log('crashes', diagState.crashes);
+    })();
 </script>
 
 <link rel="stylesheet" type="text/css" href="semantic/semantic.min.css">
@@ -176,19 +199,36 @@
 <link rel="stylesheet" type="text/css" href="semantic/components/modal.min.css">
 <link rel="stylesheet" type="text/css" href="semantic/components/tab.min.css">
 
-<Navbar links={navLinks} externals={extLinks} github={github} authLinks={authLinks} authState={authState}/>
+<Navbar
+    links={navLinks}
+    externals={extLinks}
+    github={github}
+    login={login}
+/>
 
 <div data-tab="nav::home" class="ui inverted text tab segment active">
-    <Home github={github} endpoints={endpoints} releaseInfo={releaseInfo} imguiReleaseInfo={imguiReleaseInfo} nativeReleaseInfo={nativeReleaseInfo}/>
+    <Home 
+        github={github}
+        releases={ [].concat(releases.map(e => e[1])) }
+    />
 </div>
 <div data-tab="nav::examples" class="ui inverted text tab segment">
-    <Examples github={github} repository={repository} releaseInfo={releaseInfo} commitInfo={commitInfo}/>
+    <Examples 
+        github={github}
+        releaseInfo={ {} }
+        commitInfo={commitInfo}
+    />
 </div>
 <div data-tab="nav::stats" class="ui inverted text tab segment">
-    <Statistics endpoints={endpoints}/>
+    <Statistics
+        endpoints={endpoints}
+    />
 </div>
 <div data-tab="nav::diag" class="ui inverted text tab fluid segment">
-    <Diagnostics endpoints={endpoints} authState={authState} />
+    <Diagnostics
+        state={diagState}
+    />
+    <!-- endpoints={endpoints} authState={authState} /> -->
 </div>
 
 <Footer/>

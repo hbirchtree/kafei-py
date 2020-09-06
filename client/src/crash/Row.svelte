@@ -1,6 +1,6 @@
-<script>
-    export let name;
-    export let content = "";
+<script lang="ts">
+    export let name: string | undefined;
+    export let content: any | undefined;
 </script>
 
 <div class="ui row inverted">
@@ -11,7 +11,7 @@
     </div>
     <div class="ui ten wide column inverted">
         <slot name="content">
-            {content}
+            {content ? content : ""}
         </slot>
     </div>
 </div>
