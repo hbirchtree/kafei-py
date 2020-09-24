@@ -1,0 +1,7 @@
+- name: restore mosquitto database
+  copy:
+    src: '{{ appname }}_mosquitto.db'
+    dest: /var/lib/mosquitto/mosquitto.db
+    owner: mosquitto
+    group: mosquitto
+    mode: 0600

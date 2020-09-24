@@ -12,7 +12,7 @@
         region: eu-central-1
         zone: eu-central-1a
         blueprint_id: ubuntu_18_04
-        bundle_id: nano_2_0
+        bundle_id: micro_2_0
         key_pair_name: id_rsa.nopass
         user_data: "echo 'hello world' > /home/ubuntu/test.txt"
         wait_timeout: 500

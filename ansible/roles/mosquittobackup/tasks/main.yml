@@ -1,0 +1,5 @@
+- name: retrieve mosquitto db
+  become: yes
+  fetch:
+    src: /var/lib/mosquitto/mosquitto.db
+    dest: backup/{{ appname }}

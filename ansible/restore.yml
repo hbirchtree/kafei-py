@@ -4,5 +4,7 @@
   hosts: webservers
   roles:
     - pgrestore
+    - mosquittorestore
   vars:
     db: kafei
+    appname: kafei

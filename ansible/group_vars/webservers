@@ -12,28 +12,29 @@ appusers:
 jdkversion: 8
 
 # Certbot
-certdomains: birchy.dev,api.birchy.dev,bonzi.birchy.dev,coffee.birchy.dev,crash.birchy.dev,mq.birchy.dev,s.birchy.dev,trace.birchy.dev
+certdomains: birchy.dev,api.birchy.dev,coffee.birchy.dev,crash.birchy.dev,mq.birchy.dev,s.birchy.dev,admin.birchy.dev
 certdir: /etc/letsencrypt/live/birchy.dev
 
 # Mosquitto settings
-mqtt_host: 127.0.0.1
-mqtt_wsport: 8083
-mqtt_pubport: 8883
-mqtt_tcpport: 1883
-mqtt_users:
+mqtt:
+  host: 127.0.0.1
+  wsport: 8083
+  pubport: 8883
+  tcpport: 1883
+  users:
   - name: kafei
-    password: "{{ lookup('password', 'roles/kafei/files/{{ inventory_hostname }}/mqtt') }}"
-mqtt_defaultuser: hbjerke
+    password: "{{ lookup('password', 'roles/deployservice/files/kafei/{{ inventory_hostname }}/mqtt') }}"
+  defaultuser: hbjerke
 
 # Nginx settings
 bonziroot: '{{ deployroot }}/bonzi'
 traceroot: '{{ dataroot }}/trace'
 
-kafeiserver: 127.0.0.1:8040
-kafeiname: birchy.dev
-
-# Kafei deployment
+# Kafei deployment and nginx
 kafei:
+  server: '127.0.0.1:8040'
+  admserver: '127.0.0.1:8041'
+  name: birchy.dev
   deploy: '{{ deployroot }}/kafei/kafei-py'
   data: '{{ dataroot }}/kafei'
 
@@ -43,10 +44,10 @@ pginterface: localhost
 pgusers:
   - name: kafei
     db: kafei
-    password: "{{ lookup('password', 'roles/kafei/files/{{ inventory_hostname }}/postgresql') }}"
+    password: "{{ lookup('password', 'roles/deployservice/files/kafei/{{ inventory_hostname }}/postgresql') }}"
   - name: app1
     db: apps
-    password: "{{ lookup('password', 'roles/app1/files/{{ inventory_hostname }}/postgresql') }}"
+    password: "{{ lookup('password', 'roles/deployservice/files/app1/{{ inventory_hostname }}/postgresql') }}"
 pgdatabases:
   - name: kafei
     owner: kafei

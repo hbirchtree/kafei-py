@@ -17,9 +17,9 @@
   become: yes
   template: src=default.conf dest=/etc/mosquitto/conf.d/default.conf mode=644
 
-- name: restart mosquitto
+- name: stop mosquitto
   become: yes
-  service: name=mosquitto state=restarted
+  service: name=mosquitto state=stopped
 
 - name: create mosquitto password file
   become: yes
@@ -30,4 +30,8 @@
 - name: set user passwords
   become: yes
   shell: mosquitto_passwd -b /etc/mosquitto/passwd '{{ item.name }}' '{{ item.password }}'
-  with_items: '{{ mqtt_users }}'
+  with_items: '{{ mqtt.users }}'
+
+- name: start mosquitto
+  become: yes
+  service: name=mosquitoo state=started

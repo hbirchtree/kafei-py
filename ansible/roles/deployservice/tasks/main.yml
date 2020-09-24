@@ -38,7 +38,7 @@
 - name: copy secrets to server
   become: yes
   become_user: '{{ appname }}'
-  copy: src={{ inventory_hostname }}/{{ item }} dest={{ dataroot }}/{{ appname }}/secrets
+  copy: src={{ appname }}/{{ inventory_hostname }}/{{ item }} dest={{ dataroot }}/{{ appname }}/secrets
   with_items:
     - postgresql
     - mqtt

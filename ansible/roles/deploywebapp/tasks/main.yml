@@ -29,7 +29,7 @@
   become: yes
   template: src=serve.conf dest=/etc/nginx/sites-available/99-{{ appname }}.conf mode=0644
   vars:
-    appdomain: '{{ appname }}.{{ kafeiname }}'
+    appdomain: '{{ appname }}.{{ kafei.name }}'
     approot: '{{ dataroot }}/{{ appname }}/www'
 
 - name: enable nginx config
@@ -45,7 +45,7 @@
 
 - name: get certificate for webapp
   become: yes
-  shell: certbot --nginx -d '{{ appname }}.{{ kafeiname }}' -n --agree-tos -m h0wy36@gmail.com
+  shell: certbot --nginx -d '{{ appname }}.{{ kafei.name }}' -n --agree-tos -m h0wy36@gmail.com --redirect
 
 - name: kill certbot nginx
   become: yes

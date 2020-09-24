@@ -8,4 +8,4 @@
     name: '{{ db }}'
     state: restore
     target: /tmp/{{ db }}_dump.sql.gz
-    login_user: '{{ db }}'
+    login_user: kafei
