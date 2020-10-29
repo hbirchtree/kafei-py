@@ -11,13 +11,25 @@ import dev.birchy.kafei.reports.responses.Report;
 
 public interface ReportAllDao {
     String BUILD_QUERY =
-            "        run_compiler.compiler_name as compiler," +
-            "        run_arch.arch_name as architecture," +
-            "        run.build_version as version," +
-            "        run.build_mode as buildMode" +
-            " from reports.run_compiler" +
-            " inner join reports.run_arch using (run_id)" +
-            " inner join reports.run using (run_id)";
+                "        version," +
+                "        compiler," +
+                "        compiler_version," +
+                "        architecture," +
+                "        build_mode," +
+                "        libc_runtime," +
+                "        libc_version," +
+                "        target," +
+                "        android_target," +
+                "        android_sdk," +
+                "        mac_target," +
+                "        mac_min_target," +
+                "        ios_target," +
+                "        ios_min_target," +
+                "        windows_target," +
+                "        windows_wdk," +
+                "        windows_server" +
+                " from reports.build" +
+                " inner join reports.run_build using (build_id)";
 
     /*
      *
@@ -48,7 +60,7 @@ public interface ReportAllDao {
     List<Report.BuildInfo> getBuilds();
 
     @SqlQuery( "select" + BUILD_QUERY +
-            " inner join run_app using (run_id)" +
+            " inner join reports.run_app using (run_id)" +
             " where app_id = :appId")
     @RegisterBeanMapper(Report.BuildInfo.class)
     List<Report.BuildInfo> getAppBuilds(@Bind("appId") long appId);

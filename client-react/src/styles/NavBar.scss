@@ -13,6 +13,12 @@
         background: solid midnightblue !important;
         background-color: midnightblue !important;
     }
+    a.ui.item:first-child {
+        border-bottom-left-radius: 2em;
+    }
+    a.ui.item:last-of-type {
+        border-bottom-right-radius: 2em;
+    }
     a.tiny.image {
         margin-left: auto;
         margin-right: 0;

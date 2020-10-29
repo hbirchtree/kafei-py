@@ -10,7 +10,10 @@ interface Props {
 
 export default function PropertyGroup(props: Props) {
     return (
-        <div className="ui container inverted property-group">
+        <div
+            className="ui container inverted property-group"
+            style={{flexDirection: 'column'}}
+        >
             <h4 className="ui horizontal divider header inverted">
                 <span className="flex-centered">
                     <Icon icon={props.icon} />

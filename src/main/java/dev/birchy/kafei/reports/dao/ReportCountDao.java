@@ -15,21 +15,25 @@ public interface ReportCountDao {
     @RegisterBeanMapper(SystemCount.class)
     List<SystemCount> countSystems();
 
-    @SqlQuery("select arch_name as architecture, count(run_id) as count from reports.run_arch" +
-            " group by arch_name" +
+    @SqlQuery("select architecture, count(run_id) as count from reports.build" +
+            " inner join reports.run_build using (build_id)" +
+            " group by architecture" +
             " order by count desc")
     @RegisterBeanMapper(ArchCount.class)
     List<ArchCount> countArchitectures();
 
-    @SqlQuery("select count(run_id), system, build_version from reports.run" +
-            " group by system, build_version" +
+    @SqlQuery("select count(run_id), system, build_version from reports.build" +
+            " inner join reports.run_build using (build_id)" +
+            " inner join reports.run using (run_id)" +
+            " group by system, version" +
             " order by count desc")
     @RegisterBeanMapper(BuildVersionCount.class)
     List<BuildVersionCount> countBuildVersions();
 
-    @SqlQuery("select system, arch_name as architecture, count(arch_name) from reports.run" +
-            " join reports.run_arch on run.run_id = run_arch.run_id" +
-            " group by arch_name, system")
+    @SqlQuery("select system, architecture, count(architecture) from reports.build" +
+            " inner join reports.run_build using (build_id)" +
+            " inner join reports.run using (run_id)" +
+            " group by architecture, system")
     @RegisterBeanMapper(ArchSystemCount.class)
     List<ArchSystemCount> countArchitectureSystems();
 }

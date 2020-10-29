@@ -1,4 +1,4 @@
-import type {
+import {
     EndpointConfig,
     RESTMessage,
     CrashData,
@@ -6,6 +6,7 @@ import type {
     MachineData,
     Stackframe,
     LinkData,
+    signalToString,
 } from './Types';
 
 import type {
@@ -17,6 +18,7 @@ import type {
 import type {
     AuthState,
 } from './Auth';
+import { ReleaseInfo } from './Yggdrasil';
 
 export type NetState = {
     plain: ScopedFetch;
@@ -232,6 +234,9 @@ export let reportFactory = (
 export type DiagnosticData = {
     crashes: CrashState[];
     reports: ReportState[];
+
+    filteredCrashes?: CrashState[];
+    filteredReports?: ReportState[];
 };
 
 export type DiagnosticState = NetState & {
@@ -242,4 +247,74 @@ export type DiagnosticState = NetState & {
 
     triggerUpdate: () => Promise<void>;
     propagateUpdate?: (data: DiagnosticData) => void;
+};
+
+const metaFilters = [
+    {
+        key: 'system',
+        filter: (item: ReportOrCrashState, param?: string) => {
+            if(item.type !== 'Report' || !param)
+                return false;
+            const nparam = param.toLowerCase();
+            return item.data.system.toLowerCase().indexOf(nparam) !== -1;
+        },
+    },
+    {
+        key: 'id',
+        filter: (item: ReportOrCrashState, param?: string) => {
+            if(!param)
+                return false;
+            
+            if(item.type === 'Crash')
+                return item.data.crashId + '' === param;
+            else if(item.type === 'Report')
+                return item.data.reportId + '' === param;
+        },
+    },
+    {
+        key: 'code',
+        filter: (item: ReportOrCrashState, param?: string) => {
+            if(item.type !== 'Crash' || !param)
+                return false;
+
+            const sig = signalToString(item.data.exitCode).toLowerCase();
+            const paramSig = param.toLowerCase();
+
+            return item.data.exitCode + '' === param || sig === paramSig;
+        },
+    },
+];
+
+export const reportFilter = (query?: string) => (item: ReportOrCrashState) => {
+    if(!query || query.length === 0) {
+        return true;
+    }
+
+    if(item.type === 'Report') {
+        if(metaFilters[0].filter(item, query))
+            return true;
+    }
+
+    return query.split(' ').map(queryi => {
+        if(item.type === 'Crash') {
+            const [key, value] = query.split(':');
+            return metaFilters
+                .map(filter => 
+                    filter.key == key && filter.filter(item, value))
+                .filter(res => res)
+                .length > 0;
+        } else if(item.type === 'Report') {
+            const [key, value] = query.split(':');
+            return metaFilters
+                .map(filter =>
+                        filter.key == key && filter.filter(item, value))
+                .filter(res => res)
+                .length > 0;
+        }
+    }).filter(res => res).length === query.split(' ').length;
+};
+
+export type ExamplesState = {
+    info: ReleaseInfo;
+    net: NetState;
 };

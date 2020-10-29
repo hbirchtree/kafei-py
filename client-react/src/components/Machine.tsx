@@ -4,6 +4,7 @@ import PropertyGroup from './PropertyGroup';
 import PropertyRow from './PropertyRow';
 import { BrandIcon } from './BrandIcon';
 import Button from './Button';
+import { mapArchToReadable } from '../control/Types';
 
 interface Props {
     data: ReportViewState;
@@ -73,9 +74,18 @@ export default function Machine(props: Props) {
             model: device.machineModel,
             manufacturer: device.machineManufacturer,
         };
+        const runtimeInfo = runtime && {
+            kernel: runtime.kernel && runtime.kernelVersion && 
+                        runtime.kernel + ' ' + runtime.kernelVersion,
+            distro: runtime.distro && runtime.distroVersion && 
+                        runtime.distro + ' ' + runtime.distroVersion,
+        };
 
         if(!deviceInfo.model)
             deviceInfo.manufacturer = device.name.split(' running ')[0];
+
+        if(!runtimeInfo.distro)
+            runtimeInfo.distro = device.name.split(' running ')[1];
 
         machineInfo = {
             application: application && (
@@ -90,7 +100,10 @@ export default function Machine(props: Props) {
                     {emitProperty('version', build, 'engine version')}
                     {emitProperty('buildMode', build, 'mode')}
                     <PropertyRow name='compiler'>
-                        {build.compiler} {build.compilerVersion}
+                        {build.compiler} {' '}
+                        {build.compilerVersion !== '0.0.0'
+                            ? build.compilerVersion
+                            : ''}
                     </PropertyRow>
                     {build.target ? (
                         <PropertyRow name='target kernel'>
@@ -105,23 +118,27 @@ export default function Machine(props: Props) {
             ),
             runtime: runtime && (
                 <PropertyGroup key='runtime' icon='terminal' title='Runtime Info'>
-                    {runtime.kernel ? (
+                    {runtimeInfo.kernel ? (
                         <PropertyRow name='kernel'>
                             <>
-                                <BrandIcon basedOn={runtime.kernel} />
-                                {runtime.kernel} {runtime.kernelVersion}
+                                <BrandIcon basedOn={runtimeInfo.kernel} />
+                                {runtimeInfo.kernel}
                             </>
                         </PropertyRow>
                     ) : <></>}
-                    {runtime.distro ? (
+                    {runtimeInfo.distro ? (
                         <PropertyRow name='distro'>
                             <>
-                                <BrandIcon basedOn={runtime.distro} />
-                                {runtime.distro} {runtime.distroVersion}
+                                <BrandIcon basedOn={runtimeInfo.distro} />
+                                {runtimeInfo.distro}
                             </>
                         </PropertyRow>
                     ) : <></>}
-                    {emitProperty('architecture', runtime)}
+                    {runtime.architecture ? (
+                        <PropertyRow name='architecture'>
+                            {mapArchToReadable(runtime.architecture)}
+                        </PropertyRow>
+                    ) : <></>}
                     {emitProperty('cwd', runtime)}
                     <>
                         {args}
@@ -168,7 +185,7 @@ export default function Machine(props: Props) {
                 </PropertyGroup>
             ),
             graphics: gpuInfo && gpuInfo.model && (
-                <PropertyGroup icon='screen' title='Graphics'>
+                <PropertyGroup icon='tv' title='Graphics'>
                     <PropertyRow name='gpu'>
                         <BrandIcon basedOn={gpuInfo.model} />
                         {gpuInfo.model.startsWith(gpuInfo.manufacturer)

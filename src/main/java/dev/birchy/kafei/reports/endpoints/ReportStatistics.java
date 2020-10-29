@@ -80,7 +80,7 @@ public final class ReportStatistics {
     public Response allDevices() {
         return Result.ok(
                 countReports((report) ->
-                        new IdPair<>(report.getDevice().getDevId(), report.getDevice()))
+                        new IdPair<>(report.getDevice() != null ? report.getDevice().getDevId() : 0, report.getDevice()))
         ).wrapped();
     }
 

@@ -1,15 +1,22 @@
 .report-header {
-    height: 2em;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 3em;
+    margin: 4px;
 
-    :nth-child(2) {
+    &:nth-child(4n + 1) {
         background-color: #27274a;
+    }
+    > span {
+        margin: 8px;
     }
 }
 
 .report-view {
     transition: max-height 0.5s linear;
-    height: auto;
-    max-height: 3000px;
+    // height: auto;
+    // max-height: 3000px;
     overflow: hidden;
 }
 

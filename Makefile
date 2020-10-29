@@ -9,6 +9,7 @@ build: .FORCE | $(ROOTDIR)
 	cd $(ROOTDIR) && ./gradlew :assemble
 
 CLIENTROOT := $(ROOTDIR)/client/public
+CLIENTROOT_REACT := $(ROOTDIR)/client-react/build
 WWWROOT    := $(ROOTDIR)/www
 
 update-www:
@@ -16,6 +17,9 @@ update-www:
 	cp $(CLIENTROOT)/index.html $(WWWROOT)/
 	cp $(CLIENTROOT)/build/bundle.js $(WWWROOT)/build/
 	cp $(CLIENTROOT)/build/bundle.css $(WWWROOT)/build/
+
+update-www-react:
+	cp -r $(CLIENTROOT_REACT)/* $(WWWROOT)/
 
 BUILDROOT=$(ROOTDIR)/build/distributions
 
@@ -26,6 +30,13 @@ deploy: build
 
 monitor:
 	ssh -p $(PORT) $(LOGIN_DETAILS) -t -- tmux attach
+psql:
+	ssh -p $(PORT) $(LOGIN_DETAILS) -t -- sudo su postgres -c psql
+
+logs:
+	ssh -p $(PORT) $(LOGIN_DETAILS) -t -- journalctl
+log-since:
+	ssh -p $(PORT) $(LOGIN_DETAILS) -t -- journalctl --since "$(SINCE)"
 
 # Ansible install and boostrapping
 
@@ -42,6 +53,12 @@ ANSIBLEROOT=$(ROOTDIR)/ansible
 #
 ansible-create-server:
 	ansible-playbook $(ANSIBLEROOT)/recreate.yml
+	@echo "In the AWS Lightsail control panel, enable the following ports:"
+	@echo " - HTTPS"
+	@echo " - TCP 108"
+	@echo " - TCP 8083"
+	@echo " - TCP 8883"
+	@echo "And attach to static IP"
 
 #
 # Initial setup
@@ -52,13 +69,15 @@ ansible-setup-server:
 ansible-setup-certs:
 	ansible-playbook -i $(ANSIBLEROOT)/provisioned-static $(ANSIBLEROOT)/certs.yml
 
-ansible-deploy: update-www build
+ansible-deploy: update-www-react build
 	cp $(ROOTDIR)/build/distributions/kafei-py.tar $(ANSIBLEROOT)/roles/deployservice/files
 	ansible-playbook -i $(ANSIBLEROOT)/provisioned-static $(ANSIBLEROOT)/deploy-kafei.yml --ssh-extra-args=-p108
 
 #
 # Database operations
 #
+ansible-backup-db:
+	ansible-playbook -i $(ANSIBLEROOT)/public $(ANSIBLEROOT)/backup.yml --ssh-extra-args=-p108
 ansible-restore-db:
 	ansible-playbook -i $(ANSIBLEROOT)/provisioned-static $(ANSIBLEROOT)/restore.yml
 

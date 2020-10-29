@@ -43,7 +43,13 @@ export type BrowserIcon =
     ;
 export type VendorIcon = HwVendorIcon | ConsoleIcon | OSIcon | BrowserIcon;
 
+export type LoadState =
+    | 'loaded'
+    | 'loading'
+    | 'unloaded';
+
 export type GithubProfile = {
+    username: string;
     link: string;
     img: string;
 };
@@ -216,7 +222,20 @@ export type Stackframe = {
     ip: string;
 };
 
-export let vendorToIcon = (source?: string) => {
+export type Statistics = {
+    count: number;
+    item?: any;
+    architecture?: string;
+    system?: string;
+};
+
+export type FilterCategory = 'arch' | 'os' | 'gpu' | 'device' | 'cpu';
+export type Filter = {
+    category: FilterCategory;
+    value: string;
+};
+
+export const vendorToIcon = (source?: string) => {
     if(!source)
         return undefined;
 
@@ -274,4 +293,40 @@ export let vendorToIcon = (source?: string) => {
     }
 
     return source;
+};
+
+export const mapArchToReadable = (arch: string) => {
+    arch = arch.toLowerCase();
+
+    if(arch === 'aarch64')
+        return 'ARMv8-64';
+    
+    return arch;
+};
+
+export const signalToString = (sig: number) => {
+    if(sig === 15)
+        return 'SIGTERM';
+    if(sig === 11)
+        return 'SIGSEGV';
+    if(sig === 9)
+        return 'SIGKILL';
+    if(sig === 8)
+        return 'SIGFPE';
+    if(sig === 7)
+        return 'SIGBUS';
+    if(sig === 6)
+        return 'SIGABRT';
+    if(sig === 5)
+        return 'SIGTRAP';
+    if(sig === 4)
+        return 'SIGILL';
+    if(sig === 1)
+        return 'SIGHUP';
+
+    return '' + sig;
+};
+
+export const filterLog = (log: string) => {
+
 };

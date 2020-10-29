@@ -14,11 +14,16 @@ import type {
     HTTPMethod,
     GithubCommit,
     CrashData,
-    ReportData 
+    ReportData,
 } from "./Types";
 import type { AuthToken } from "./Auth";
 import { LoginState } from './Auth';
 import { ScopedFetch, endpointFetch, ServerListener } from "./Netcode";
+
+export type ReleaseInfo = {
+    releases: string[];
+    primaryRepo: string;
+};
 
 export type Yggdrasil = {
     /* Internal data */
@@ -32,18 +37,18 @@ export type Yggdrasil = {
         links: NavLink[];
         externals: NavLink[];
     };
-    releases: GithubRelease[];
-    commits: GithubCommit[];
+    releases: ReleaseInfo;
 };
 
-export const seedTree: (e: EndpointConfig, g: GithubProfile) => Yggdrasil = (
+export const seedTree = (
     endpoints: EndpointConfig,
-    github: GithubProfile
+    github: GithubProfile,
+    release: string[],
+    primaryRepo: string,
 ) => {
     let navLinks: NavLink[] = [
         {name: "Home", target: "nav::home", icon: "home"},
         {name: "Examples", target: "nav::examples", icon: "package"},
-        {name: "Statistics", target: "nav::stats", icon: "pie-chart"},
         {name: "Diagnostics", target: "nav::diag", icon: "activity"}
     ];
     let extLinks: NavLink[] = [
@@ -125,36 +130,6 @@ export const seedTree: (e: EndpointConfig, g: GithubProfile) => Yggdrasil = (
         auth: new ScopedFetch(login.authState.fetch),
     };
 
-    let releases: [string, GithubRelease][] = [];
-    let releasesMap: Map<string, GithubRelease> = new Map();
-    let commitInfo: GithubCommit | undefined;
-
-    async function initialize_releases() {
-        [
-            '/github/latestRelease/hbirchtree_coffeecutie',
-            '/github/latestRelease/hbirchtree_coffeecutie-imgui',
-            '/github/latestRelease/hbirchtree_native-library-bundle',
-        ].map(async rel => 
-            await net.plain.fetch<GithubRelease>(rel)
-                .then(rel => {
-                    if(rel.data && rel.data.repository) {
-                        releases.push([rel.data.repository.name, rel.data]);
-                        releasesMap.set(rel.data.repository.name, rel.data);
-                    }
-                }));
-    }
-    async function initialize_commit() {
-        const update = await net.plain.fetch<GithubCommit>(
-            '/github/updateInfo/hbirchtree_coffeecutie');
-        if(update.data)
-            commitInfo = update.data;
-    }
-
-    async function get_resources() {
-        initialize_releases();
-        initialize_commit();
-    }
-
     const diagState: DiagnosticState = {
         endpoints,
         auths: login.authState,
@@ -184,6 +159,11 @@ export const seedTree: (e: EndpointConfig, g: GithubProfile) => Yggdrasil = (
         },
     };
 
+    diagState.mqtt.addJsonHandler(async () => {
+        console.log('got MQTT message');
+        await diagState.triggerUpdate();
+    });
+
     const out: Yggdrasil = {
         endpoints: endpoints,
         login: login,
@@ -194,8 +174,10 @@ export const seedTree: (e: EndpointConfig, g: GithubProfile) => Yggdrasil = (
             links: navLinks,
             externals: extLinks,
         },
-        releases: releases.map(e => e[1]),
-        commits: [commitInfo!],
+        releases: {
+            releases: release,
+            primaryRepo,
+        }
     };
 
     return out;

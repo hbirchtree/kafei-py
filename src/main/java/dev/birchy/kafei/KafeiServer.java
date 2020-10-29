@@ -91,7 +91,7 @@ public class KafeiServer extends Application<KafeiConfiguration> {
         try {
             client.connect(options);
         } catch(MqttException e) {
-            return null;
+            e.printStackTrace();
         }
         return client;
     }

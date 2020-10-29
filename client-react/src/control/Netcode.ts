@@ -88,6 +88,7 @@ export async function endpointFetch(
 }
 
 export type MqttListener = (message: string) => void;
+export type MqttJsonListener<T> = (message: T) => void;
 
 export class ServerListener {
     constructor(subscriptions: string[]) {
@@ -109,6 +110,11 @@ export class ServerListener {
 
     addHandler(func: MqttListener) {
         this.listeners.push(func);
+    }
+    addJsonHandler<T>(func: MqttJsonListener<T>) {
+        this.listeners.push((message) => {
+            func(JSON.parse(message) as T);
+        });
     }
 
     listener: Paho.Client;

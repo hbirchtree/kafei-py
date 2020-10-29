@@ -14,18 +14,27 @@ export default function Stacktrace(props: Props) {
             const type = frame.frame.startsWith('void ') ? '' : 'auto ';
             const sigStart = frame.frame.indexOf('(');
             const signature = (sigStart !== -1 ? frame.frame.substr(0, sigStart) : frame.frame) + '(...)';
-            const out = frame.ip.replace('0x0x', '0x') + ' ' + type + signature + '\n';
+            const module = '<unknown module>';
+            const address = frame.ip.replace('0x0x', '0x');
+            const out = module + ' ' + address + ' ' + type + signature + '\n';
 
             return out;
         });
 
     return (
         <PropertyGroup icon='file-text' title='Stacktrace'>
-            <div className="ui segment left aligned inverted stack-segment">
-                <Code language="cpp">
-                    {stackframes}
-                </Code>
-            </div>
+            {stackframes.length > 0 ? (
+                <div
+                    className="ui segment left aligned inverted stack-segment"
+                    style={{flexDirection: 'column'}}
+                >
+                    <Code language="cpp">
+                        {stackframes}
+                    </Code>
+                </div>
+            ) : (
+                <p>No stacktrace available</p>
+            )}
         </PropertyGroup>
     );
 }

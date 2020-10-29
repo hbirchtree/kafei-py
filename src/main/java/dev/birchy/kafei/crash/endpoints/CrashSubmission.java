@@ -94,6 +94,9 @@ public final class CrashSubmission {
     }
 
     private InputStream fileToStream(File f) throws FileNotFoundException {
+        if(f == null)
+            return null;
+
         return new FileInputStream(f);
     }
 

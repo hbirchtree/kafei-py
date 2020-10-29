@@ -50,6 +50,21 @@ public class Report {
         private String architecture;
         private BuildMode buildMode;
         private String target;
+
+        private String windowsTarget;
+        private String windowsWdk;
+        private boolean windowsServer;
+
+        private String macTarget;
+        private String macMinTarget;
+        private String iosTarget;
+        private String iosMinTarget;
+
+        private String androidTarget;
+        private String androidSdkTarget;
+
+        private String libcRuntime;
+        private String libcVersion;
     }
 
     @Data
@@ -67,6 +82,7 @@ public class Report {
         private List<String> arguments;
         private String distro;
         private String distroVersion;
+        private String libcVersion;
 
         @JsonIgnore
         public String getCommandLine() {
@@ -94,6 +110,9 @@ public class Report {
         private String motherboard;
         private String motherboardVersion;
         private String chassis;
+
+        private String machineManufacturer;
+        private String machineModel;
 
         private float dpi;
         private int type;

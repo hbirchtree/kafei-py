@@ -1,0 +1,10 @@
+
+.ui.tab.active {
+    position: relative;
+    display: flex !important;
+    flex-direction: column;
+}
+
+.ui.tab[data-tab$="diag"] > .ui.input {
+    align-self: center;
+}

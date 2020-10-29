@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { CrashState, ReportOrCrashState, ReportState } from '../control/States';
+import { ReportOrCrashState } from '../control/States';
 import Machine from './Machine';
 import '../styles/ReportView.scss';
-import { data } from 'jquery';
 import Stacktrace from './Stacktrace';
 import TextFileView from './TextFileView';
 import PropertyGroup from './PropertyGroup';
+import Icon from './Icon';
+import { signalToString } from '../control/Types';
 
 interface Props {
     data: ReportOrCrashState;
@@ -47,9 +48,12 @@ export default function ReportView(props: Props) {
     return (
         <>
         <div onClick={expand} className='report-header'>
-            {dataType} - {state.type === 'Report' ? state.data.system : ''}
+            {dataType} - {state.type === 'Report' 
+                ? state.data.system.split(' running')[0] 
+                : signalToString(state.data.exitCode)}
+            <Icon icon="chevron-down"/>
         </div>
-        <div className={`report-view ${displayState}`}>
+        <div className={`report-view ${displayState}`} style={{position: 'relative'}}>
             {displayState === 'shown' ?  (
                 <>
                 <Machine
@@ -62,20 +66,30 @@ export default function ReportView(props: Props) {
                             '{src}',
                             props.downloadUrl))}
                 />
+                {loadState === 'loading' && (
+                    <div className="ui active loader" style={{
+                        position: 'relative',
+                        height: '40px' }}>
+                    </div>
+                )}
                 { state.type === 'Crash' && state.stack ? (
                         <Stacktrace data={state.stack} />
                 ) : <></>
                 }
+                {state.type === 'Crash' && (
+                    state.stdout.code === 200 || state.stderr.code === 200) 
+                    && (
                 <PropertyGroup icon='' title='Logs'>
-                    { state.type === 'Crash' && state.stdout.code === 200 ? (
+                    { state.stdout.code === 200 ? (
                             <TextFileView data={state.stdout.data} />
                     ) : <></>
                     }
-                    { state.type === 'Crash' && state.stderr.code === 200 ? (
+                    { state.stderr.code === 200 ? (
                             <TextFileView data={state.stderr.data} />
                     ) : <></>
                     }
                 </PropertyGroup>
+                )}
                 </>
             ) : (
                 <></>

@@ -86,9 +86,11 @@ public final class ReportService {
                     .orElseGet(() -> reports.getApplicationId(newReport.getApplication()));
             long devId = removeFuckedOptional(reports.addDevice(newReport.getDevice()))
                     .orElseGet(() -> reports.getDeviceId(newReport.getDevice()));
+            long buildId = removeFuckedOptional(reports.addBuild(newReport.getBuild()))
+                    .orElseGet(() -> reports.getBuildId(newReport.getBuild()));
 
             long runId = reports.addRuntime(
-                    newReport.getRuntime(), newReport.getBuild(), newReport.getMemory());
+                    newReport.getRuntime(), newReport.getMemory());
 
             for(String key : newReport.getExtra().keySet())
                 reports.addRunExtra(runId, key, newReport.getExtra().get(key));
@@ -97,13 +99,14 @@ public final class ReportService {
             for(float f : newReport.getProcessor().getFrequencies())
                 reports.addProcessorFrequency(procId, f);
 
-            reports.addCompiler(newReport.getBuild());
-            reports.addArchitecture(newReport.getBuild().getArchitecture());
+//            reports.addCompiler(newReport.getBuild());
+//            reports.addArchitecture(newReport.getBuild().getArchitecture());
 
             reports.relateRuntimeApplication(runId, appId);
-            reports.relateRuntimeArchitecture(runId, newReport.getBuild().getArchitecture());
-            reports.relateRuntimeCompiler(runId, newReport.getBuild());
+//            reports.relateRuntimeArchitecture(runId, newReport.getBuild().getArchitecture());
+//            reports.relateRuntimeCompiler(runId, newReport.getBuild());
             reports.relateRuntimeDevice(runId, devId);
+            reports.relateRuntimeBuild(runId, buildId);
             reports.relateRuntimeProcessor(runId, procId);
 
             return runId;
