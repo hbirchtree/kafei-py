@@ -34,4 +34,4 @@
 
 - name: start mosquitto
   become: yes
-  service: name=mosquitoo state=started
+  service: name=mosquitto state=started

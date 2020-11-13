@@ -47,7 +47,7 @@ export default function Examples(props: Props) {
             title={props.releases.info.primaryRepo}
         content={(<>
             {commit.commit.head_commit?.message.split('\n').map(
-                line => (<p style={{margin: "0"}}>{line}</p>))}
+                line => (<p key={line} style={{margin: "0"}}>{line}</p>))}
             </>)}
         />)
         : (<div className="ui active loader" style={{height: "2em"}}></div>);
@@ -57,7 +57,7 @@ export default function Examples(props: Props) {
             const link = (<a key={i} href={rel.release?.html_url}>
                     {rel.release?.tag_name}
                 </a>);
-            return (<div className="row">
+            return (<div key={i} className="row">
                 <div className="column"><p>{rel.repository?.name}</p></div>
                 <div className="column">{link}</div>
             </div>);

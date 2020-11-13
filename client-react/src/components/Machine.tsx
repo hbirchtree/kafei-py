@@ -4,7 +4,7 @@ import PropertyGroup from './PropertyGroup';
 import PropertyRow from './PropertyRow';
 import { BrandIcon } from './BrandIcon';
 import Button from './Button';
-import { mapArchToReadable } from '../control/Types';
+import { arraySorted, mapArchToReadable, stringHash } from '../control/Types';
 
 interface Props {
     data: ReportViewState;
@@ -24,7 +24,18 @@ interface Display {
     runtime?: JSX.Element;
     memory?: JSX.Element;
     graphics?: JSX.Element;
+    extra?: JSX.Element;
+    tags?: JSX.Element;
 }
+
+const colorText = (text: string) => {
+    const colors = [
+        'red', 'orange', 'green', 'teal',
+        'blue', 'violet', 'purple', 'pink',
+    ];
+    const hash = stringHash(text);
+    return colors[hash % colors.length];
+};
 
 export default function Machine(props: Props) {
     const machine = props.data.machine;
@@ -86,6 +97,8 @@ export default function Machine(props: Props) {
 
         if(!runtimeInfo.distro)
             runtimeInfo.distro = device.name.split(' running ')[1];
+
+        const keys: {[index: string]: any} = {};
 
         machineInfo = {
             application: application && (
@@ -223,6 +236,41 @@ export default function Machine(props: Props) {
                     )}
                 </PropertyGroup>
             ),
+            tags: machine.extra && (
+                <PropertyGroup icon='' title='Tags'>
+                    {
+                        (machine.extra['gl:extensions'] ? machine.extra['gl:extensions'].split(' ') : [])
+                        .filter((ext: string) => 
+                            ext.startsWith('GL_ARB') ||
+                            ext.startsWith('GL_KHR') ||
+                            ext.indexOf('texture_compression_') !== -1 ||
+                            false)
+                        .map((ext: string) => {
+                            return (<a 
+                                key={ext} 
+                                className={"ui label " + colorText(ext)}>
+                                    {ext}
+                                </a>);
+                        })
+                    }
+                    {
+                        arraySorted(machine.extra['gl:limits']
+                        ? machine.extra['gl:limits'].split(',')
+                        : []).map((lim: string) => {
+                            const v = lim.split('=');
+                            if(v.length < 2 || keys[v[0]])
+                                return null;
+                            keys[v[0]] = 1;
+                            return (<div
+                                key={v[0]}
+                                className={"ui label " + colorText(v[0])}>
+                                {v[0]}
+                                <div className="detail">{v[1]}</div>
+                            </div>);
+                        })
+                    }
+                </PropertyGroup>
+            ),
         };
     }
 
@@ -266,6 +314,7 @@ export default function Machine(props: Props) {
             {machineInfo.device}
             {machineInfo.processor}
             {machineInfo.graphics}
+            {machineInfo.tags}
         </div>
     );
 }

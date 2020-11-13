@@ -11,6 +11,12 @@
     > span {
         margin: 8px;
     }
+    > .ui.label {
+        margin-left: 8px !important;
+    }
+    > span.generic-icon {
+        margin-left: auto;
+    }
 }
 
 .report-view {

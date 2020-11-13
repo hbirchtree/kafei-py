@@ -11,6 +11,7 @@
     "@types/node": "^12.12.56",
     "@types/react": "^16.9.49",
     "@types/react-dom": "^16.9.8",
+    "@types/simple-icons": "^2.5.0",
     "chart.js": "^2.9.3",
     "feather-icons": "^4.28.0",
     "highlight.js": "^10.2.0",
@@ -20,6 +21,7 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-scripts": "3.4.3",
+    "simple-icons": "^3.12.3",
     "source-map-explorer": "^2.5.0",
     "typescript": "^3.9.7"
   },

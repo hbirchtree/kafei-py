@@ -47,6 +47,7 @@ ansible-bootstrap:
 	ssh -p $(PORT) $(LOGIN_DETAILS) -- sudo apt -qy install ansible
 
 ANSIBLEROOT=$(ROOTDIR)/ansible
+ANSIBLEPORT=22
 
 #
 # Creation of servers
@@ -64,22 +65,25 @@ ansible-create-server:
 # Initial setup
 #
 ansible-setup-server:
-	ansible-playbook -i $(ANSIBLEROOT)/provisioned-static $(ANSIBLEROOT)/site.yml
+	ansible-playbook -i $(ANSIBLEROOT)/provisioned-static $(ANSIBLEROOT)/site.yml --ssh-extra-args=-p$(ANSIBLEPORT)
 
 ansible-setup-certs:
-	ansible-playbook -i $(ANSIBLEROOT)/provisioned-static $(ANSIBLEROOT)/certs.yml
+	ansible-playbook -i $(ANSIBLEROOT)/provisioned-static $(ANSIBLEROOT)/certs.yml --ssh-extra-args=-p$(ANSIBLEPORT)
 
 ansible-deploy: update-www-react build
 	cp $(ROOTDIR)/build/distributions/kafei-py.tar $(ANSIBLEROOT)/roles/deployservice/files
 	ansible-playbook -i $(ANSIBLEROOT)/provisioned-static $(ANSIBLEROOT)/deploy-kafei.yml --ssh-extra-args=-p108
 
+ansible-deploy-webapp-%:
+	ansible-playbook -i $(ANSIBLEROOT)/provisioned-static $(ANSIBLEROOT)/deploy-$*.yml --ssh-extra-args=-p108
+
 #
 # Database operations
 #
-ansible-backup-db:
-	ansible-playbook -i $(ANSIBLEROOT)/public $(ANSIBLEROOT)/backup.yml --ssh-extra-args=-p108
+ansible-backup-db-%:
+	ansible-playbook -i $(ANSIBLEROOT)/$* $(ANSIBLEROOT)/backup.yml --ssh-extra-args=-p108
 ansible-restore-db:
-	ansible-playbook -i $(ANSIBLEROOT)/provisioned-static $(ANSIBLEROOT)/restore.yml
+	ansible-playbook -i $(ANSIBLEROOT)/provisioned-static $(ANSIBLEROOT)/restore.yml --ssh-extra-args=-p$(ANSIBLEPORT)
 
 #
 # Composite operations

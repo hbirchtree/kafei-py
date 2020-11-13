@@ -330,3 +330,17 @@ export const signalToString = (sig: number) => {
 export const filterLog = (log: string) => {
 
 };
+
+export const stringHash = (s: string) =>
+    Math.abs(s
+    .split("")
+    .reduce(
+        (a,b) => {
+            a=((a<<5)-a)+b.charCodeAt(0);
+            return a&a
+        }, 0));
+
+export const arraySorted = (a: any[]) => {
+    a.sort();
+    return a;
+};

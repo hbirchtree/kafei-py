@@ -45,12 +45,28 @@ export default function ReportView(props: Props) {
         itemId = state.data.reportId;
     }
 
+    let systemManufacturer, operatingSystem, osVersion;
+    if(state.type === 'Report')
+    {
+        systemManufacturer =
+            state.data.system.split(' running ')[0].split(' ')[0];
+        operatingSystem =
+            state.data.system.split(' running ')[1];
+    }
+    const tags = [
+        systemManufacturer ?
+            (<a className="ui label green">{systemManufacturer}</a>) : null,
+        operatingSystem ?
+            (<a className="ui label blue">{operatingSystem}</a>) : null,
+    ];
+
     return (
         <>
         <div onClick={expand} className='report-header'>
             {dataType} - {state.type === 'Report' 
                 ? state.data.system.split(' running')[0] 
                 : signalToString(state.data.exitCode)}
+            {tags}
             <Icon icon="chevron-down"/>
         </div>
         <div className={`report-view ${displayState}`} style={{position: 'relative'}}>
