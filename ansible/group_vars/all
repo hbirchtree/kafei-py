@@ -1,0 +1,10 @@
+---
+
+appusers: []
+
+deployroot: /var/app-deploy
+dataroot: /var/app-data
+
+hostnames:
+    'b8:27:eb:34:64:96': 'pi3'
+    '28:d2:44:a3:de:4d': 'tp-E540'

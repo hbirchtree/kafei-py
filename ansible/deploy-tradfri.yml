@@ -1,0 +1,15 @@
+- hosts: pi
+  name: deploy tradfri server
+  roles:
+    - deployservice
+  vars:
+    appname: tradfri
+    servicename: Tradfri Services
+    execpath: /bin/bash '{{ tradfri.data }}/startup.sh' '{{ tradfri.deploy }}/wrapper.sh'
+    migration_args: routes
+    service_args: run --host={{ tradfri.net }} --port={{tradfri.port}}
+    working_dir: '{{ tradfri.data }}'
+    source: tradfri.tar
+    env_vars:
+      - var: FLASK_APP
+        value: '{{ tradfri.deploy }}/proxy.py'

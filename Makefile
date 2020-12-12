@@ -18,7 +18,10 @@ update-www:
 	cp $(CLIENTROOT)/build/bundle.js $(WWWROOT)/build/
 	cp $(CLIENTROOT)/build/bundle.css $(WWWROOT)/build/
 
-update-www-react:
+build-react: .FORCE | $(ROOTDIR)/client-react
+	cd $(ROOTDIR)/client-react && npm run build
+
+update-www-react: build-react
 	cp -r $(CLIENTROOT_REACT)/* $(WWWROOT)/
 
 BUILDROOT=$(ROOTDIR)/build/distributions

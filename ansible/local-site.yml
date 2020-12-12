@@ -1,0 +1,11 @@
+---
+
+- name: set config
+  hosts:
+    - pi
+    - laptop
+    - server
+  vars:
+      hostname: '{{ hostnames[ansible_default_ipv4.macaddress] }}'
+  roles:
+    - config

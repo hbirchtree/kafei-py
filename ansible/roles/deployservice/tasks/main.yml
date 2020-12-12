@@ -42,6 +42,7 @@
   with_items:
     - postgresql
     - mqtt
+  ignore_errors: yes
 
 - name: stop server
   become: yes

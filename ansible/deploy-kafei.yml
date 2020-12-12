@@ -5,8 +5,13 @@
   vars:
     appname: kafei
     servicename: Kafei Services
-    execpath: /bin/sh '{{ kafei.data }}/startup.sh' '{{ kafei.deploy }}/bin/kafei-py'
+    execpath: /bin/bash '{{ kafei.data }}/startup.sh' '{{ kafei.deploy }}/bin/kafei-py'
     migration_args: db migrate production.yml
     service_args: server production.yml
     working_dir: '{{ kafei.data }}'
     source: kafei-py.tar
+    env_vars:
+      - var: MQTT_PASSWORD
+        value: '$(cat {{ dataroot }}/{{ appname }}/secrets/mqtt)'
+      - var: DB_PASSWORD
+        value: '$(cat {{ dataroot }}/{{ appname }}/secrets/postgresql)'

@@ -6,4 +6,5 @@
     appname: bonzi
     indexfile: PurpleMonkeyFella
     source: bonzi.tar.xz
+    env_vars: []
 

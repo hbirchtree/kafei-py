@@ -1,9 +1,5 @@
 ---
 
-# App directories
-deployroot: /var/app-deploy
-dataroot: /var/app-data
-
 appusers:
   - kafei
   - playground

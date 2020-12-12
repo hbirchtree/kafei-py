@@ -2,8 +2,10 @@
 
 - name: set config
   hosts: webservers
+  vars:
+    hostname: kafei
   roles:
-      - config
+    - config
 
 - name: configure server
   hosts: webservers
@@ -12,4 +14,5 @@
     - jdk
     - mosquitto
     - postgres
+    - prometheus
 

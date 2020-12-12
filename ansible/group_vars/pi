@@ -1,0 +1,16 @@
+---
+
+# App directories
+deployroot: /var/app-deploy
+dataroot: /var/app-data
+
+appusers:
+  - tradfri
+
+tradfri:
+    net: 192.168.50.21
+    port: 8081
+    data: '{{ dataroot }}/tradfri'
+    deploy: '{{ deployroot }}/tradfri'
+
+hostname: pi3

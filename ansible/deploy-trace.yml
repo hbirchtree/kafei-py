@@ -6,4 +6,5 @@
     appname: trace
     indexfile: ChromeTraceView
     source: trace.tar.gz
+    env_vars: []
 
