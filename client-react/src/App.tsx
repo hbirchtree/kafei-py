@@ -49,7 +49,7 @@ function App() {
   useEffect(() => initSemanticAccordionsDirty('.ui.accordion'));
 
   return (
-    <div className="kafei">
+    <div className="kafei" style={{ position: "relative" }}>
       {stylesheets}
       {yggdrasil ? (
         <>

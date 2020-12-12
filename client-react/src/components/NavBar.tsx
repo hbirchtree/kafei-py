@@ -49,7 +49,12 @@ export default function NavBar (props: Props) {
 
     return (
         <>
-            <div className="ui inverted menu desktop navbar">
+            <div className="ui inverted menu desktop navbar" style={{
+                position: "sticky",
+                top: 0,
+                backgroundColor: "transparent !important",
+                zIndex: 100,
+            }}>
                 {desktopItems}
                 <span style={{flexGrow: 1}}></span>
                 <AdminMenu profile={props.profile} login={props.login} />

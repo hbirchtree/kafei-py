@@ -1,9 +1,13 @@
 .navbar {
+    .ui.desktop.menu {
+        background: transparent !important;
+    }
+
     a {
         color: white;
     }
-    .ui.menu .item {
-        transition: background-color linear 0.5s;
+    & .item {
+        transition: background-color 0.5s linear;
     }
     .ui.menu, .ui.item, .ui.container {
         background-color: royalblue !important;
@@ -102,4 +106,8 @@
         transform: rotate(45deg);
         border-radius: 5px;
     }
+    .item:before {
+        background: transparent !important;
+    }
 }
+
