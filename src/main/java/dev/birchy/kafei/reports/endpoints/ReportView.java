@@ -79,7 +79,7 @@ public final class ReportView {
         return reportService.getRawReport(reportId).map((report) ->
                 Response
                         .ok(report.getRawData())
-                        .type(MediaType.APPLICATION_OCTET_STREAM)
+                        .type(MediaType.APPLICATION_JSON)
                         .header(CustomHeaders.X_REPORT_FORMAT, report.getFormat())
                         .build()
         ).orElse(Result

@@ -168,6 +168,8 @@ public class KafeiServer extends Application<KafeiConfiguration> {
 
         crashDb.registerColumnMapper(new LargeObjectMapper());
         crashDb.registerArgument(new InputStreamMapperFactory(0));
+        reportDb.registerColumnMapper(new LargeObjectMapper());
+        reportDb.registerArgument(new InputStreamMapperFactory(0));
 
         final MqttClient mqttClient = createMqttClient(configuration.getMqtt());
 

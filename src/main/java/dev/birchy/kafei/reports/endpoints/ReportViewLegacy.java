@@ -54,7 +54,6 @@ public final class ReportViewLegacy {
                         /* Only on legacy reports with non-null size */
                         .filter((report) -> report.getFormat().equals(ReportFormat.LEGACY))
                         .filter((report) -> report.getRawData() != null)
-                        .filter((report) -> report.getRawData().length > 0)
 
                         /* Convert to ObjectNode for creating JSON list */
                         .map((report) -> {

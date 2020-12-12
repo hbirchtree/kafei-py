@@ -3,11 +3,12 @@ package dev.birchy.kafei.reports;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import org.eclipse.jetty.util.annotation.Name;
 import org.jdbi.v3.core.Jdbi;
 import org.joda.time.DateTime;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringBufferInputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
@@ -118,7 +119,7 @@ public final class ReportService {
             ReportData raw = new ReportData();
 
             raw.setFormat(format);
-            raw.setRawData(mapper.writeValueAsBytes(source));
+            raw.setRawData(new StringBufferInputStream(mapper.writeValueAsString(source)));
 
             return Optional.of(raw);
         } catch (IOException e) {
@@ -130,6 +131,12 @@ public final class ReportService {
     public void putRawReport(final long runId, ReportData data) {
         reportsDb.useExtension(ReportDao.class, (reports) -> {
             reports.addRawReport(runId, data);
+        });
+    }
+    public void putStreamReport(final long runId, final String format, final InputStream data) {
+        reportsDb.useTransaction((h) -> {
+            ReportDao reports = h.attach(ReportDao.class);
+            reports.addStreamReport(runId, format, data);
         });
     }
 
@@ -189,9 +196,8 @@ public final class ReportService {
     }
 
     public Optional<ReportData> getRawReport(long runId) {
-        return reportsDb.withExtension(
-                ReportSingleDao.class,
-                (reports) -> reports.getRawReport(runId));
+        return reportsDb.inTransaction(
+                (h) -> h.attach(ReportSingleDao.class).getRawReport(runId));
     }
 
     public Optional<String> getRawReportFormat(long runId) {

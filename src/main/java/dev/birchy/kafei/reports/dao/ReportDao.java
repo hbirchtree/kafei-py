@@ -6,6 +6,7 @@ import org.jdbi.v3.sqlobject.statement.GetGeneratedKeys;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
+import java.io.InputStream;
 import java.util.Optional;
 
 import dev.birchy.kafei.reports.responses.Report;
@@ -90,6 +91,12 @@ public interface ReportDao {
 
     @SqlUpdate("insert into reports.run_report values(:runId, :report.format, :report.rawData)")
     void addRawReport(@Bind("runId") long runId, @BindBean("report") ReportData reportData);
+
+    @SqlUpdate("insert into reports.run_report values(:runId, :format, :stream)")
+    void addStreamReport(
+            @Bind("runId") long runId,
+            @Bind("format") String reportData,
+            @Bind("stream") InputStream stream);
 
     @SqlUpdate("insert into reports.run_extras(run_id, key, value) values(:runId, :key, :value)")
     void addRunExtra(@Bind("runId") long runId, @Bind("key") String key, @Bind("value") String value);
