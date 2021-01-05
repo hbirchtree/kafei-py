@@ -1,0 +1,92 @@
+---
+- name: set hostname
+  become: yes
+  hostname:
+    name: '{{ hostname }}'
+
+- name: update apt cache
+  become: yes
+  apt: update_cache=yes
+
+- name: install base programs
+  become: yes
+  apt:
+      name:
+        - tmux
+        - vim
+
+- name: set ssh port
+  become: yes
+  template: src=sshd_config dest=/etc/ssh/sshd_config mode=644
+
+- name: set ssh banner
+  become: yes
+  copy: src=banner dest=/etc/ssh/banner mode=644
+
+- name: overwrite motd header
+  become: yes
+  copy: src=motd-header dest=/etc/update-motd.d/00-header mode=755
+
+- name: remove unnecessary parts of motd
+  become: yes
+  file: path=/etc/update-motd.d/{{ item }} state=absent
+  with_items:
+    - '10-help-text'
+    - '50-motd-news'
+    - '51-cloudguest'
+
+- name: create groups
+  become: yes
+  group: 'name={{ item }}'
+  with_items:
+    - apps
+    - maintenance
+    - wheel
+
+- name: grant sudo to wheel
+  become: yes
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: '^%wheel'
+    line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+    validate: 'visudo -cf %s'
+
+- name: create maintenance user
+  become: yes
+  user:
+    name: maintenance
+    shell: /bin/bash
+    createhome: yes
+    groups:
+      - maintenance
+      - wheel
+
+- name: create app users
+  become: yes
+  user:
+    name: '{{ item }}'
+    shell: /bin/sh
+    createhome: yes
+    home: '{{ dataroot }}/{{ item }}'
+    group: apps
+    system: yes
+  with_items: '{{ appusers }}'
+
+- name: create deploy directory
+  become: yes
+  file:
+    path: '{{ deployroot }}'
+    owner: maintenance
+    group: maintenance
+    mode: u=rwx,g=rwx,o=rx
+    state: directory
+
+- name: disable snapd
+  become: yes
+  shell: systemctl disable snapd
+  ignore_errors: yes
+
+- name: restart sshd
+  become: yes
+  service: name=ssh state=restarted
