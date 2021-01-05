@@ -1,0 +1,21 @@
+- hosts: webservers
+  name: deploy video metadata service
+  roles:
+    - deployservice
+  vars:
+    appname: videometa
+    servicename: VideoMeta Service
+    execpath: '{{ vidmeta.data }}/startup.sh flask'
+    migration_args: routes
+    service_args: run --host={{ vidmeta.net }} --port={{vidmeta.port}}
+    working_dir: '{{ vidmeta.data }}'
+    source: vidmeta.tar
+    env_vars:
+      - var: FLASK_APP
+        value: '{{ vidmeta.deploy }}/videometa.py'
+      - var: VIDEOMETA_SETTINGS
+        value: '{{ vidmeta.deploy }}/default.cfg'
+      - var: LC_ALL
+        value: 'C.UTF-8'
+      - var: LANG_ALL
+        value: 'C.UTF-8'

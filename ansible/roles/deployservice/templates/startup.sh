@@ -18,7 +18,8 @@ if [ -f "${DEPLOYROOT}/requirements.txt" ]; then
     virtualenv -p python3 "${DATAROOT}/venv"
     source "${DATAROOT}/venv/bin/activate"
     pip install -r "${DEPLOYROOT}/requirements.txt"
+    source "${DATAROOT}/venv/bin/activate"
 fi
 
-bash "$@"
+$@
 

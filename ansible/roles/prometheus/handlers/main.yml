@@ -1,0 +1,3 @@
+- name: prometheus
+  become: yes
+  service: name=prometheus state=restarted

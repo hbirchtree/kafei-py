@@ -1,3 +1,9 @@
+- name: install virtualenv
+  become: yes
+  apt:
+    name:
+    - virtualenv
+
 - name: create deploy directory
   become: yes
   become_user: maintenance
@@ -21,6 +27,16 @@
 - name: daemon reload
   become: yes
   shell: systemctl daemon-reload
+
+- name: create app users
+  become: yes
+  user:
+    name: '{{ appname }}'
+    shell: /bin/sh
+    createhome: yes
+    home: '{{ dataroot }}/{{ appname }}'
+    group: apps
+    system: yes
 
 - name: install startup script
   become: yes

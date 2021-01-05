@@ -8,7 +8,7 @@ appusers:
 jdkversion: 8
 
 # Certbot
-certdomains: birchy.dev,api.birchy.dev,coffee.birchy.dev,crash.birchy.dev,mq.birchy.dev,s.birchy.dev,admin.birchy.dev
+certdomains: birchy.dev,api.birchy.dev,coffee.birchy.dev,crash.birchy.dev,mq.birchy.dev,s.birchy.dev,admin.birchy.dev,v.birchy.dev
 certdir: /etc/letsencrypt/live/birchy.dev
 
 # Mosquitto settings
@@ -73,3 +73,8 @@ kafeidb:
       db: kafei
       roles: kafei
 
+vidmeta:
+  net: localhost
+  port: 8060
+  data: '{{ dataroot }}/videometa'
+  deploy: '{{ deployroot }}/videometa'

@@ -1,0 +1,11 @@
+- name: install prometheus
+  become: yes
+  apt:
+    name:
+      - prometheus
+      - prometheus-postgres-exporter
+  notify: start prometheus
+
+- name: install prometheus config
+  become: yes
+  template: src=config.yml dest=/etc/prometheus/prometheus.yml

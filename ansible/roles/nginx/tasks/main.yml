@@ -4,6 +4,7 @@
     name:
       - nginx
       - certbot
+      - nginx-extras
 
 - name: add configuration
   become: yes
@@ -11,7 +12,11 @@
 
 - name: create streams-enabled directory
   become: yes
-  file: path=/etc/nginx/streams-enabled state=directory mode=744
+  file: path=/etc/nginx/streams-enabled state=directory mode=755
+
+- name: create applications-enabled directory
+  become: yes
+  file: path=/etc/nginx/applications-enabled state=directory mode=755
 
 - name: add site configs
   become: yes
@@ -19,6 +24,11 @@
   with_items:
     - '10-kafei'
     - '20-shortener'
+    - '50-dash-http'
+
+- name: disable default
+  become: yes
+  file: path=/etc/nginx/sites-enabled/default state=absent
 
 - name: enable sites
   become: yes
@@ -29,6 +39,7 @@
   with_items:
     - '10-kafei'
     - '20-shortener'
+    - '50-dash-http'
   notify:
     - restart nginx
 
@@ -36,3 +47,13 @@
   become: yes
   template: src={{item}}.conf dest=/etc/nginx/streams-enabled/{{item}}.conf mode=644
   with_items: []
+
+- name: add application configs
+  become: yes
+  template: src={{item}}.conf dest=/etc/nginx/applications-enabled/{{item}}.conf mode=644
+  with_items:
+    - '50-dash-rtmp'
+
+- name: make video serving directory
+  become: yes
+  file: path={{ dataroot }}/video state=directory owner=ubuntu mode=755

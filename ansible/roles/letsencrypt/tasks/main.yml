@@ -13,7 +13,7 @@
 
 - name: register certs
   become: yes
-  shell: certbot --nginx -d {{ certdomains }} -n --agree-tos --redirect -m h0wy36@gmail.com
+  shell: certbot --nginx -d {{ certdomains }} -n --agree-tos --redirect -m h0wy36@gmail.com --expand
 
 - name: kill certbot nginx
   become: yes
