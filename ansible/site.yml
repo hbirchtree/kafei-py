@@ -14,5 +14,5 @@
     - jdk
     - mosquitto
     - postgres
-    - prometheus
+    - vpn
 

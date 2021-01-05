@@ -1,0 +1,15 @@
+[Unit]
+Description={{ servicename }}
+After=postgresql.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User={{ appname }}
+ExecStart={{ execpath }} {{ service_args }}
+WorkingDirectory={{ working_dir }}
+
+[Install]
+WantedBy=multi-user.target

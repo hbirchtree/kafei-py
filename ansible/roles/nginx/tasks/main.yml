@@ -7,6 +7,14 @@
 
 - name: add configuration
   become: yes
+  copy: src=nginx.conf dest=/etc/nginx/nginx.conf mode=644
+
+- name: create streams-enabled directory
+  become: yes
+  file: path=/etc/nginx/streams-enabled state=directory mode=744
+
+- name: add site configs
+  become: yes
   template: src={{item}}.conf dest=/etc/nginx/sites-available/{{item}}.conf mode=644
   with_items:
     - '10-kafei'
@@ -23,3 +31,8 @@
     - '20-shortener'
   notify:
     - restart nginx
+
+- name: add stream configs
+  become: yes
+  template: src={{item}}.conf dest=/etc/nginx/streams-enabled/{{item}}.conf mode=644
+  with_items: []

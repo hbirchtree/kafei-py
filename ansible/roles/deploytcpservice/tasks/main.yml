@@ -1,0 +1,67 @@
+- name: create deploy directory
+  become: yes
+  become_user: maintenance
+  file:
+    path: '{{ deployroot }}/{{ appname }}'
+    state: directory
+    mode: 'u=rwx,g=rwx,o=rx'
+
+- name: 'copy {{ appname }} to server'
+  become: yes
+  become_user: maintenance
+  unarchive:
+    src: '{{ source }}'
+    dest: '{{ deployroot }}/{{ appname }}'
+    mode: 'u=rwx,g=rwx,o=rx'
+
+- name: install nginx config
+  become: yes
+  template: src=serve.conf dest=/etc/nginx/streams-enabled/99-{{ appname }}.conf mode=0644
+  vars:
+    appdomain: '{{ appname }}.{{ kafei.name }}'
+    approot: '{{ dataroot }}/{{ appname }}/www'
+    tcpport: '{{ deployport }}'
+
+- name: install service
+  become: yes
+  template: src=template.service dest=/etc/systemd/system/{{ appname }}.service mode=0644
+
+- name: daemon reload
+  become: yes
+  shell: systemctl daemon-reload
+
+- name: install startup script
+  become: yes
+  become_user: '{{ appname }}'
+  template: src=startup.sh dest={{ dataroot }}/{{ appname }} mode=0700
+
+- name: set secrets permissions
+  become: yes
+  become_user: '{{ appname }}'
+  file:
+    path: '{{ dataroot }}/{{ appname }}/secrets'
+    state: directory
+    mode: 0700
+
+- name: copy secrets to server
+  become: yes
+  become_user: '{{ appname }}'
+  copy: src={{ appname }}/{{ inventory_hostname }}/{{ item }} dest={{ dataroot }}/{{ appname }}/secrets
+  with_items:
+    - postgresql
+    - mqtt
+  ignore_errors: yes
+
+- name: stop server
+  become: yes
+  service: name={{ appname }} state=stopped
+
+- name: run migrations
+  become: yes
+  become_user: '{{ appname }}'
+  shell:
+      cmd: '{{ execpath }} {{ migration_args }}'
+
+- name: start server
+  become: yes
+  service: name={{ appname }} state=started

@@ -1,0 +1,3 @@
+- name: copy ocserv forwarding config
+  become: yes
+  copy: src=50-ocserv.conf dest=/etc/nginx/streams-enabled/50-ocserv.conf mode=644
