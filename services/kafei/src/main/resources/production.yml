@@ -1,0 +1,67 @@
+server:
+  applicationConnectors:
+  - type: http
+    port: 8040
+  adminConnectors:
+  - type: http
+    port: 8041
+
+flyway:
+  sqlMigrationPrefix: v
+  sqlMigrationSeparator: "-"
+  schemas:
+    - reports
+    - githooks
+
+reportDatabase:
+  driverClass: org.postgresql.Driver
+  user: kafei
+  password: ${DB_PASSWORD}
+  url: jdbc:postgresql://localhost/kafei
+
+gitHooksDatabase:
+  driverClass: org.postgresql.Driver
+  user: kafei
+  password: ${DB_PASSWORD}
+  url: jdbc:postgresql://localhost/kafei
+
+crashDatabase:
+  driverClass: org.postgresql.Driver
+  user: kafei
+  password: ${DB_PASSWORD}
+  url: jdbc:postgresql://localhost/kafei
+
+shortDatabase:
+  driverClass: org.postgresql.Driver
+  user: kafei
+  password: ${DB_PASSWORD}
+  url: jdbc:postgresql://localhost/kafei
+
+authDatabase:
+  driverClass: org.postgresql.Driver
+  user: kafei
+  password: ${DB_PASSWORD}
+  url: jdbc:postgresql://localhost/kafei?currentSchema=public
+
+corsData:
+  allowOrigin: "*"
+  allowMethods: "OPTIONS,GET,DELETE,PUT,POST"
+
+proxies:
+  - name: bonzi
+    targetHost: http://localhost:8040
+    targetResource: /api/sapi/speak.wav?pitch=150&text={say}
+    proxyResource: /api/bonziProxy
+    parameterMap:
+      say: text
+
+sapi:
+  host: localhost
+  port: 4000
+
+mqtt:
+  protocol: tcp
+  host: localhost
+  port: 1883
+  username: kafei
+  password: ${MQTT_PASSWORD}

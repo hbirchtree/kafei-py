@@ -1,0 +1,56 @@
+{
+  "name": "client-react",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^9.5.0",
+    "@testing-library/user-event": "^7.2.1",
+    "@types/jest": "^24.9.1",
+    "@types/jquery": "^3.5.1",
+    "@types/node": "^12.12.56",
+    "@types/react": "^16.9.49",
+    "@types/react-dom": "^16.9.8",
+    "@types/simple-icons": "^2.5.0",
+    "chart.js": "^2.9.3",
+    "feather-icons": "^4.28.0",
+    "highlight.js": "^10.2.0",
+    "jquery": "^3.5.1",
+    "node-sass": "^4.14.1",
+    "paho-mqtt": "^1.1.0",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-scripts": "3.4.3",
+    "simple-icons": "^3.12.3",
+    "source-map-explorer": "^2.5.0",
+    "typescript": "^3.9.7"
+  },
+  "scripts": {
+    "analyze": "source-map-explorer 'build/static/js/*.js'",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@types/chart.js": "^2.9.24",
+    "@types/feather-icons": "^4.7.0",
+    "@types/highlight.js": "^9.12.4",
+    "@types/paho-mqtt": "^1.0.4"
+  }
+}

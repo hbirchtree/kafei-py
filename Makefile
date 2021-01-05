@@ -6,25 +6,25 @@ ROOTDIR       := $(abspath $(shell dirname $(MAKEFILE_LIST)))
 .FORCE:
 
 build: .FORCE | $(ROOTDIR)
-	cd $(ROOTDIR) && ./gradlew :assemble
+	cd $(ROOTDIR)/services/kafei && ./gradlew :assemble
 
-CLIENTROOT := $(ROOTDIR)/client/public
-CLIENTROOT_REACT := $(ROOTDIR)/client-react/build
-WWWROOT    := $(ROOTDIR)/www
+CLIENTROOT 		 := $(ROOTDIR)/services/kafei/client
+CLIENTROOT_REACT := $(ROOTDIR)/services/kafei/client-react
+WWWROOT    		 := $(ROOTDIR)/services/kafei/www
 
 update-www:
-	cp $(CLIENTROOT)/global.css $(WWWROOT)/
-	cp $(CLIENTROOT)/index.html $(WWWROOT)/
-	cp $(CLIENTROOT)/build/bundle.js $(WWWROOT)/build/
-	cp $(CLIENTROOT)/build/bundle.css $(WWWROOT)/build/
+	cp $(CLIENTROOT)/public/global.css $(WWWROOT)/
+	cp $(CLIENTROOT)/public/index.html $(WWWROOT)/
+	cp $(CLIENTROOT)/public/build/bundle.js $(WWWROOT)/build/
+	cp $(CLIENTROOT)/public/build/bundle.css $(WWWROOT)/build/
 
 build-react: .FORCE | $(ROOTDIR)/client-react
-	cd $(ROOTDIR)/client-react && npm run build
+	cd $(CLIENTROOT_REACT) && npm run build
 
 update-www-react: build-react
-	cp -r $(CLIENTROOT_REACT)/* $(WWWROOT)/
+	cp -r $(CLIENTROOT_REACT)/build/* $(WWWROOT)/
 
-BUILDROOT=$(ROOTDIR)/build/distributions
+BUILDROOT=$(ROOTDIR)/services/kafei/build/distributions
 
 deploy: build
 	ssh -p $(PORT) $(LOGIN_DETAILS) -- mkdir -p $(TARGET_NAME)
@@ -74,7 +74,7 @@ ansible-setup-certs:
 	ansible-playbook -i $(ANSIBLEROOT)/provisioned-static $(ANSIBLEROOT)/certs.yml --ssh-extra-args=-p$(ANSIBLEPORT)
 
 ansible-deploy: update-www-react build
-	cp $(ROOTDIR)/build/distributions/kafei-py.tar $(ANSIBLEROOT)/roles/deployservice/files
+	cp $(BUILDROOT)/kafei-py.tar $(ANSIBLEROOT)/roles/deployservice/files
 	ansible-playbook -i $(ANSIBLEROOT)/provisioned-static $(ANSIBLEROOT)/deploy-kafei.yml --ssh-extra-args=-p108
 
 ansible-deploy-webapp-%:

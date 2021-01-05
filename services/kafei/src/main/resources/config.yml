@@ -1,0 +1,64 @@
+logging:
+  level: DEBUG
+
+  loggers:
+    "org.eclipse": INFO
+
+flyway:
+  sqlMigrationPrefix: v
+  sqlMigrationSeparator: "-"
+  schemas:
+    - reports
+    - githooks
+
+reportDatabase:
+  driverClass: org.postgresql.Driver
+  user: postgres
+  password: admin
+  url: jdbc:postgresql://25.57.48.59/kafei
+
+gitHooksDatabase:
+  driverClass: org.postgresql.Driver
+  user: postgres
+  password: admin
+  url: jdbc:postgresql://25.57.48.59/kafei
+
+crashDatabase:
+  driverClass: org.postgresql.Driver
+  user: postgres
+  password: admin
+  url: jdbc:postgresql://25.57.48.59/kafei
+
+shortDatabase:
+  driverClass: org.postgresql.Driver
+  user: postgres
+  password: admin
+  url: jdbc:postgresql://25.57.48.59/kafei
+
+authDatabase:
+  driverClass: org.postgresql.Driver
+  user: postgres
+  password: admin
+  url: jdbc:postgresql://25.57.48.59/kafei?currentSchema=public
+
+corsData:
+  allowOrigin: '*'
+  allowMethods: "OPTIONS,HEAD,GET,DELETE,PUT,POST"
+
+proxies:
+  - name: bonzi
+    targetHost: http://localhost:8080
+    targetResource: /api/sapi/speak.wav?pitch=150&text={say}
+    proxyResource: /api/bonziProxy
+    parameterMap:
+      say: text
+
+sapi:
+  host: localhost
+  port: 4000
+
+mqtt:
+  host: birchy.dev
+  port: 8883
+  username: kafei
+  password: bonus
