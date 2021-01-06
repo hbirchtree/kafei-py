@@ -16,6 +16,7 @@ jobs:
     - name: Gradle build
       uses: eskatos/gradle-command-action@v1
       with:
+        build-root-directory: services/kafei
         wrapper-directory: services/kafei
         arguments: :assemble
         wrapper-cache-enabled: true
