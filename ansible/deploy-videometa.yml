@@ -9,7 +9,7 @@
     migration_args: routes
     service_args: run --host={{ vidmeta.net }} --port={{vidmeta.port}}
     working_dir: '{{ vidmeta.data }}'
-    source: vidmeta.tar
+    source: videometa.tar
     env_vars:
       - var: FLASK_APP
         value: '{{ vidmeta.deploy }}/videometa.py'

@@ -3,14 +3,23 @@ TARGET_NAME   := kafei-py
 PORT          := 108
 ROOTDIR       := $(abspath $(shell dirname $(MAKEFILE_LIST)))
 
+
+SERVICEROOT=$(ROOTDIR)/services
+KAFEIROOT=$(SERVICEROOT)/kafei
+BUILDROOT=$(KAFEIROOT)/build/distributions
+
+WWWROOT    		 := $(KAFEIROOT)/www
+CLIENTROOT 		 := $(KAFEIROOT)/client
+CLIENTROOT_REACT := $(KAFEIROOT)/client-react
+
+ANSIBLEROOT=$(ROOTDIR)/ansible
+ANSIBLEPORT=22
+
 .FORCE:
 
-build: .FORCE | $(ROOTDIR)
-	cd $(ROOTDIR)/services/kafei && ./gradlew :assemble
-
-CLIENTROOT 		 := $(ROOTDIR)/services/kafei/client
-CLIENTROOT_REACT := $(ROOTDIR)/services/kafei/client-react
-WWWROOT    		 := $(ROOTDIR)/services/kafei/www
+#
+# Web client builds
+#
 
 update-www:
 	cp $(CLIENTROOT)/public/global.css $(WWWROOT)/
@@ -24,13 +33,20 @@ build-react: .FORCE | $(ROOTDIR)/client-react
 update-www-react: build-react
 	cp -r $(CLIENTROOT_REACT)/build/* $(WWWROOT)/
 
-BUILDROOT=$(ROOTDIR)/services/kafei/build/distributions
+#
+# Java server builds
+#
+build: .FORCE
+	cd $(KAFEIROOT) && ./gradlew :assemble
 
 deploy: build
 	ssh -p $(PORT) $(LOGIN_DETAILS) -- mkdir -p $(TARGET_NAME)
 	scp -P $(PORT) $(BUILDROOT)/$(TARGET_NAME).tar $(LOGIN_DETAILS):$(TARGET_NAME).tar
 	ssh -p $(PORT) $(LOGIN_DETAILS) -- tar xf $(TARGET_NAME).tar $(TARGET_NAME)
 
+#
+# Utility commands
+#
 monitor:
 	ssh -p $(PORT) $(LOGIN_DETAILS) -t -- tmux attach
 psql:
@@ -41,16 +57,14 @@ logs:
 log-since:
 	ssh -p $(PORT) $(LOGIN_DETAILS) -t -- journalctl --since "$(SINCE)"
 
+#
 # Ansible install and boostrapping
-
+#
 ansible-bootstrap:
 	ssh -p $(PORT) $(LOGIN_DETAILS) -- sudo apt update
 	ssh -p $(PORT) $(LOGIN_DETAILS) -- sudo apt install software-properties-common
 	ssh -p $(PORT) $(LOGIN_DETAILS) -- sudo add-apt-repository --yes --update ppa:ansible/ansible
 	ssh -p $(PORT) $(LOGIN_DETAILS) -- sudo apt -qy install ansible
-
-ANSIBLEROOT=$(ROOTDIR)/ansible
-ANSIBLEPORT=22
 
 #
 # Creation of servers
@@ -96,3 +110,14 @@ ansible-create: ansible-setup-server ansible-setup-certs ansible-deploy
 
 ansible-resurrect: ansible-create ansible-restore-db
 	@true
+
+#
+# Microservice package/install
+#
+service-package-%:
+	tar cvf $(ANSIBLEROOT)/roles/deployservice/files/$*.tar \
+		-C $(SERVICEROOT)/$* \
+		$(shell git -C $(SERVICEROOT)/$* ls-files)
+
+ansible-package-deploy-%:
+	@make -f $(MAKEFILE_LIST) service-package-$* ansible-deploy-webapp-$*
