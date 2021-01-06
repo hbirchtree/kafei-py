@@ -119,5 +119,10 @@ service-package-%:
 		-C $(SERVICEROOT)/$* \
 		$(shell git -C $(SERVICEROOT)/$* ls-files)
 
+schedule-package-%:
+	tar cvf $(ANSIBLEROOT)/roles/deployschedule/files/$*.tar \
+		-C $(SERVICEROOT)/$* \
+		$(shell git -C $(SERVICEROOT)/$* ls-files)
+
 ansible-package-deploy-%:
 	@make -f $(MAKEFILE_LIST) service-package-$* ansible-deploy-webapp-$*

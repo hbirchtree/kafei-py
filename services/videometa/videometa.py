@@ -29,7 +29,7 @@ def getmeta(video):
         title=video,
         url='{}/{}'.format(root_url, video),
         preview='{}/raw/{}.mp4'.format(root_url, video),
-        thumb='{}/thumb/{}.jpg'.format(root_url, video),
+        thumb='{}/thumb/{}.mp4.full.960.jpg'.format(root_url, video),
         sources=[{
                 'url': '{}/dash/{}.mpd'.format(root_url, video),
                 'type': 'application/dash+xml'

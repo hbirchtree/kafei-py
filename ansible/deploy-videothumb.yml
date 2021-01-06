@@ -1,0 +1,16 @@
+- hosts: webservers
+  name: deploy video thumbnailer service
+  roles:
+    - deployschedule
+  vars:
+    appname: videothumb
+    execpath: 'VIDEO_DIR={{ dataroot }}/video THUMBNAILS_DIR={{ dataroot }}/video/thumb {{ vidthumb.data }}/startup.sh {{ vidthumb.deploy }}/process.sh'
+    migration_args: routes
+    sched_args: ''
+    working_dir: '{{ vidthumb.deploy }}'
+    source: videothumb.tar
+    env_vars:
+      - var: LC_ALL
+        value: 'C.UTF-8'
+      - var: LANG_ALL
+        value: 'C.UTF-8'

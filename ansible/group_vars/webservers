@@ -78,3 +78,8 @@ vidmeta:
   port: 8060
   data: '{{ dataroot }}/videometa'
   deploy: '{{ deployroot }}/videometa'
+
+vidthumb:
+  data: '{{ dataroot }}/videothumb'
+  deploy: '{{ deployroot }}/videothumb'
+
