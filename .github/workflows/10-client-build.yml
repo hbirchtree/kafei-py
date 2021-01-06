@@ -1,4 +1,4 @@
-name: Frontend build
+name: Svelte build
 on: push
 jobs:
   build:
