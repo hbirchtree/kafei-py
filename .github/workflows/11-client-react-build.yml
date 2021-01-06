@@ -1,4 +1,4 @@
-name: React build
+name: React
 on: push
 jobs:
   build:

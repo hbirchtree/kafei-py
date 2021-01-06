@@ -1,4 +1,4 @@
-name: Svelte build
+name: Svelte
 on: push
 jobs:
   build:
