@@ -27,7 +27,7 @@ update-www:
 	cp $(CLIENTROOT)/public/build/bundle.js $(WWWROOT)/build/
 	cp $(CLIENTROOT)/public/build/bundle.css $(WWWROOT)/build/
 
-build-react: .FORCE | $(ROOTDIR)/client-react
+build-react: .FORCE | $(CLIENTROOT_REACT)
 	cd $(CLIENTROOT_REACT) && npm run build
 
 update-www-react: build-react
